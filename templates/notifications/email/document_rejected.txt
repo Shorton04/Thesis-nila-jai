@@ -1,0 +1,30 @@
+Document Rejected
+================
+
+Dear {{ business_name }} Team,
+
+Unfortunately, your {{ document_type }} has been rejected for the following reasons:
+
+REJECTION REASONS:
+{% for reason in rejection_reasons %}
+ISSUE: {{ reason.description }}
+Severity: {{ reason.severity|title }}
+Resolution Steps:
+{% for step in reason.resolution_steps %}
+- {{ step }}
+{% endfor %}
+
+{% endfor %}
+
+APPEAL PROCESS:
+{% for step in appeal_process %}
+{{ forloop.counter }}. {{ step }}
+{% endfor %}
+
+View details at: {{ tracking_info.status_url }}
+
+For assistance:
+Email: {{ support_contact.email }}
+Phone: {{ support_contact.phone }}
+
+This is an automated message. Please do not reply to this email.

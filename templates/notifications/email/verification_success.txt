@@ -1,0 +1,26 @@
+Document Verification Successful
+==============================
+
+Dear {{ business_name }} Team,
+
+Your {{ document_type }} has been successfully verified!
+
+NEXT STEPS:
+{% for step in next_steps %}
+{{ forloop.counter }}. {{ step }}
+{% endfor %}
+
+{% if additional_requirements %}
+ADDITIONAL REQUIREMENTS:
+{% for req in additional_requirements %}
+- {{ req }}
+{% endfor %}
+{% endif %}
+
+Continue your application at: {{ tracking_info.status_url }}
+
+Need assistance?
+Email: {{ support_contact.email }}
+Phone: {{ support_contact.phone }}
+
+This is an automated message. Please do not reply to this email.

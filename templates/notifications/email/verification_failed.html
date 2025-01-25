@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
+        .header { background: #f8f9fa; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .footer { padding: 20px; text-align: center; font-size: 12px; color: #6c757d; }
+        .alert { padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; }
+        .alert-warning { background-color: #fff3cd; border-color: #ffeeba; color: #856404; }
+        .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Document Verification Failed</h2>
+        </div>
+        <div class="content">
+            <p>Dear {{ business_name }} Team,</p>
+            
+            <p>We regret to inform you that the verification of your {{ document_type }} has failed our verification process.</p>
+
+            <div class="alert alert-warning">
+                <h3>Issues Identified:</h3>
+                <ul>
+                    {% for issue in issues %}
+                    <li>{{ issue }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <h3>Next Steps:</h3>
+            <ol>
+                {% for step in resubmission_guidelines %}
+                <li>{{ step }}</li>
+                {% endfor %}
+            </ol>
+
+            <p>Please resubmit your document after addressing these issues.</p>
+
+            <p style="margin-top: 20px;">
+                <a href="{{ tracking_info.status_url }}" class="btn">Track Your Application</a>
+            </p>
+
+            <p style="margin-top: 20px;">
+                Need assistance? Contact our support team:
+                <br>
+                Email: {{ support_contact.email }}
+                <br>
+                Phone: {{ support_contact.phone }}
+            </p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>

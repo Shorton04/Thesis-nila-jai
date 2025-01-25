@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
+        .header { background: #f8f9fa; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .footer { padding: 20px; text-align: center; font-size: 12px; color: #6c757d; }
+        .alert { padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; }
+        .alert-danger { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .btn { display: inline-block; padding: 10px 20px; background: #dc3545; color: white; text-decoration: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Document Rejected</h2>
+        </div>
+        <div class="content">
+            <p>Dear {{ business_name }} Team,</p>
+            
+            <p>Unfortunately, your {{ document_type }} has been rejected for the following reasons:</p>
+
+            <div class="alert alert-danger">
+                {% for reason in rejection_reasons %}
+                <div style="margin-bottom: 15px;">
+                    <h4>Issue: {{ reason.description }}</h4>
+                    <p><strong>Severity:</strong> {{ reason.severity|title }}</p>
+                    <p><strong>Resolution Steps:</strong></p>
+                    <ul>
+                        {% for step in reason.resolution_steps %}
+                        <li>{{ step }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+
+            <h3>Appeal Process:</h3>
+            <ol>
+                {% for step in appeal_process %}
+                <li>{{ step }}</li>
+                {% endfor %}
+            </ol>
+
+            <p style="margin-top: 20px;">
+                <a href="{{ tracking_info.status_url }}" class="btn">View Details</a>
+            </p>
+
+            <p style="margin-top: 20px;">
+                For assistance, contact our support team:
+                <br>
+                Email: {{ support_contact.email }}
+                <br>
+                Phone: {{ support_contact.phone }}
+            </p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>

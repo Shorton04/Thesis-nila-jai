@@ -1,0 +1,26 @@
+Document Verification Failed
+===========================
+
+Dear {{ business_name }} Team,
+
+We regret to inform you that the verification of your {{ document_type }} has failed our verification process.
+
+ISSUES IDENTIFIED:
+{% for issue in issues %}
+- {{ issue }}
+{% endfor %}
+
+NEXT STEPS:
+{% for step in resubmission_guidelines %}
+{{ forloop.counter }}. {{ step }}
+{% endfor %}
+
+Please resubmit your document after addressing these issues.
+
+Track your application at: {{ tracking_info.status_url }}
+
+Need assistance?
+Email: {{ support_contact.email }}
+Phone: {{ support_contact.phone }}
+
+This is an automated message. Please do not reply to this email.

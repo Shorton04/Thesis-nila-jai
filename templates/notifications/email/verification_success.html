@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
+        .header { background: #f8f9fa; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .footer { padding: 20px; text-align: center; font-size: 12px; color: #6c757d; }
+        .alert { padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; }
+        .alert-success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .btn { display: inline-block; padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Document Verification Successful</h2>
+        </div>
+        <div class="content">
+            <p>Dear {{ business_name }} Team,</p>
+
+            <div class="alert alert-success">
+                <p>Your {{ document_type }} has been successfully verified!</p>
+            </div>
+
+            <h3>Next Steps:</h3>
+            <ol>
+                {% for step in next_steps %}
+                <li>{{ step }}</li>
+                {% endfor %}
+            </ol>
+
+            {% if additional_requirements %}
+            <h3>Additional Requirements:</h3>
+            <ul>
+                {% for req in additional_requirements %}
+                <li>{{ req }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <p style="margin-top: 20px;">
+                <a href="{{ tracking_info.status_url }}" class="btn">Continue Application</a>
+            </p>
+
+            <p style="margin-top: 20px;">
+                Need assistance? Our support team is here to help:
+                <br>
+                Email: {{ support_contact.email }}
+                <br>
+                Phone: {{ support_contact.phone }}
+            </p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>
