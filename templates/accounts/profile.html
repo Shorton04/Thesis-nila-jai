@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="md:grid md:grid-cols-3 md:gap-6">
+        <!-- Profile Overview -->
+        <div class="md:col-span-1">
+            <div class="px-4 sm:px-0">
+                <h3 class="text-lg font-medium leading-6 text-gray-900">Profile</h3>
+                <p class="mt-1 text-sm text-gray-600">
+                    Manage your account information and preferences.
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-5 md:mt-0 md:col-span-2">
+            <div class="shadow sm:rounded-md sm:overflow-hidden">
+                <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
+                    <!-- Profile Picture -->
+                    <div class="flex items-center space-x-4">
+                        {% if profile.profile_picture %}
+                        <img class="h-24 w-24 rounded-full" src="{{ profile.profile_picture.url }}" alt="Profile picture">
+                        {% else %}
+                        <div class="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center">
+                            <span class="text-2xl text-gray-500">{{ user.username|make_list|first|upper }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div>
+                            <h2 class="text-xl font-bold">{{ user.get_full_name|default:user.username }}</h2>
+                            <p class="text-sm text-gray-500">{{ user.email }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Company Information -->
+                    <div class="border-t pt-4">
+                        <h3 class="text-lg font-medium text-gray-900">Company Information</h3>
+                        <dl class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Company Name</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ user.company_name }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Position</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ user.position }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Business Type</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ user.business_type }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Phone Number</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ user.phone_number }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <!-- Address Information -->
+                    <div class="border-t pt-4">
+                        <h3 class="text-lg font-medium text-gray-900">Address Information</h3>
+                        <dl class="mt-2">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Address</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ profile.address }}</dd>
+                            </div>
+                            <div class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">City</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">{{ profile.city }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">State</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">{{ profile.state }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Postal Code</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">{{ profile.postal_code }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Country</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">{{ profile.country }}</dd>
+                                </div>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                    <a href="{% url 'accounts:edit_profile' %}" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="mt-8">
+        <div class="md:grid md:grid-cols-3 md:gap-6">
+            <div class="md:col-span-1">
+                <div class="px-4 sm:px-0">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">Recent Activity</h3>
+                    <p class="mt-1 text-sm text-gray-600">
+                        Your recent login history and account activity.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-5 md:mt-0 md:col-span-2">
+                <div class="shadow overflow-hidden sm:rounded-md">
+                    <ul class="divide-y divide-gray-200">
+                        {% for login in login_history %}
+                        <li class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    {% if login.is_successful %}
+                                    <span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white bg-green-500">
+                                        <i class="fas fa-check text-white"></i>
+                                    </span>
+                                    {% else %}
+                                    <span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white bg-red-500">
+                                        <i class="fas fa-times text-white"></i>
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-4 flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-sm font-medium text-gray-900">
+                                            {{ login.is_successful|yesno:"Successful login,Failed login attempt" }}
+                                        </p>
+                                        <p class="text-sm text-gray-500">
+                                            {{ login.login_datetime|timesince }} ago
+                                        </p>
+                                    </div>
+                                    <div class="mt-1">
+                                        <p class="text-sm text-gray-500">
+                                            from {{ login.ip_address }}
+                                            {% if login.user_agent %}
+                                            <span class="text-xs text-gray-400"> - {{ login.user_agent }}</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li class="px-4 py-4 sm:px-6 text-center text-gray-500">
+                            No recent activity to display
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

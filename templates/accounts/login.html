@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <img class="mx-auto h-12 w-auto" src="{% static 'images/logo.png' %}" alt="Logo">
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Sign in to your account
+            </h2>
+        </div>
+        
+        {% if messages %}
+        <div class="rounded-md bg-red-50 p-4">
+            <div class="flex">
+                <div class="ml-3">
+                    {% for message in messages %}
+                    <p class="text-sm font-medium text-red-800">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <form class="mt-8 space-y-6" method="POST">
+            {% csrf_token %}
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <label for="email" class="sr-only">Email address</label>
+                    {{ form.email }}
+                </div>
+                <div>
+                    <label for="password" class="sr-only">Password</label>
+                    {{ form.password }}
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    {{ form.remember_me }}
+                    <label for="remember_me" class="ml-2 block text-sm text-gray-900">
+                        Remember me
+                    </label>
+                </div>
+
+                <div class="text-sm">
+                    <a href="{% url 'accounts:password_reset_request' %}" class="font-medium text-indigo-600 hover:text-indigo-500">
+                        Forgot your password?
+                    </a>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Sign in
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center">
+            <p class="text-sm text-gray-600">
+                Don't have an account?
+                <a href="{% url 'accounts:register' %}" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    Register here
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

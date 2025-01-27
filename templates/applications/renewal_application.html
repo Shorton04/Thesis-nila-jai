@@ -1,0 +1,288 @@
+{# templates/applications/renewal_application.html #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <!-- Progress Steps -->
+    <div class="mb-8">
+        <div class="relative">
+            <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-between">
+                <span class="bg-white px-4 text-sm font-medium text-indigo-600">Previous Permit</span>
+                <span class="bg-white px-4 text-sm font-medium text-gray-500">Business Details</span>
+                <span class="bg-white px-4 text-sm font-medium text-gray-500">Financial Information</span>
+                <span class="bg-white px-4 text-sm font-medium text-gray-500">Documents</span>
+                <span class="bg-white px-4 text-sm font-medium text-gray-500">Review</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Section -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                Business Permit Renewal Application
+            </h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                Please provide your previous permit details and updated business information.
+            </p>
+        </div>
+
+        <form method="POST" class="space-y-8 divide-y divide-gray-200">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="rounded-md bg-red-50 p-4 mx-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">
+                            There were errors with your submission
+                        </h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <ul role="list" class="list-disc pl-5 space-y-1">
+                                {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Previous Permit Information -->
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Previous Permit Information</h3>
+                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div class="sm:col-span-3">
+                        <label for="{{ form.previous_permit_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Previous Permit Number
+                        </label>
+                        <div class="mt-1">
+                            {{ form.previous_permit_number }}
+                        </div>
+                        {% if form.previous_permit_number.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.previous_permit_number.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="{{ form.previous_permit_expiry.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Previous Permit Expiry Date
+                        </label>
+                        <div class="mt-1">
+                            {{ form.previous_permit_expiry }}
+                        </div>
+                        {% if form.previous_permit_expiry.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.previous_permit_expiry.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Mode -->
+            <div class="px-4 py-5 sm:p-6">
+                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div class="sm:col-span-3">
+                        <label for="{{ form.payment_mode.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Payment Mode
+                        </label>
+                        <div class="mt-1">
+                            {{ form.payment_mode }}
+                        </div>
+                        {% if form.payment_mode.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.payment_mode.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Details -->
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Business Details</h3>
+                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div class="sm:col-span-6">
+                        <label for="{{ form.business_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Business Name
+                        </label>
+                        <div class="mt-1">
+                            {{ form.business_name }}
+                        </div>
+                        {% if form.business_name.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.business_name.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-6">
+                        <label for="{{ form.business_address.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Business Address
+                        </label>
+                        <div class="mt-1">
+                            {{ form.business_address }}
+                        </div>
+                        {% if form.business_address.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.business_address.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="{{ form.postal_code.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Postal Code
+                        </label>
+                        <div class="mt-1">
+                            {{ form.postal_code }}
+                        </div>
+                        {% if form.postal_code.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.postal_code.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="{{ form.telephone.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Telephone
+                        </label>
+                        <div class="mt-1">
+                            {{ form.telephone }}
+                        </div>
+                        {% if form.telephone.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.telephone.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Email
+                        </label>
+                        <div class="mt-1">
+                            {{ form.email }}
+                        </div>
+                        {% if form.email.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.email.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Information -->
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Financial Information</h3>
+                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div class="sm:col-span-6">
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-yellow-700">
+                                        Please provide accurate financial information based on your previous year's operations.
+                                        This information will be verified against your submitted documents.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="{{ form.gross_sales_receipts.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Total Gross Sales/Receipts
+                        </label>
+                        <div class="mt-1">
+                            {{ form.gross_sales_receipts }}
+                        </div>
+                        {% if form.gross_sales_receipts.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.gross_sales_receipts.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="{{ form.gross_essential.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Gross Sales (Essential Goods)
+                        </label>
+                        <div class="mt-1">
+                            {{ form.gross_essential }}
+                        </div>
+                        {% if form.gross_essential.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.gross_essential.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="{{ form.gross_non_essential.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Gross Sales (Non-Essential Goods)
+                        </label>
+                        <div class="mt-1">
+                            {{ form.gross_non_essential }}
+                        </div>
+                        {% if form.gross_non_essential.errors %}
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ form.gross_non_essential.errors.0 }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                <button type="button" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Save as Draft
+                </button>
+                <button type="submit" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Continue to Documents
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-calculate total gross sales
+        const grossEssential = document.getElementById('{{ form.gross_essential.id_for_label }}');
+        const grossNonEssential = document.getElementById('{{ form.gross_non_essential.id_for_label }}');
+        const totalGross = document.getElementById('{{ form.gross_sales_receipts.id_for_label }}');
+
+        function calculateTotal() {
+            const essential = parseFloat(grossEssential.value) || 0;
+            const nonEssential = parseFloat(grossNonEssential.value) || 0;
+            totalGross.value = (essential + nonEssential).toFixed(2);
+        }
+
+        grossEssential.addEventListener('input', calculateTotal);
+        grossNonEssential.addEventListener('input', calculateTotal);
+    });
+</script>
+{% endblock %}
