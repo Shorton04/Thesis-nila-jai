@@ -1,5 +1,5 @@
 # documents/services/notification_service.py
-
+'''
 from typing import Dict, Any, List, Optional
 from django.conf import settings
 from django.core.mail import send_mail
@@ -269,3 +269,4 @@ class NotificationService:
         """
         # This would typically be calculated based on actual system metrics
         return "24-48 hours"
+'''

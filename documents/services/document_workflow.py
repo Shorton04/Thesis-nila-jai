@@ -1,5 +1,5 @@
 # documents/services/document_workflow.py
-
+'''
 import logging
 import re
 from typing import Dict, Any, List, Optional
@@ -706,3 +706,4 @@ class DocumentWorkflowService:
                 'document_id': document.id,
                 'error': str(e)
             }
+'''

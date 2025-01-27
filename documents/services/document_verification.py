@@ -1,5 +1,5 @@
 # documents/services/document_verification.py
-
+'''
 import logging
 import re
 import io
@@ -751,3 +751,4 @@ class DocumentVerificationService:
 
         except Exception as e:
             logger.error(f"Error storing verification results: {str(e)}")
+            '''

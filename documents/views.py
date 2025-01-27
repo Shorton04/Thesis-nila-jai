@@ -1,4 +1,5 @@
 # documents/views.py
+'''
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
@@ -287,3 +288,4 @@ def document_download(request, document_id, version=None):
     except Exception as e:
         logger.error(f"Document download error: {str(e)}")
         return HttpResponseBadRequest(f'Error downloading document: {str(e)}')
+'''

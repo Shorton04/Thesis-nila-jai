@@ -1,5 +1,5 @@
 # documents/services/document_verification_utils.py
-
+'''
 from typing import Dict, Any, List, Optional, Tuple
 import hashlib
 import os
@@ -374,3 +374,4 @@ class DocumentVerificationUtils:
         except Exception as e:
             logger.error(f"Error getting verification requirements: {str(e)}")
             return {}
+'''

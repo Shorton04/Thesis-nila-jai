@@ -1,4 +1,5 @@
 # documents/utils/fraud_detection.py
+'''
 import cv2
 import numpy as np
 from PIL import Image
@@ -235,3 +236,4 @@ class FraudDetector:
                 'signature_analysis': signature_analysis
             }
         }
+'''

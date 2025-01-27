@@ -1,9 +1,10 @@
 # documents/urls.py
+
 from django.urls import path
 from . import views
 
 app_name = 'documents'
-
+'''
 urlpatterns = [
     # Document upload and management
     path('upload/<int:application_id>/', views.upload_document, name='upload_document'),
@@ -60,3 +61,4 @@ urlpatterns = [
 
     path('api/verification-status/<int:document_id>/', views.verification_status, name='verification_status'),
 ]
+'''

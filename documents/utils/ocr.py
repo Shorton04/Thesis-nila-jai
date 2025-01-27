@@ -1,4 +1,5 @@
 # documents/utils/ocr.py
+'''
 import pytesseract
 from PIL import Image
 import cv2
@@ -141,3 +142,5 @@ class OCRProcessor:
 
         except Exception as e:
             raise Exception(f"Error processing document: {str(e)}")
+
+'''

@@ -1,4 +1,5 @@
 # documents/utils/nlp_validation.py
+'''
 import re
 import json
 import numpy as np
@@ -293,3 +294,4 @@ class NLPValidator:
                 ])
 
         return validation_results
+'''
