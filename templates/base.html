@@ -3,28 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}My Website{% endblock %}</title>
+    <title>{% block title %}BPLO{% endblock %}</title>
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f7fafc;
+            font-family: 'Inter', sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(45deg, #4c51bf, #667eea);
+        }
+        .navbar a {
+            transition: all 0.3s ease;
+        }
+        .navbar a:hover {
+            color: #fff;
+        }
+        .footer {
+            background: linear-gradient(45deg, #667eea, #4c51bf);
+            color: #fff;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to My Website</h1>
-        <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/about">About</a></li>
-                <li><a href="/contact">Contact</a></li>
-            </ul>
-        </nav>
+    <header class="navbar text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-xl font-semibold">BPLO Dashboard</a>
+            <nav>
+                <ul class="flex space-x-4">
+                    <li><a href="/" class="hover:text-white">Home</a></li>
+                    <li><a href="{% url 'applications:new_application' %}" class="hover:text-white">New Application</a></li>
+                    <li><a href="{% url 'admin:index' %}" class="hover:text-white">Admin</a></li>
+                </ul>
+            </nav>
+        </div>
     </header>
- 
-    <main>
+
+    <main class="container mx-auto mt-8">
         {% block content %}
-        <!-- Default content or empty placeholder -->
         {% endblock %}
     </main>
- 
-    <footer>
-        <p>&copy; 2025 My Website. All rights reserved.</p>
+
+    <footer class="footer mt-8 py-4">
+        <div class="container mx-auto text-center">
+            &copy; {% now "Y" %} BPLO. All rights reserved.
+        </div>
     </footer>
 </body>
 </html>
