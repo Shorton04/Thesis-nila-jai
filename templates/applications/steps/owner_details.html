@@ -1,0 +1,112 @@
+{# templates/applications/steps/owner_details.html #}
+<div data-step="3">
+    <!-- Owner Information -->
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Owner Information</h3>
+        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div class="sm:col-span-6">
+                <label for="{{ form.owner_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Owner's Name
+                </label>
+                <div class="mt-1">
+                    {{ form.owner_name }}
+                </div>
+                {% if form.owner_name.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.owner_name.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-6">
+                <label for="{{ form.owner_address.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Owner's Address
+                </label>
+                <div class="mt-1">
+                    {{ form.owner_address }}
+                </div>
+                {% if form.owner_address.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.owner_address.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-3">
+                <label for="{{ form.owner_telephone.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Owner's Telephone
+                </label>
+                <div class="mt-1">
+                    {{ form.owner_telephone }}
+                </div>
+                {% if form.owner_telephone.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.owner_telephone.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-3">
+                <label for="{{ form.owner_email.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Owner's Email
+                </label>
+                <div class="mt-1">
+                    {{ form.owner_email }}
+                </div>
+                {% if form.owner_email.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.owner_email.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Contact -->
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Emergency Contact</h3>
+        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div class="sm:col-span-6">
+                <label for="{{ form.emergency_contact_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Emergency Contact Name
+                </label>
+                <div class="mt-1">
+                    {{ form.emergency_contact_name }}
+                </div>
+                {% if form.emergency_contact_name.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.emergency_contact_name.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-3">
+                <label for="{{ form.emergency_contact_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Emergency Contact Number
+                </label>
+                <div class="mt-1">
+                    {{ form.emergency_contact_number }}
+                </div>
+                {% if form.emergency_contact_number.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.emergency_contact_number.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-3">
+                <label for="{{ form.emergency_contact_email.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Emergency Contact Email
+                </label>
+                <div class="mt-1">
+                    {{ form.emergency_contact_email }}
+                </div>
+                {% if form.emergency_contact_email.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.emergency_contact_email.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

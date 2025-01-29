@@ -11,16 +11,16 @@
                 <div class="w-full border-t border-gray-300"></div>
             </div>
             <div class="relative flex justify-between">
-                <span class="bg-white px-4 text-sm font-medium text-indigo-600">
+                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 1 %}text-indigo-600{% else %}text-gray-500{% endif %}">
                     Basic Information
                 </span>
-                <span class="bg-white px-4 text-sm font-medium text-gray-500">
+                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 2 %}text-indigo-600{% else %}text-gray-500{% endif %}">
                     Business Details
                 </span>
-                <span class="bg-white px-4 text-sm font-medium text-gray-500">
-                    Documents
+                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 3 %}text-indigo-600{% else %}text-gray-500{% endif %}">
+                    Owner Details
                 </span>
-                <span class="bg-white px-4 text-sm font-medium text-gray-500">
+                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 4 %}text-indigo-600{% else %}text-gray-500{% endif %}">
                     Review
                 </span>
             </div>
@@ -38,14 +38,14 @@
             </p>
         </div>
 
-        <form method="POST" class="space-y-8 divide-y divide-gray-200">
+        <form method="POST" class="space-y-8 divide-y divide-gray-200" id="applicationForm">
             {% csrf_token %}
             
             {% if form.non_field_errors %}
             <div class="rounded-md bg-red-50 p-4 mb-6">
                 <div class="flex">
                     <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                         </svg>
                     </div>
@@ -65,323 +65,26 @@
             </div>
             {% endif %}
 
-            <!-- Basic Information -->
-            <div class="px-4 py-5 sm:p-6">
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.payment_mode.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Payment Mode
-                        </label>
-                        <div class="mt-1">
-                            {{ form.payment_mode }}
-                        </div>
-                        {% if form.payment_mode.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.payment_mode.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.business_type.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Business Type
-                        </label>
-                        <div class="mt-1">
-                            {{ form.business_type }}
-                        </div>
-                        {% if form.business_type.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.business_type.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-6">
-                        <label for="{{ form.business_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Business Name
-                        </label>
-                        <div class="mt-1">
-                            {{ form.business_name }}
-                        </div>
-                        {% if form.business_name.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.business_name.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-6">
-                        <label for="{{ form.trade_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Trade Name/Franchise
-                        </label>
-                        <div class="mt-1">
-                            {{ form.trade_name }}
-                        </div>
-                        {% if form.trade_name.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.trade_name.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.registration_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Registration Number
-                        </label>
-                        <div class="mt-1">
-                            {{ form.registration_number }}
-                        </div>
-                        {% if form.registration_number.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.registration_number.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.registration_date.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Registration Date
-                        </label>
-                        <div class="mt-1">
-                            {{ form.registration_date }}
-                        </div>
-                        {% if form.registration_date.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.registration_date.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contact Information -->
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    Contact Information
-                </h3>
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <!-- Business Address fields -->
-                    <div class="sm:col-span-6">
-                        <label for="{{ form.business_address.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Business Address
-                        </label>
-                        <div class="mt-1">
-                            {{ form.business_address }}
-                        </div>
-                        {% if form.business_address.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.business_address.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-2">
-                        <label for="{{ form.postal_code.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Postal Code
-                        </label>
-                        <div class="mt-1">
-                            {{ form.postal_code }}
-                        </div>
-                        {% if form.postal_code.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.postal_code.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-2">
-                        <label for="{{ form.telephone.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Telephone
-                        </label>
-                        <div class="mt-1">
-                            {{ form.telephone }}
-                        </div>
-                        {% if form.telephone.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.telephone.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-2">
-                        <label for="{{ form.mobile.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Mobile
-                        </label>
-                        <div class="mt-1">
-                            {{ form.mobile }}
-                        </div>
-                        {% if form.mobile.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.mobile.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Email
-                        </label>
-                        <div class="mt-1">
-                            {{ form.email }}
-                        </div>
-                        {% if form.email.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.email.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.website.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Website (Optional)
-                        </label>
-                        <div class="mt-1">
-                            {{ form.website }}
-                        </div>
-                        {% if form.website.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.website.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Business Activity -->
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    Business Activity
-                </h3>
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-6">
-                        <label for="{{ form.line_of_business.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Line of Business
-                        </label>
-                        <div class="mt-1">
-                            {{ form.line_of_business }}
-                        </div>
-                        {% if form.line_of_business.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.line_of_business.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-2">
-                        <label for="{{ form.business_area.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Business Area (sqm)
-                        </label>
-                        <div class="mt-1">
-                            {{ form.business_area }}
-                        </div>
-                        {% if form.business_area.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.business_area.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-2">
-                        <label for="{{ form.number_of_employees.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Number of Employees
-                        </label>
-                        <div class="mt-1">
-                            {{ form.number_of_employees }}
-                        </div>
-                        {% if form.number_of_employees.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.number_of_employees.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-2">
-                        <label for="{{ form.capitalization.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Capitalization
-                        </label>
-                        <div class="mt-1">
-                            {{ form.capitalization }}
-                        </div>
-                        {% if form.capitalization.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.capitalization.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Owner Details -->
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    Owner Details
-                </h3>
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-6">
-                        <label for="{{ form.owner_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Owner's Name
-                        </label>
-                        <div class="mt-1">
-                            {{ form.owner_name }}
-                        </div>
-                        {% if form.owner_name.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.owner_name.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-6">
-                        <label for="{{ form.owner_address.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Owner's Address
-                        </label>
-                        <div class="mt-1">
-                            {{ form.owner_address }}
-                        </div>
-                        {% if form.owner_address.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.owner_address.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.owner_telephone.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Owner's Telephone
-                        </label>
-                        <div class="mt-1">
-                            {{ form.owner_telephone }}
-                        </div>
-                        {% if form.owner_telephone.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.owner_telephone.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.owner_email.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Owner's Email
-                        </label>
-                        <div class="mt-1">
-                            {{ form.owner_email }}
-                        </div>
-                        {% if form.owner_email.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.owner_email.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+            <!-- Step Content -->
+            {% include step_template %}
 
             <!-- Form Actions -->
             <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                <button type="button" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                {% if current_step > 1 %}
+                <button type="submit" name="action" value="previous" 
+                        class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Previous
+                </button>
+                {% endif %}
+                
+                <button type="submit" name="action" value="save_draft"
+                        class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Save as Draft
                 </button>
-                <button type="submit" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Continue to Documents
+                
+                <button type="submit" name="action" value="continue"
+                        class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    {% if current_step == total_steps %}Submit Application{% else %}Continue{% endif %}
                 </button>
             </div>
         </form>
@@ -391,9 +94,83 @@
 
 {% block extra_js %}
 <script>
-    // Form validation and enhancement JavaScript will go here
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add your JavaScript for form validation and enhancement here
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('applicationForm');
+    let isSubmitting = false;
+    
+    form.addEventListener('submit', function(e) {
+        if (isSubmitting) {
+            return;
+        }
+
+        e.preventDefault();
+        const action = e.submitter.value;
+        
+        // Don't validate if saving as draft or going back
+        if (action === 'save_draft' || action === 'previous') {
+            isSubmitting = true;
+            form.submit();
+            return;
+        }
+        
+        // Get all required fields in the current step
+        const currentStepDiv = document.querySelector('[data-step="{{ current_step }}"]');
+        if (!currentStepDiv) {
+            console.error('Current step div not found');
+            return;
+        }
+
+        const currentStepFields = currentStepDiv.querySelectorAll('input[required], select[required], textarea[required]');
+        let isValid = true;
+        
+        // Remove all existing error messages
+        document.querySelectorAll('.error-message').forEach(error => error.remove());
+        document.querySelectorAll('.border-red-500').forEach(field => {
+            field.classList.remove('border-red-500');
+        });
+        
+        currentStepFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.classList.add('border-red-500');
+                
+                // Add error message
+                const errorDiv = document.createElement('p');
+                errorDiv.className = 'mt-2 text-sm text-red-600 error-message';
+                errorDiv.textContent = 'This field is required';
+                field.parentElement.appendChild(errorDiv);
+            }
+        });
+        
+        if (isValid) {
+            isSubmitting = true;
+            form.submit();
+        } else {
+            const firstError = document.querySelector('.border-red-500');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            messages.error('Please fill in all required fields.');
+        }
     });
+    
+    // Remove error styling on input
+    document.querySelectorAll('input, select, textarea').forEach(field => {
+        field.addEventListener('input', function() {
+            this.classList.remove('border-red-500');
+            const errorDiv = this.parentElement.querySelector('.error-message');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        });
+    });
+
+    // Initialize form fields with proper classes
+    document.querySelectorAll('input, select, textarea').forEach(field => {
+        if (!field.classList.contains('form-input')) {
+            field.classList.add('mt-1', 'block', 'w-full', 'rounded-md', 'border-gray-300', 'shadow-sm', 'focus:border-indigo-500', 'focus:ring-indigo-500', 'sm:text-sm');
+        }
+    });
+});
 </script>
 {% endblock %}

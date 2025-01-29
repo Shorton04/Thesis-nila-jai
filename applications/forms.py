@@ -9,52 +9,112 @@ from .models import (
 
 
 class BusinessApplicationForm(forms.ModelForm):
-    """Form for creating and updating business permit applications."""
-
     class Meta:
         model = BusinessApplication
         exclude = ['applicant', 'application_number', 'tracking_number',
                    'reviewed_by', 'approved_by', 'status', 'created_at',
                    'updated_at', 'is_active']
-
         widgets = {
             'registration_date': forms.DateInput(attrs={'type': 'date'}),
-            'submission_date': forms.DateInput(attrs={'type': 'date'}),
             'business_area': forms.NumberInput(attrs={'step': '0.01'}),
             'capitalization': forms.NumberInput(attrs={'step': '0.01'}),
-            'gross_sales_receipts': forms.NumberInput(attrs={'step': '0.01'}),
-            'gross_essential': forms.NumberInput(attrs={'step': '0.01'}),
-            'gross_non_essential': forms.NumberInput(attrs={'step': '0.01'}),
+            'business_address': forms.Textarea(attrs={'rows': 3}),
+            'owner_address': forms.Textarea(attrs={'rows': 3}),
         }
 
-    def clean_registration_date(self):
-        date = self.cleaned_data['registration_date']
-        if date > timezone.now().date():
-            raise ValidationError("Registration date cannot be in the future.")
-        return date
+    def __init__(self, *args, current_step=1, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.current_step = current_step
 
-    def clean_business_area(self):
-        area = self.cleaned_data['business_area']
-        if area <= 0:
-            raise ValidationError("Business area must be greater than 0.")
-        return area
+        # Define required fields for each step
+        self.step_fields = {
+            1: [
+                'business_type', 'business_name', 'trade_name',
+                'registration_number', 'registration_date', 'payment_mode'
+            ],
+            2: [
+                'business_address', 'postal_code', 'telephone', 'email',
+                'line_of_business', 'business_area', 'number_of_employees',
+                'capitalization'
+            ],
+            3: [
+                'owner_name', 'owner_address', 'owner_telephone', 'owner_email',
+                'emergency_contact_name', 'emergency_contact_number',
+                'emergency_contact_email'
+            ],
+            4: []  # Review step, no required fields
+        }
 
-    def clean_capitalization(self):
-        capitalization = self.cleaned_data['capitalization']
-        if capitalization <= 0:
-            raise ValidationError("Capitalization must be greater than 0.")
-        return capitalization
+        # Define required model fields with default values
+        self.required_model_fields = {
+            'business_type': 'single',
+            'payment_mode': 'annually',
+            'registration_date': timezone.now().date(),
+            'business_area': 0,
+            'number_of_employees': 0,
+            'capitalization': 0,
+            'line_of_business': 'Unknown',
+            'business_name': 'Draft Business',
+            'business_address': 'TBD',
+            'postal_code': '00000',
+            'telephone': 'TBD',
+            'email': 'draft@example.com',
+        }
+
+        # Set all fields as not required initially
+        for field in self.fields:
+            self.fields[field].required = False
+
+        # Set required fields for current step
+        current_step_fields = self.step_fields.get(current_step, [])
+        for field_name in current_step_fields:
+            if field_name in self.fields:
+                self.fields[field_name].required = True
+
+        # Add CSS classes to all form widgets
+        for field_name, field in self.fields.items():
+            css_class = 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'
+            field.widget.attrs['class'] = css_class
 
     def clean(self):
         cleaned_data = super().clean()
-        application_type = cleaned_data.get('application_type')
 
-        # Validate financial information for renewal applications
-        if application_type == 'renewal':
-            if not cleaned_data.get('gross_sales_receipts'):
-                raise ValidationError({
-                    'gross_sales_receipts': "This field is required for renewal applications."
-                })
+        # Validate fields for current step
+        current_step_fields = self.step_fields.get(self.current_step, [])
+        for field_name in current_step_fields:
+            if field_name not in cleaned_data or not cleaned_data[field_name]:
+                self.add_error(field_name, 'This field is required.')
+
+        # Preserve existing values for fields from other steps
+        if self.instance and self.instance.pk:
+            for field_name, default_value in self.required_model_fields.items():
+                if field_name not in current_step_fields:
+                    existing_value = getattr(self.instance, field_name, None)
+                    if existing_value:
+                        cleaned_data[field_name] = existing_value
+                    else:
+                        cleaned_data[field_name] = default_value
+        else:
+            # For new instances, set default values for required fields
+            for field_name, default_value in self.required_model_fields.items():
+                if field_name not in current_step_fields and (
+                        field_name not in cleaned_data or not cleaned_data[field_name]):
+                    cleaned_data[field_name] = default_value
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        # Ensure all required fields have values
+        for field_name, default_value in self.required_model_fields.items():
+            current_value = getattr(instance, field_name, None)
+            if not current_value and field_name not in self.step_fields.get(self.current_step, []):
+                setattr(instance, field_name, default_value)
+
+        if commit:
+            instance.save()
+        return instance
 
 
 class RenewalApplicationForm(BusinessApplicationForm):

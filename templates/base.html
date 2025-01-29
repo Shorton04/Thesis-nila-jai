@@ -31,16 +31,25 @@
             <a href="/" class="text-xl font-semibold">BPLO Dashboard</a>
             <nav>
                 <ul class="flex space-x-4">
-                    <li><a href="/" class="hover:text-white">Home</a></li>
+                    <li><a href="{% url 'applications:dashboard' %}" class="hover:text-white">Home</a></li>
                     <li><a href="{% url 'applications:new_application' %}" class="hover:text-white">New Application</a></li>
-                    <li><a href="{% url 'admin:index' %}" class="hover:text-white">Admin</a></li>
+                    <li><a href="{% url 'accounts:profile' %}" class="hover:text-white">Profile</a></li>
                 </ul>
             </nav>
         </div>
     </header>
-
+        {% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
     <main class="container mx-auto mt-8">
         {% block content %}
+            
         {% endblock %}
     </main>
 
