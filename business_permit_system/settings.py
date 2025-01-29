@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 from decouple import config
 
@@ -75,6 +76,16 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+'''
+# Email Settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'rmarcdexter@gmail.com'  # Replace with your Gmail
+EMAIL_HOST_PASSWORD = 'Admin123'  # Replace with the App Password you generated
+DEFAULT_FROM_EMAIL = 'rmarcdexter@gmail.com'  # Replace with your Gmail
+'''
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -124,3 +135,14 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.CustomUser'
+
+# Add this to your settings.py if not already present
+MAX_LOGIN_ATTEMPTS = 3  # or whatever number you prefer
+
+if 'test' in sys.argv:
+    EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'test_media')
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
+    TEST_RUNNER = 'tests.test_settings.TestRunner'

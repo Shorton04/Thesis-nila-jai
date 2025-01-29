@@ -22,7 +22,7 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False  # User needs to verify email
+            user.is_active = True  # User needs to verify email
             user.verification_token = uuid.uuid4()
             user.save()
 
@@ -92,25 +92,26 @@ def login_view(request):
                     return render(request, 'accounts/login.html', {'form': form})
 
                 # Attempt authentication
-                user = authenticate(request, username=user.username, password=password)
-                if user is not None:
-                    if not user.is_email_verified:
+                authenticated_user = authenticate(request, username=user.username, password=password)
+                if authenticated_user is not None:
+                    if not authenticated_user.is_email_verified:
                         messages.error(request, 'Please verify your email address before logging in.')
                         return render(request, 'accounts/login.html', {'form': form})
 
-                    login(request, user)
-
-                    # Record login
+                    # Create login history record first
                     LoginHistory.objects.create(
-                        user=user,
+                        user=authenticated_user,
                         ip_address=request.META.get('REMOTE_ADDR', ''),
                         user_agent=request.META.get('HTTP_USER_AGENT', ''),
                         is_successful=True
                     )
 
+                    # Then login the user
+                    login(request, authenticated_user)
+
                     # Reset login attempts
-                    user.login_attempts = 0
-                    user.save()
+                    authenticated_user.login_attempts = 0
+                    authenticated_user.save()
 
                     if not remember_me:
                         request.session.set_expiry(0)
@@ -118,15 +119,6 @@ def login_view(request):
                     return redirect('applications:dashboard')
 
                 # Authentication failed
-                LoginHistory.objects.create(
-                    user=user,
-                    ip_address=request.META.get('REMOTE_ADDR', ''),
-                    user_agent=request.META.get('HTTP_USER_AGENT', ''),
-                    is_successful=False,
-                    failure_reason='Invalid password'
-                )
-
-                # Increment login attempts
                 user.login_attempts += 1
                 if user.login_attempts >= settings.MAX_LOGIN_ATTEMPTS:
                     user.lock_account()
@@ -134,6 +126,15 @@ def login_view(request):
                 else:
                     messages.error(request, 'Invalid email or password.')
                 user.save()
+
+                # Record failed login attempt
+                LoginHistory.objects.create(
+                    user=user,  # Use the found user object
+                    ip_address=request.META.get('REMOTE_ADDR', ''),
+                    user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                    is_successful=False,
+                    failure_reason='Invalid password'
+                )
 
             except CustomUser.DoesNotExist:
                 messages.error(request, 'Invalid email or password.')
@@ -152,22 +153,22 @@ def logout_view(request):
 
 @login_required
 def profile(request):
-    user_profile = request.user.profile
+    user_profile = UserProfile.get_or_create_profile(request.user)
     return render(request, 'accounts/profile.html', {
         'user': request.user,
         'profile': user_profile,
         'login_history': LoginHistory.objects.filter(user=request.user)[:5]
     })
 
-
 @login_required
 def edit_profile(request):
+    user_profile = UserProfile.get_or_create_profile(request.user)
     if request.method == 'POST':
         user_form = CustomUserChangeForm(request.POST, instance=request.user)
         profile_form = UserProfileForm(
             request.POST,
             request.FILES,
-            instance=request.user.profile
+            instance=user_profile
         )
 
         if user_form.is_valid() and profile_form.is_valid():
@@ -177,12 +178,20 @@ def edit_profile(request):
             return redirect('accounts:profile')
     else:
         user_form = CustomUserChangeForm(instance=request.user)
-        profile_form = UserProfileForm(instance=request.user.profile)
+        profile_form = UserProfileForm(instance=user_profile)
 
     return render(request, 'accounts/edit_profile.html', {
         'user_form': user_form,
         'profile_form': profile_form
     })
+
+@login_required
+def logout_view(request):
+    if request.method == 'POST':
+        logout(request)
+        messages.success(request, 'You have been successfully logged out.')
+        return redirect('accounts:login')
+    return render(request, 'accounts/logout_confirmation.html')
 
 
 def password_reset_request(request):

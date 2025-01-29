@@ -4,59 +4,210 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}BPLO{% endblock %}</title>
-    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Modern Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     <style>
+        /* Base Styles */
         body {
-            background-color: #f7fafc;
             font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        .navbar {
-            background: linear-gradient(45deg, #4c51bf, #667eea);
+
+        /* Navbar Styles */
+        .navbar-gradient {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
-        .navbar a {
+
+        /* Navigation Link Animations */
+        .nav-link {
+            position: relative;
             transition: all 0.3s ease;
         }
-        .navbar a:hover {
-            color: #fff;
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: #fff;
+            transition: width 0.3s ease;
         }
-        .footer {
-            background: linear-gradient(45deg, #667eea, #4c51bf);
-            color: #fff;
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Content Area */
+        main {
+            flex: 1;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Dropdown Menu Animation */
+        @keyframes slideDown {
+            0% {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .dropdown-content {
+            animation: slideDown 0.2s ease-out;
         }
     </style>
 </head>
 <body>
-    <header class="navbar text-white p-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <a href="/" class="text-xl font-semibold">BPLO Dashboard</a>
-            <nav>
-                <ul class="flex space-x-4">
-                    <li><a href="{% url 'applications:dashboard' %}" class="hover:text-white">Home</a></li>
-                    <li><a href="{% url 'applications:new_application' %}" class="hover:text-white">New Application</a></li>
-                    <li><a href="{% url 'accounts:profile' %}" class="hover:text-white">Profile</a></li>
-                </ul>
-            </nav>
+    <!-- Navigation -->
+    <header class="navbar-gradient">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="/" class="flex items-center space-x-2">
+                        <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        <span class="text-white font-semibold text-lg">BPLO Dashboard</span>
+                    </a>
+                </div>
+
+                <!-- Navigation Links -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="{% url 'applications:dashboard' %}" class="nav-link text-gray-100 hover:text-white px-3 py-2 text-sm font-medium">
+                        <i class="fas fa-home mr-2"></i>Home
+                    </a>
+                    <a href="{% url 'applications:new_application' %}" class="nav-link text-gray-100 hover:text-white px-3 py-2 text-sm font-medium">
+                        <i class="fas fa-file-alt mr-2"></i>New Application
+                    </a>
+                    <div class="relative group">
+                        <a href="{% url 'accounts:profile' %}" class="nav-link text-gray-100 hover:text-white px-3 py-2 text-sm font-medium flex items-center">
+                            <i class="fas fa-user mr-2"></i>Profile
+                            <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                        </a>
+                        <!-- Dropdown Menu -->
+                        <div class="hidden group-hover:block absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 dropdown-content">
+                            <a href="{% url 'accounts:profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-user-circle mr-2"></i>My Profile
+                            </a>
+                            <a href="{% url 'accounts:edit_profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-cog mr-2"></i>Settings
+                            </a>
+                            <div class="border-t border-gray-100"></div>
+                            <a href="{% url 'accounts:logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </a>
+                        </div>
+                    </div>
+                </nav>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button type="button" class="text-gray-100 hover:text-white focus:outline-none" onclick="toggleMobileMenu()">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white shadow-lg">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="{% url 'applications:dashboard' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">
+                    <i class="fas fa-home mr-2"></i>Home
+                </a>
+                <a href="{% url 'applications:new_application' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">
+                    <i class="fas fa-file-alt mr-2"></i>New Application
+                </a>
+                <a href="{% url 'accounts:profile' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">
+                    <i class="fas fa-user mr-2"></i>Profile
+                </a>
+                <a href="{% url 'accounts:logout' %}" class="block px-3 py-2 text-base font-medium text-red-600 hover:bg-red-50">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </a>
+            </div>
         </div>
     </header>
-        {% if messages %}
-<div class="messages">
-    {% for message in messages %}
-    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-        {{ message }}
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
-    <main class="container mx-auto mt-8">
-        {% block content %}
-            
-        {% endblock %}
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
     </main>
 
-    <footer class="footer mt-8 py-4">
-        <div class="container mx-auto text-center">
-            &copy; {% now "Y" %} BPLO. All rights reserved.
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex justify-between items-center">
+                <div class="text-gray-500 text-sm">
+                    &copy; {% now "Y" %} BPLO. All rights reserved.
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-gray-500">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-gray-500">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-gray-500">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
         </div>
     </footer>
+
+    <!-- JavaScript -->
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('mobileMenu');
+            const menuButton = event.target.closest('button');
+            if (!menu.classList.contains('hidden') && !menuButton) {
+                menu.classList.add('hidden');
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

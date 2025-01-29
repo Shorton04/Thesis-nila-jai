@@ -27,6 +27,7 @@ class CustomUser(AbstractUser):
         verbose_name = _('user')
         verbose_name_plural = _('users')
 
+
     def __str__(self):
         return self.email
 
@@ -45,20 +46,27 @@ class CustomUser(AbstractUser):
         return False
 
 
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')
-    profile_picture = models.ImageField(upload_to='profile_pics/', blank=True)
-    address = models.TextField(blank=True)
-    city = models.CharField(max_length=100, blank=True)
-    state = models.CharField(max_length=100, blank=True)
-    postal_code = models.CharField(max_length=10, blank=True)
-    country = models.CharField(max_length=100, blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
+    postal_code = models.CharField(max_length=10, blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
     date_of_birth = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.user.email}'s Profile"
+
+    @classmethod
+    def get_or_create_profile(cls, user):
+        profile, created = cls.objects.get_or_create(user=user)
+        return profile
 
 
 class LoginHistory(models.Model):
