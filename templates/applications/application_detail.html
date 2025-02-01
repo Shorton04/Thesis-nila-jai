@@ -1,3 +1,4 @@
+{# templates/applications/application_detail.html #}
 {% extends 'base.html' %}
 {% load static %}
 
@@ -11,290 +12,298 @@
             </h2>
             <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
                 <div class="mt-2 flex items-center text-sm text-gray-500">
-                    <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    </svg>
-                    Application ID: {{ application.tracking_number }}
+                    <span class="mr-2">Application ID:</span> {{ application.application_number }}
                 </div>
                 <div class="mt-2 flex items-center text-sm text-gray-500">
-                    <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    Submitted: {{ application.submission_date|default:"Not yet submitted" }}
-                </div>
-                <div class="mt-2 flex items-center text-sm text-gray-500">
+                    <span class="mr-2">Status:</span>
                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                         {% if application.status == 'approved' %}bg-green-100 text-green-800
                         {% elif application.status == 'rejected' %}bg-red-100 text-red-800
-                        {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                        {% elif application.status == 'submitted' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
                         {{ application.get_status_display }}
                     </span>
+                </div>
+                <div class="mt-2 flex items-center text-sm text-gray-500">
+                    <span class="mr-2">Submitted:</span>
+                    {{ application.submission_date|default:"Not yet submitted" }}
                 </div>
             </div>
         </div>
         <div class="mt-4 flex md:mt-0 md:ml-4">
             {% if can_edit %}
-            <a href="{% url 'applications:edit_application' application.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Edit
+            <a href="{% url 'applications:edit_application' application.id %}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                Edit Application
             </a>
             {% endif %}
             
             {% if can_submit %}
-            <form method="POST" class="inline-block ml-3">
+            <form method="POST" class="ml-3">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="submit">
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
                     Submit Application
                 </button>
             </form>
             {% endif %}
-
-            {% if application.status in 'draft,submitted' %}
-            <form method="POST" class="inline-block ml-3">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="cancel">
-                <button type="submit" onclick="return confirm('Are you sure you want to cancel this application?')" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                    Cancel
-                </button>
-            </form>
-            {% endif %}
         </div>
     </div>
 
-    <!-- Progress Bar -->
-    <div class="mt-6">
-        <h4 class="sr-only">Application Progress</h4>
-        <div class="bg-gray-200 rounded-full overflow-hidden">
-            <div class="h-2 bg-indigo-600 rounded-full" style="width: {{ completion_percentage }}%"></div>
-        </div>
-        <p class="mt-2 text-sm text-gray-600">{{ completion_percentage }}% complete</p>
+    <!-- Navigation Tabs -->
+    <div class="border-b border-gray-200 mt-8">
+        <nav class="-mb-px flex space-x-8">
+            <a href="#details" 
+               class="border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                Details
+            </a>
+            <a href="#requirements"
+               class="border-transparent text-gray-500 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                Requirements
+            </a>
+            <a href="#history"
+               class="border-transparent text-gray-500 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                History
+            </a>
+        </nav>
     </div>
 
-    <!-- Main Content -->
-    <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
-        <!-- Tabs -->
-        <div class="border-b border-gray-200">
-            <nav class="-mb-px flex" aria-label="Tabs">
-                <a href="#details" class="border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm">
-                    Details
-                </a>
-                <a href="{% url 'applications:requirements' application.id %}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm">
-                    Requirements
-                </a>
-                <a href="{% url 'applications:application_history' application.id %}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm">
-                    History
-                </a>
-                {% if assessment %}
-                <a href="#assessment" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm">
-                    Assessment
-                </a>
-                {% endif %}
-            </nav>
+    <!-- Tab Contents -->
+    <div class="py-6">
+        <!-- Details Section -->
+        <div id="details" class="tab-content">
+            <!-- Basic Information -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Basic Information</h3>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
+                    <dl class="sm:divide-y sm:divide-gray-200">
+                        <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Business Name</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ application.business_name }}</dd>
+                        </div>
+                        <!-- Add other fields as needed -->
+                    </dl>
+                </div>
+            </div>
         </div>
 
-        <!-- Tab Content -->
-        <div class="px-4 py-5 sm:p-6">
-            <!-- Details Section -->
-            <div id="details" class="space-y-6">
-                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                    <div class="px-4 py-5 sm:px-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">
-                            Business Information
-                        </h3>
+        <!-- Requirements Section -->
+        <div id="requirements" class="tab-content hidden">
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Requirements</h3>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Required documents for your application
+                            </p>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="mr-4">
+                                <span class="text-sm font-medium text-gray-900">Progress</span>
+                                <span class="ml-2 text-sm text-gray-500">{{ completion_percentage }}%</span>
+                            </div>
+                            <div class="w-48 bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-indigo-600 h-2.5 rounded-full" style="width: {{ completion_percentage }}%"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
-                        <dl class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
-                            <div class="sm:col-span-1">
-                                <dt class="text-sm font-medium text-gray-500">Business Type</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ application.get_business_type_display }}</dd>
+                </div>
+                <div class="border-t border-gray-200">
+                    <ul role="list" class="divide-y divide-gray-200">
+                        {% for requirement in requirements %}
+                        <li class="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    {% if requirement.is_submitted %}
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                    {% endif %}
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ requirement.requirement_name }}</div>
+                                        {% if requirement.is_submitted %}
+                                        <div class="text-sm text-gray-500">Submitted on {{ requirement.updated_at|date:"F j, Y" }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    {% if requirement.is_submitted %}
+                                        <button onclick="viewDocument('{{ requirement.id }}')"
+                                                class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                                            View
+                                        </button>
+                                        <button onclick="showUploadModal('{{ requirement.id }}')"
+                                                class="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
+                                            Replace
+                                        </button>
+                                    {% else %}
+                                        <button onclick="showUploadModal('{{ requirement.id }}')"
+{# Continuing the application_detail.html template #}
+                                                class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700">
+                                            Upload
+                                        </button>
+                                    {% endif %}
+                                </div>
                             </div>
-                            <div class="sm:col-span-1">
-                                <dt class="text-sm font-medium text-gray-500">Trade Name</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ application.business_name }}</dd>
-                            </div>
-                            <div class="sm:col-span-1">
-                                <dt class="text-sm font-medium text-gray-500">Registration Number</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ application.registration_number }}</dd>
-                            </div>
-                            <div class="sm:col-span-1">
-                                <dt class="text-sm font-medium text-gray-500">Registration Date</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ application.registration_date }}</dd>
-                            </div>
-                            <!-- Add more business details -->
-                        </dl>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div id="history" class="tab-content hidden">
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Activity History</h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">Complete timeline of application activities.</p>
+                </div>
+                <div class="border-t border-gray-200">
+                    <div class="flow-root">
+                        <ul role="list" class="-mb-8">
+                            {% for activity in activities %}
+                            <li>
+                                <div class="relative pb-8">
+                                    {% if not forloop.last %}
+                                    <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                                    {% endif %}
+                                    <div class="relative flex space-x-3">
+                                        <div>
+                                            <span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white 
+                                                {% if activity.activity_type == 'create' %}bg-green-500
+                                                {% elif activity.activity_type == 'update' %}bg-blue-500
+                                                {% elif activity.activity_type == 'submit' %}bg-indigo-500
+                                                {% elif activity.activity_type == 'approve' %}bg-green-500
+                                                {% elif activity.activity_type == 'reject' %}bg-red-500
+                                                {% else %}bg-gray-500{% endif %}">
+                                                <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    {% if activity.activity_type == 'create' %}
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                                    {% elif activity.activity_type == 'update' %}
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                                    {% elif activity.activity_type == 'submit' %}
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    {% else %}
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    {% endif %}
+                                                </svg>
+                                            </span>
+                                        </div>
+                                        <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                            <div>
+                                                <p class="text-sm text-gray-500">{{ activity.description }}</p>
+                                            </div>
+                                            <div class="text-right text-sm whitespace-nowrap text-gray-500">
+                                                <time datetime="{{ activity.performed_at|date:'c' }}">
+                                                    {{ activity.performed_at|date:"F j, Y H:i" }}
+                                                </time>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            {% empty %}
+                            <li class="px-4 py-5 text-center text-sm text-gray-500">
+                                No activity recorded yet.
+                            </li>
+                            {% endfor %}
+                        </ul>
                     </div>
                 </div>
             </div>
-
-            <!-- Requirements Section -->
-            <div id="requirements" class="hidden space-y-6">
-                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                    <div class="px-4 py-5 sm:px-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">
-                            Required Documents
-                        </h3>
-                    </div>
-                    <div class="border-t border-gray-200">
-                        <ul role="list" class="divide-y divide-gray-200">
-                            {% for requirement in requirements %}
-                            <li class="px-4 py-4 sm:px-6">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0">
-                                            {% if requirement.is_submitted %}
-                                            <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                            </svg>
-                                            {% else %}
-                                            <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"/>
-                                            </svg>
-                            {% endif %}
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm font-medium text-gray-900">
-                                {{ requirement.requirement_name }}
-                            </p>
-                            <p class="text-sm text-gray-500">
-                                {% if requirement.is_submitted %}
-                                    Submitted on {{ requirement.submission_date|date:"M d, Y" }}
-                                {% else %}
-                                    Not yet submitted
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="ml-4 flex-shrink-0">
-                        {% if can_edit %}
-                            {% if requirement.is_submitted %}
-                                <a href="{% url 'applications:view_document' requirement.id %}" class="font-medium text-indigo-600 hover:text-indigo-500">
-                                    View
-                                </a>
-                            {% else %}
-                                <a href="{% url 'applications:upload_requirement' application.id requirement.id %}" class="font-medium text-indigo-600 hover:text-indigo-500">
-                                    Upload
-                                </a>
-                            {% endif %}
-                        {% endif %}
-                    </div>
-                </div>
-            </li>
-            {% endfor %}
-        </ul>
+        </div>
     </div>
 </div>
-</div>
 
-<!-- History Section -->
-<div id="history" class="hidden space-y-6">
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                Application History
-            </h3>
-        </div>
-        <div class="border-t border-gray-200">
-            <div class="flow-root">
-                <ul role="list" class="-mb-8">
-                    {% for activity in activities %}
-                    <li>
-                        <div class="relative pb-8">
-                            {% if not forloop.last %}
-                            <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
-                            {% endif %}
-                            <div class="relative flex space-x-3">
-                                <div>
-                                    <span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white
-                                        {% if activity.activity_type == 'create' %}bg-green-500
-                                        {% elif activity.activity_type == 'update' %}bg-blue-500
-                                        {% elif activity.activity_type == 'submit' %}bg-indigo-500
-                                        {% elif activity.activity_type == 'cancel' %}bg-red-500
-                                        {% else %}bg-gray-500{% endif %}">
-                                        <!-- Icon based on activity type -->
-                                        <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            {% if activity.activity_type == 'create' %}
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                            {% elif activity.activity_type == 'update' %}
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                            {% elif activity.activity_type == 'submit' %}
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                            {% else %}
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                            {% endif %}
+<!-- Upload Modal -->
+<div id="uploadModal" class="fixed inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <form id="uploadForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="requirementId" name="requirement_id">
+                
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                Upload Document
+                            </h3>
+                            <div class="mt-2">
+                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                                    <div class="space-y-1 text-center">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4-4m4-4h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>
-                                    </span>
-                                </div>
-                                <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                                    <div>
-                                        <p class="text-sm text-gray-500">
-                                            {{ activity.description }}
+                                        <div class="flex text-sm text-gray-600">
+                                            <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
+                                                <span>Upload a file</span>
+                                                <input id="file-upload" name="document" type="file" class="sr-only" accept=".pdf,.jpg,.jpeg,.png">
+                                            </label>
+                                            <p class="pl-1">or drag and drop</p>
+                                        </div>
+                                        <p class="text-xs text-gray-500">
+                                            PDF, JPG, PNG up to 10MB
                                         </p>
                                     </div>
-                                    <div class="text-right text-sm whitespace-nowrap text-gray-500">
-                                        <time datetime="{{ activity.performed_at|date:'c' }}">
-                                            {{ activity.performed_at|date:"M d, Y H:i" }}
-                                        </time>
+                                </div>
+                                <div id="file-preview" class="mt-4 hidden">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0h8v12H6V4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span id="file-name" class="ml-2 text-sm text-gray-500"></span>
+                                        </div>
+                                        <button type="button" onclick="removeFile()" class="text-sm text-red-600 hover:text-red-500">
+                                            Remove
+                                        </button>
                                     </div>
+                                </div>
+                                <div class="mt-4">
+                                    <label for="remarks" class="block text-sm font-medium text-gray-700">
+                                        Remarks (Optional)
+                                    </label>
+                                    <textarea id="remarks" name="remarks" rows="3" 
+                                              class="mt-1 block w-full shadow-sm sm:text-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md"></textarea>
                                 </div>
                             </div>
                         </div>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="submit"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Upload
+                    </button>
+                    <button type="button" onclick="hideUploadModal()"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancel
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
-</div>
-
-<!-- Assessment Section -->
-{% if assessment %}
-<div id="assessment" class="hidden space-y-6">
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                Assessment Details
-            </h3>
-        </div>
-        <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
-            <dl class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500">Assessment Date</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ assessment.assessed_date|date:"M d, Y" }}</dd>
-                </div>
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500">Assessment Number</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ assessment.assessment_number }}</dd>
-                </div>
-                <div class="sm:col-span-2">
-                    <dt class="text-sm font-medium text-gray-500">Total Amount Due</dt>
-                    <dd class="mt-1 text-sm text-gray-900">₱ {{ assessment.total_amount|floatformat:2 }}</dd>
-                </div>
-                {% if can_pay %}
-                <div class="sm:col-span-2">
-                    <a href="{% url 'applications:payment' application.id %}" 
-                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Proceed to Payment
-                    </a>
-                </div>
-                {% endif %}
-            </dl>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-</div>
-</div>
 </div>
 
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// Tab Navigation
 document.addEventListener('DOMContentLoaded', function() {
-    // Tab functionality
+    // Initialize tab functionality
     const tabs = document.querySelectorAll('nav a');
-    const tabContents = document.querySelectorAll('[id^="details"], [id^="requirements"], [id^="history"], [id^="assessment"]');
+    const tabContents = document.querySelectorAll('.tab-content');
     
     function switchTab(tabId) {
         // Hide all tab contents
@@ -339,6 +348,156 @@ document.addEventListener('DOMContentLoaded', function() {
     
     window.addEventListener('hashchange', handleHashChange);
     handleHashChange();
+
+    // File Upload Functionality
+    const dropZone = document.querySelector('.border-dashed');
+    const fileInput = document.getElementById('file-upload');
+    
+    // Upload Modal Functions
+    window.showUploadModal = function(requirementId) {
+        document.getElementById('requirementId').value = requirementId;
+        document.getElementById('uploadModal').classList.remove('hidden');
+    }
+
+    window.hideUploadModal = function() {
+        document.getElementById('uploadModal').classList.add('hidden');
+        document.getElementById('uploadForm').reset();
+        document.getElementById('file-preview').classList.add('hidden');
+    }
+
+    window.removeFile = function() {
+        fileInput.value = '';
+        document.getElementById('file-preview').classList.add('hidden');
+    }
+
+    window.viewDocument = function(requirementId) {
+        window.open(`{% url 'applications:view_requirement' application.id '0' %}`.replace('0', requirementId), '_blank');
+    }
+
+    // Drag and Drop Handlers
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        dropZone.classList.add('border-indigo-500');
+    }
+
+    function unhighlight(e) {
+        dropZone.classList.remove('border-indigo-500');
+    }
+
+    // File Drop Handler
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        handleFiles(files);
+    }
+
+    // File Input Change Handler
+    fileInput.addEventListener('change', function(e) {
+        handleFiles(this.files);
+    });
+
+    function handleFiles(files) {
+        if (files.length === 0) return;
+        
+        const file = files[0];
+        if (validateFile(file)) {
+            showFilePreview(file);
+        }
+    }
+
+    function validateFile(file) {
+        // Check file size (10MB limit)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File too large. Maximum size is 10MB.');
+            return false;
+        }
+        
+        // Check file type
+        const validTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+        if (!validTypes.includes(file.type)) {
+            alert('Invalid file type. Only PDF and images are allowed.');
+            return false;
+        }
+        
+        return true;
+    }
+
+    function showFilePreview(file) {
+        document.getElementById('file-name').textContent = file.name;
+        document.getElementById('file-preview').classList.remove('hidden');
+    }
+
+    // Form Submission Handler
+    const uploadForm = document.getElementById('uploadForm');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const requirementId = document.getElementById('requirementId').value;
+            const submitButton = this.querySelector('button[type="submit"]');
+            
+            try {
+                submitButton.disabled = true;
+                submitButton.innerHTML = `
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Uploading...
+                `;
+
+                const response = await fetch(`/applications/${application.id}/requirement/${requirementId}/upload/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    throw new Error(result.error || 'Upload failed');
+                }
+            } catch (error) {
+                alert(error.message || 'An error occurred during upload');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Upload';
+            }
+        });
+    }
+
+    // Auto-hide messages after 5 seconds
+    const messages = document.querySelectorAll('.alert');
+    messages.forEach(message => {
+        setTimeout(() => {
+            message.classList.add('opacity-0');
+            setTimeout(() => message.remove(), 300);
+        }, 5000);
+    });
 });
 </script>
-{% endblock %}    
+{% endblock %}

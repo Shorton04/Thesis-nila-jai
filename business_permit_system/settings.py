@@ -146,3 +146,4 @@ if 'test' in sys.argv:
         'django.contrib.auth.hashers.MD5PasswordHasher',
     ]
     TEST_RUNNER = 'tests.test_settings.TestRunner'
+

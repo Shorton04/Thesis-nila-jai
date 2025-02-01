@@ -12,8 +12,8 @@ class BusinessApplicationForm(forms.ModelForm):
     class Meta:
         model = BusinessApplication
         exclude = ['applicant', 'application_number', 'tracking_number',
-                   'reviewed_by', 'approved_by', 'status', 'created_at',
-                   'updated_at', 'is_active']
+                  'reviewed_by', 'approved_by', 'status', 'created_at',
+                  'updated_at', 'is_active']
         widgets = {
             'registration_date': forms.DateInput(attrs={'type': 'date'}),
             'business_area': forms.NumberInput(attrs={'step': '0.01'}),

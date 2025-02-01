@@ -1,0 +1,370 @@
+{# templates/applications/edit_application.html #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between mb-6">
+        <div class="flex-1 min-w-0">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                Edit Application
+            </h2>
+            <div class="mt-1 text-sm text-gray-500">
+                Application Number: {{ application.application_number }}
+            </div>
+        </div>
+        <div class="mt-4 flex md:mt-0 md:ml-4">
+            <a href="{% url 'applications:application_detail' application.id %}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Back to Details
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="rounded-md {% if message.tags == 'success' %}bg-green-50{% else %}bg-red-50{% endif %} p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    {% if message.tags == 'success' %}
+                    <svg class="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {% else %}
+                    <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {% endif %}
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium {% if message.tags == 'success' %}text-green-800{% else %}text-red-800{% endif %}">
+                        {{ message }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Form Section -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <form method="POST" id="editForm" class="space-y-8 divide-y divide-gray-200">
+            {% csrf_token %}
+
+            <!-- Business Information -->
+            <div class="px-4 py-5 sm:p-6">
+                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div class="sm:col-span-3">
+                        <label for="{{ form.business_type.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Business Type
+                        </label>
+                        <div class="mt-1">
+                            {{ form.business_type }}
+                        </div>
+                        {% if form.business_type.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.business_type.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="{{ form.payment_mode.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Payment Mode
+                        </label>
+                        <div class="mt-1">
+                            {{ form.payment_mode }}
+                        </div>
+                        {% if form.payment_mode.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.payment_mode.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-6">
+                        <label for="{{ form.business_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Business Name
+                        </label>
+                        <div class="mt-1">
+                            {{ form.business_name }}
+                        </div>
+                        {% if form.business_name.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.business_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-6">
+                        <label for="{{ form.trade_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Trade Name/Franchise
+                        </label>
+                        <div class="mt-1">
+                            {{ form.trade_name }}
+                        </div>
+                        {% if form.trade_name.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.trade_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Address -->
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Business Location</h3>
+                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div class="sm:col-span-6">
+                        <label for="{{ form.business_address.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Business Address
+                        </label>
+                        <div class="mt-1">
+                            {{ form.business_address }}
+                        </div>
+                        {% if form.business_address.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.business_address.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="{{ form.postal_code.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Postal Code
+                        </label>
+                        <div class="mt-1">
+                            {{ form.postal_code }}
+                        </div>
+                        {% if form.postal_code.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.postal_code.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="{{ form.telephone.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Telephone
+                        </label>
+                        <div class="mt-1">
+                            {{ form.telephone }}
+                        </div>
+                        {% if form.telephone.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.telephone.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Email
+                        </label>
+                        <div class="mt-1">
+                            {{ form.email }}
+                        </div>
+                        {% if form.email.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Activity -->
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Business Activity</h3>
+                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div class="sm:col-span-6">
+                        <label for="{{ form.line_of_business.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Line of Business
+                        </label>
+                        <div class="mt-1">
+                            {{ form.line_of_business }}
+                        </div>
+                        {% if form.line_of_business.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.line_of_business.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="{{ form.business_area.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Business Area (sqm)
+                        </label>
+                        <div class="mt-1">
+                            {{ form.business_area }}
+                        </div>
+                        {% if form.business_area.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.business_area.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="{{ form.number_of_employees.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Number of Employees
+                        </label>
+                        <div class="mt-1">
+                            {{ form.number_of_employees }}
+                        </div>
+                        {% if form.number_of_employees.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.number_of_employees.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="{{ form.capitalization.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Capitalization
+                        </label>
+                        <div class="mt-1">
+                            {{ form.capitalization }}
+                        </div>
+                        {% if form.capitalization.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.capitalization.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                <button type="submit" name="action" value="save_draft"
+                        class="mr-3 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Save as Draft
+                </button>
+                <button type="submit" name="action" value="submit"
+                        class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Submit Application
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editForm');
+    
+    form.addEventListener('submit', function(e) {
+        const submitButton = e.submitter;
+        const action = submitButton.value;
+        
+        if (action === 'submit') {
+            if (!confirm('Are you sure you want to submit this application? You won\'t be able to make further changes once submitted.')) {
+                e.preventDefault();
+                return;
+            }
+        }
+
+        // Validate required fields
+        const requiredFields = form.querySelectorAll('input[required], select[required], textarea[required]');
+        let isValid = true;
+
+        // Remove existing error messages
+        document.querySelectorAll('.error-message').forEach(error => error.remove());
+        document.querySelectorAll('.border-red-500').forEach(field => {
+            field.classList.remove('border-red-500');
+        });
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.classList.add('border-red-500');
+                
+                // Add error message
+                const errorDiv = document.createElement('p');
+                errorDiv.className = 'mt-2 text-sm text-red-600 error-message';
+                errorDiv.textContent = 'This field is required';
+                field.parentElement.appendChild(errorDiv);
+            }
+        });
+
+        // Number validation for specific fields
+        const numberFields = {
+            'business_area': 'Business Area',
+            'number_of_employees': 'Number of Employees',
+            'capitalization': 'Capitalization'
+        };
+
+        Object.entries(numberFields).forEach(([fieldId, fieldName]) => {
+            const field = document.getElementById(`id_${fieldId}`);
+            if (field && field.value) {
+                const value = parseFloat(field.value);
+                if (isNaN(value) || value <= 0) {
+                    isValid = false;
+                    field.classList.add('border-red-500');
+                    
+                    const errorDiv = document.createElement('p');
+                    errorDiv.className = 'mt-2 text-sm text-red-600 error-message';
+                    errorDiv.textContent = `${fieldName} must be a positive number`;
+                    field.parentElement.appendChild(errorDiv);
+                }
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            // Scroll to first error
+            const firstError = document.querySelector('.border-red-500');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return;
+        }
+
+        // Disable submit button to prevent double submission
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Saving...';
+    });
+
+    // Remove error styling on input
+    document.querySelectorAll('input, select, textarea').forEach(field => {
+        field.addEventListener('input', function() {
+            this.classList.remove('border-red-500');
+            const errorDiv = this.parentElement.querySelector('.error-message');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        });
+    });
+
+    // Format number inputs
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+    numberInputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value) {
+                const value = parseFloat(this.value);
+                if (!isNaN(value)) {
+                    this.value = value.toFixed(2);
+                }
+            }
+        });
+    });
+
+    // Handle back button
+    const backButton = document.querySelector('a[href*="application_detail"]');
+    if (backButton) {
+        backButton.addEventListener('click', function(e) {
+            const formChanged = hasFormChanged();
+            if (formChanged) {
+                if (!confirm('You have unsaved changes. Are you sure you want to leave this page?')) {
+                    e.preventDefault();
+                }
+            }
+        });
+    }
+
+    // Track form changes
+    let initialFormState = getFormState();
+    function getFormState() {
+        const formData = new FormData(form);
+        return Array.from(formData.entries())
+            .map(([key, value]) => `${key}:${value}`)
+            .join('|');
+    }
+
+    function hasFormChanged() {
+        return getFormState() !== initialFormState;
+    }
+
+    // Handle window close/navigation
+    window.addEventListener('beforeunload', function(e) {
+        if (hasFormChanged()) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+});
+</script>
+{% endblock %}

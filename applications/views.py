@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse, HttpResponse
 import mimetypes
 import os
+import logging
 from django.db.models import Q
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -19,31 +20,9 @@ from .forms import (
 )
 import uuid
 
-
 @login_required
 def dashboard(request):
-    """Dashboard view showing application statistics and list."""
-    search_form = ApplicationSearchForm(request.GET)
     applications = BusinessApplication.objects.filter(applicant=request.user)
-
-    if search_form.is_valid():
-        search_field = search_form.cleaned_data.get('search_field')
-        search_query = search_form.cleaned_data.get('search_query')
-        status = search_form.cleaned_data.get('status')
-        date_from = search_form.cleaned_data.get('date_from')
-        date_to = search_form.cleaned_data.get('date_to')
-
-        if search_query:
-            filter_kwargs = {f"{search_field}__icontains": search_query}
-            applications = applications.filter(**filter_kwargs)
-
-        if status:
-            applications = applications.filter(status=status)
-
-        if date_from:
-            applications = applications.filter(created_at__gte=date_from)
-        if date_to:
-            applications = applications.filter(created_at__lte=date_to)
 
     # Get application counts
     application_counts = {
@@ -61,11 +40,12 @@ def dashboard(request):
 
     context = {
         'page_obj': page_obj,
-        'search_form': search_form,
         'application_counts': application_counts,
     }
     return render(request, 'applications/dashboard.html', context)
 
+
+logger = logging.getLogger(__name__)
 
 STEP_TEMPLATES = {
     1: 'applications/steps/basic_information.html',
@@ -94,35 +74,30 @@ def new_application(request):
             request.session.pop('draft_application_id', None)
 
     if request.method == 'POST':
+        print(f"POST data: {request.POST}")
         form = BusinessApplicationForm(
             request.POST,
             instance=draft_application,
             current_step=current_step
         )
-        action = request.POST.get('action', '')
 
-        if action == 'previous':
-            if current_step > 1:
-                request.session['application_step'] = current_step - 1
+        # Get the action from submit_type
+        action = request.POST.get('submit_type')
+        print(f"Action: {action}")
+
+        if action == 'previous' and current_step > 1:
+            request.session['application_step'] = current_step - 1
             return redirect('applications:new_application')
 
         if form.is_valid():
             try:
-                # Save form with required fields
                 application = form.save(commit=False)
                 application.applicant = request.user
                 application.application_type = 'new'
                 application.status = 'draft'
-
-                # Set defaults for non-current step fields if needed
-                if not application.business_area:
-                    application.business_area = 0
-                if not application.number_of_employees:
-                    application.number_of_employees = 0
-                if not application.capitalization:
-                    application.capitalization = 0
-
                 application.save()
+
+                # Store application ID in session
                 request.session['draft_application_id'] = str(application.id)
 
                 if action == 'save_draft':
@@ -133,6 +108,7 @@ def new_application(request):
                     next_step = current_step + 1
                     if next_step <= total_steps:
                         request.session['application_step'] = next_step
+                        messages.success(request, f'Step {current_step} completed.')
                         return redirect('applications:new_application')
                     else:
                         # Final submission
@@ -140,13 +116,13 @@ def new_application(request):
                         application.submission_date = timezone.now()
                         application.save()
 
+                        # Create activity log and requirements
                         ApplicationActivity.objects.create(
                             application=application,
                             activity_type='create',
                             performed_by=request.user,
                             description='Application created and submitted'
                         )
-
                         create_default_requirements(application)
 
                         # Clear session
@@ -160,9 +136,8 @@ def new_application(request):
                 messages.error(request, f'An error occurred: {str(e)}')
                 print(f"Error saving form: {str(e)}")
         else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field}: {error}")
+            print(f"Form errors: {form.errors}")
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = BusinessApplicationForm(
             instance=draft_application,
@@ -353,6 +328,129 @@ def application_detail(request, application_id):
         'can_pay': can_pay,
     }
     return render(request, 'applications/application_detail.html', context)
+
+@login_required
+def requirement_upload(request, application_id, requirement_id):
+    """Handle requirement document upload."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+    application = get_object_or_404(BusinessApplication, id=application_id, applicant=request.user)
+    requirement = get_object_or_404(ApplicationRequirement, id=requirement_id, application=application)
+
+    try:
+        if 'document' not in request.FILES:
+            return JsonResponse({'success': False, 'error': 'No document provided'})
+
+        document = request.FILES['document']
+
+        # Validate file size (10MB limit)
+        if document.size > 10 * 1024 * 1024:
+            return JsonResponse({'success': False, 'error': 'File size must not exceed 10MB'})
+
+        # Validate file type
+        allowed_types = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif']
+        content_type = document.content_type.lower()
+        if content_type not in allowed_types:
+            return JsonResponse({'success': False, 'error': 'Invalid file type. Only PDF and images are allowed.'})
+
+        # Save the document
+        requirement.document = document
+        requirement.remarks = request.POST.get('remarks', '')
+        requirement.is_submitted = True
+        requirement.updated_at = timezone.now()
+        requirement.save()
+
+        # Log the activity
+        ApplicationActivity.objects.create(
+            application=application,
+            activity_type='update',
+            performed_by=request.user,
+            description=f'Document uploaded for {requirement.requirement_name}'
+        )
+
+        return JsonResponse({'success': True})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def view_requirement(request, application_id, requirement_id):
+    """View a requirement document."""
+    application = get_object_or_404(BusinessApplication, id=application_id, applicant=request.user)
+    requirement = get_object_or_404(ApplicationRequirement, id=requirement_id, application=application)
+
+    if not requirement.document:
+        messages.error(request, 'No document available.')
+        return redirect('applications:application_detail', application_id=application.id)
+
+    try:
+        file_path = requirement.document.path
+        content_type, encoding = mimetypes.guess_type(file_path)
+
+        if content_type is None:
+            content_type = 'application/octet-stream'
+
+        with open(file_path, 'rb') as fh:
+            response = HttpResponse(fh.read(), content_type=content_type)
+
+        # Set content-disposition based on file type
+        if content_type.startswith('image/'):
+            # Display images in browser
+            response['Content-Disposition'] = f'inline; filename="{os.path.basename(file_path)}"'
+        else:
+            # Download other files
+            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+
+        return response
+
+    except Exception as e:
+        messages.error(request, f'Error accessing document: {str(e)}')
+        return redirect('applications:application_detail', application_id=application.id)
+
+
+@login_required
+def edit_application(request, application_id):
+    """Handle editing of business permit application."""
+    application = get_object_or_404(
+        BusinessApplication,
+        id=application_id,
+        applicant=request.user,
+        status__in=['draft', 'requires_revision']
+    )
+
+    if request.method == 'POST':
+        form = BusinessApplicationForm(request.POST, instance=application)
+        if form.is_valid():
+            application = form.save(commit=False)
+
+            if 'save_draft' in request.POST:
+                application.status = 'draft'
+                messages.success(request, 'Changes saved as draft.')
+            elif 'submit' in request.POST:
+                application.status = 'submitted'
+                application.submission_date = timezone.now()
+                messages.success(request, 'Application submitted successfully.')
+
+            application.save()
+
+            # Log the activity
+            ApplicationActivity.objects.create(
+                application=application,
+                activity_type='update',
+                performed_by=request.user,
+                description='Application details updated'
+            )
+
+            return redirect('applications:application_detail', application_id=application.id)
+    else:
+        form = BusinessApplicationForm(instance=application)
+
+    context = {
+        'form': form,
+        'application': application,
+    }
+    return render(request, 'applications/edit_application.html', context)
 
 
 @login_required
