@@ -155,36 +155,55 @@ def new_application(request):
 
 @login_required
 def renewal_application(request):
-    """Handle business permit renewal application."""
     if request.method == 'POST':
-        form = RenewalApplicationForm(request.POST)
-        if form.is_valid():
+        form = RenewalApplicationForm(request.POST, request.FILES)
+
+        try:
             application = form.save(commit=False)
             application.applicant = request.user
             application.application_type = 'renewal'
 
-            if request.POST.get('action') == 'save_draft':
-                application.status = 'draft'
-                messages.success(request, 'Renewal application saved as draft.')
-            else:
-                application.status = 'submitted'
+            # Set status based on action
+            action = request.POST.get('action', '')
+            application.status = 'draft' if action == 'save_draft' else 'submitted'
+
+            if application.status == 'submitted':
                 application.submission_date = timezone.now()
-                messages.success(request, 'Renewal application submitted successfully.')
 
             application.save()
+
+            # Handle required documents
+            required_docs = {
+                'business_permit': 'Previous Business Permit',
+                'sales_declaration': 'Gross Sales Declaration',
+                'tax_returns': 'Tax Returns'
+            }
+
+            for key, name in required_docs.items():
+                if key in request.FILES:
+                    requirement = ApplicationRequirement.objects.create(
+                        application=application,
+                        requirement_name=name,
+                        document=request.FILES[key],
+                        is_submitted=True
+                    )
 
             # Create activity log
             ApplicationActivity.objects.create(
                 application=application,
                 activity_type='create',
                 performed_by=request.user,
-                description='Renewal application created'
+                description=f'Renewal application {application.status}'
             )
 
-            # Create renewal-specific requirements
-            create_renewal_requirements(application)
+            success_msg = 'Application saved as draft.' if action == 'save_draft' else 'Renewal application submitted successfully.'
+            messages.success(request, success_msg)
 
             return redirect('applications:application_detail', application.id)
+
+        except Exception as e:
+            print(f"Error in renewal application: {str(e)}")  # For debugging
+            messages.error(request, f'Error processing application: {str(e)}')
     else:
         form = RenewalApplicationForm()
 
@@ -455,44 +474,48 @@ def edit_application(request, application_id):
 
 @login_required
 def upload_requirement(request, application_id, requirement_id):
-    """Handle document upload for application requirements."""
-    application = get_object_or_404(BusinessApplication, id=application_id, applicant=request.user)
-    requirement = get_object_or_404(ApplicationRequirement, id=requirement_id, application=application)
+    """Handle requirement document upload."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
-    if request.method == 'POST':
-        form = RequirementSubmissionForm(request.POST, request.FILES)
-        if form.is_valid():
-            document = request.FILES['document']
+    try:
+        application = get_object_or_404(BusinessApplication, id=application_id, applicant=request.user)
+        requirement = get_object_or_404(ApplicationRequirement, id=requirement_id, application=application)
 
-            # Save the document and update requirement status
-            requirement.document = document
-            requirement.is_submitted = True
-            requirement.remarks = form.cleaned_data.get('remarks', '')
-            requirement.save()
+        if 'document' not in request.FILES:
+            return JsonResponse({'success': False, 'error': 'No document provided'})
 
-            ApplicationActivity.objects.create(
-                application=application,
-                activity_type='update',
-                performed_by=request.user,
-                description=f'Document uploaded for {requirement.requirement_name}'
-            )
+        document = request.FILES['document']
 
-            messages.success(request, 'Document uploaded successfully.')
-            return JsonResponse({'success': True})
-        else:
-            return JsonResponse({
-                'success': False,
-                'error': 'Invalid form submission',
-                'errors': form.errors
-            })
+        # Validate file size (10MB limit)
+        if document.size > 10 * 1024 * 1024:
+            return JsonResponse({'success': False, 'error': 'File size must not exceed 10MB'})
 
-    form = RequirementSubmissionForm(initial={'requirement_id': requirement.id})
-    context = {
-        'form': form,
-        'application': application,
-        'requirement': requirement,
-    }
-    return render(request, 'applications/upload_requirement.html', context)
+        # Validate file type
+        allowed_types = ['application/pdf', 'image/jpeg', 'image/png']
+        content_type = document.content_type.lower()
+        if content_type not in allowed_types:
+            return JsonResponse({'success': False, 'error': 'Invalid file type. Only PDF and images are allowed.'})
+
+        # Save the document
+        requirement.document = document
+        requirement.remarks = request.POST.get('remarks', '')
+        requirement.is_submitted = True
+        requirement.updated_at = timezone.now()
+        requirement.save()
+
+        # Log the activity
+        ApplicationActivity.objects.create(
+            application=application,
+            activity_type='update',
+            performed_by=request.user,
+            description=f'Document uploaded for {requirement.requirement_name}'
+        )
+
+        return JsonResponse({'success': True})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 
 # Helper functions

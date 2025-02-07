@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from django.conf.urls.static import static
+from django.conf import settings
 
 app_name = 'applications'
 
@@ -11,9 +13,9 @@ urlpatterns = [
     path('closure/', views.closure_application, name='closure_application'),
     path('<uuid:application_id>/', views.application_detail, name='application_detail'),
     path('<uuid:application_id>/requirement/<int:requirement_id>/upload/',
-         views.requirement_upload, name='requirement_upload'),
+         views.upload_requirement, name='requirement_upload'),
     path('<uuid:application_id>/requirement/<int:requirement_id>/view/',
          views.view_requirement, name='view_requirement'),
     path('<uuid:application_id>/edit_application/', views.edit_application, name='edit_application'),
     path('<uuid:application_id>/history/', views.application_history, name='application_history'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

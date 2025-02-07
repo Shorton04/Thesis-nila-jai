@@ -136,10 +136,9 @@ class BusinessApplication(models.Model):
 
 
 class ApplicationRequirement(models.Model):
-    """Model for managing application requirements and their status."""
-
     application = models.ForeignKey(BusinessApplication, on_delete=models.CASCADE)
     requirement_name = models.CharField(max_length=255)
+    document = models.FileField(upload_to='requirements/%Y/%m/%d/', null=True, blank=True)
     is_required = models.BooleanField(default=True)
     is_submitted = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
@@ -153,9 +152,6 @@ class ApplicationRequirement(models.Model):
     remarks = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.requirement_name} - {self.application.application_number}"
 
 
 class ApplicationRevision(models.Model):

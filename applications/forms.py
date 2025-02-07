@@ -117,21 +117,31 @@ class BusinessApplicationForm(forms.ModelForm):
         return instance
 
 
-class RenewalApplicationForm(BusinessApplicationForm):
-    """Specific form for renewal applications with additional validation."""
+class RenewalApplicationForm(forms.ModelForm):
+    registration_date = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    )
 
-    previous_permit_number = forms.CharField(max_length=20)
-    previous_permit_expiry = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
-
-    class Meta(BusinessApplicationForm.Meta):
-        fields = BusinessApplicationForm.Meta.exclude + ['previous_permit_number', 'previous_permit_expiry']
-
-    def clean_previous_permit_expiry(self):
-        expiry_date = self.cleaned_data['previous_permit_expiry']
-        if expiry_date > timezone.now().date():
-            raise ValidationError("Previous permit has not expired yet.")
-        return expiry_date
-
+    class Meta:
+        model = BusinessApplication
+        fields = [
+            'payment_mode', 'business_name', 'business_address',
+            'postal_code', 'telephone', 'email', 'registration_date',
+            'registration_number', 'gross_sales_receipts',
+            'gross_essential', 'gross_non_essential'
+        ]
+        widgets = {
+            'payment_mode': forms.Select(attrs={'class': 'form-control'}),
+            'business_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'business_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'postal_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'telephone': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'registration_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'gross_sales_receipts': forms.NumberInput(attrs={'class': 'form-control', 'readonly': True}),
+            'gross_essential': forms.NumberInput(attrs={'class': 'form-control'}),
+            'gross_non_essential': forms.NumberInput(attrs={'class': 'form-control'})
+        }
 
 class AmendmentApplicationForm(BusinessApplicationForm):
     """Specific form for amendment applications."""

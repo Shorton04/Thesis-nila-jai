@@ -1,0 +1,62 @@
+{# templates/reviewer/application_list.html #}
+{% extends 'reviewer/base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Applications</h2>
+        <form method="get" class="flex gap-2">
+            <input type="text" name="search" value="{{ search }}" 
+                   placeholder="Search applications..." class="form-control">
+            <select name="status" class="form-control">
+                <option value="">All Status</option>
+                <option value="submitted" {% if current_status == 'submitted' %}selected{% endif %}>Submitted</option>
+                <option value="under_review" {% if current_status == 'under_review' %}selected{% endif %}>Under Review</option>
+                <option value="requires_revision" {% if current_status == 'requires_revision' %}selected{% endif %}>Requires Revision</option>
+            </select>
+            <select name="type" class="form-control">
+                <option value="">All Types</option>
+                <option value="new" {% if current_type == 'new' %}selected{% endif %}>New Permit</option>
+                <option value="renewal" {% if current_type == 'renewal' %}selected{% endif %}>Renewal</option>
+                <option value="amendment" {% if current_type == 'amendment' %}selected{% endif %}>Amendment</option>
+                <option value="closure" {% if current_type == 'closure' %}selected{% endif %}>Closure</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </form>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Application #</th>
+                <th>Business Name</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td>{{ app.application_number }}</td>
+                <td>{{ app.business_name }}</td>
+                <td>{{ app.get_application_type_display }}</td>
+                <td>
+                    <span class="status-badge status-{{ app.status }}">
+                        {{ app.get_status_display }}
+                    </span>
+                </td>
+                <td>{{ app.submission_date|date:"M d, Y" }}</td>
+                <td>
+                    <a href="{% url 'reviewer:application_detail' app.id %}" 
+                       class="btn btn-primary btn-sm">Review</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% include "reviewer/components/pagination.html" with page_obj=applications %}
+</div>
+{% endblock %}

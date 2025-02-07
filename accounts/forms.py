@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from .models import UserProfile
 from django.core.exceptions import ValidationError
 import re
-
+from .models import CustomUser
 User = get_user_model()
 
 
@@ -141,3 +141,36 @@ class LoginForm(forms.Form):
         })
     )
     remember_me = forms.BooleanField(required=False)
+
+class AdminUserCreationForm(UserCreationForm):
+    class Meta:
+        model = CustomUser
+        fields = ('email', 'first_name', 'last_name', 'phone_number',
+                 'company_name', 'position', 'business_type', 'is_active',
+                 'is_email_verified')
+        widgets = {
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'company_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'position': forms.TextInput(attrs={'class': 'form-control'}),
+            'business_type': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+class AdminUserEditForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ('email', 'first_name', 'last_name', 'phone_number',
+                 'company_name', 'position', 'business_type', 'is_active',
+                 'is_email_verified')
+        widgets = {
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'company_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'position': forms.TextInput(attrs={'class': 'form-control'}),
+            'business_type': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+

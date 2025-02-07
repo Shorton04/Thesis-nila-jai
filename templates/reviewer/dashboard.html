@@ -1,0 +1,68 @@
+{# templates/reviewer/dashboard.html #}
+{% extends 'reviewer/base.html' %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-2">Pending Applications</h3>
+        <p class="text-3xl font-bold">{{ pending_applications }}</p>
+    </div>
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-2">Under Review</h3>
+        <p class="text-3xl font-bold">{{ under_review }}</p>
+    </div>
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-2">Requires Revision</h3>
+        <p class="text-3xl font-bold">{{ requires_revision }}</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card">
+        <h3 class="text-xl font-semibold mb-4">Recent Applications</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Application #</th>
+                    <th>Business Name</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in recent_applications %}
+                <tr>
+                    <td>{{ app.application_number }}</td>
+                    <td>{{ app.business_name }}</td>
+                    <td>{{ app.get_application_type_display }}</td>
+                    <td>
+                        <span class="status-badge status-{{ app.status }}">
+                            {{ app.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'reviewer:application_detail' app.id %}" 
+                           class="btn btn-primary btn-sm">Review</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h3 class="text-xl font-semibold mb-4">Recent Activities</h3>
+        <div class="space-y-4">
+            {% for activity in recent_activities %}
+            <div class="border-b pb-4">
+                <p class="font-medium">{{ activity.description }}</p>
+                <p class="text-sm text-gray-600">
+                    {{ activity.performed_at|date:"M d, Y H:i" }} by {{ activity.performed_by.get_full_name }}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

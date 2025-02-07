@@ -1,0 +1,29 @@
+{# templates/admin/accounts/user_edit.html #}
+{% extends 'admin/base.html' %}
+
+{% block content %}
+<div class="card">
+    <h2 class="text-2xl font-bold mb-6">Edit User</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        {% for field in form %}
+        <div class="mb-4">
+            <label class="block text-gray-700 font-medium mb-2">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ field.errors.0 }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="flex justify-end gap-2">
+            <a href="{% url 'accounts:admin_user_detail' form.instance.id %}" class="btn btn-secondary">
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{# templates/admin/accounts/login_history.html #}
+{% extends 'admin/base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Login History</h2>
+        <form method="get" class="flex gap-2">
+            <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
+            <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
+            <select name="status" class="form-control">
+                <option value="">All</option>
+                <option value="success" {% if status == 'success' %}selected{% endif %}>Successful</option>
+                <option value="failure" {% if status == 'failure' %}selected{% endif %}>Failed</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </form>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date/Time</th>
+                <th>User</th>
+                <th>IP Address</th>
+                <th>User Agent</th>
+                <th>Status</th>
+                <th>Failure Reason</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in history %}
+            <tr>
+                <td>{{ log.login_datetime|date:"M d, Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'accounts:admin_user_detail' log.user.id %}" class="text-primary hover:underline">
+                        {{ log.user.email }}
+                    </a>
+                </td>
+                <td>{{ log.ip_address }}</td>
+                <td class="text-sm">{{ log.user_agent }}</td>
+                <td>
+                    {% if log.is_successful %}
+                        <span class="text-success">Success</span>
+                    {% else %}
+                        <span class="text-danger">Failed</span>
+                    {% endif %}
+                </td>
+                <td>{{ log.failure_reason|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% include "admin/accounts/components/pagination.html" with page_obj=history %}
+</div>
+{% endblock %}

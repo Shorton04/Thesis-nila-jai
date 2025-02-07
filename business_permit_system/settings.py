@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'applications',
     'documents',
     'notifications',
+    'reviewer',
 ]
 
 MIDDLEWARE = [
