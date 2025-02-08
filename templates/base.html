@@ -118,6 +118,16 @@
                     <a href="{% url 'applications:dashboard' %}" class="nav-link text-gray-100 hover:text-white px-3 py-2 text-sm font-medium">
                         <i class="fas fa-home mr-2"></i>Home
                     </a>
+                    {% if user.is_staff and user.groups.all %}
+    {% for group in user.groups.all %}
+        {% if group.name == 'Reviewers' %}
+        <div class="reviewer-nav">
+            <a href="{% url 'reviewer:dashboard' %}">Reviewer Dashboard</a>
+            <a href="{% url 'reviewer:application_list' %}">Review Applications</a>
+        </div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
                     <a href="{% url 'applications:new_application' %}" class="nav-link text-gray-100 hover:text-white px-3 py-2 text-sm font-medium">
                         <i class="fas fa-file-alt mr-2"></i>New Application
                     </a>

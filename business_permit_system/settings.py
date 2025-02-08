@@ -140,6 +140,9 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 # Add this to your settings.py if not already present
 MAX_LOGIN_ATTEMPTS = 3  # or whatever number you prefer
 
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = 'reviewer:dashboard'  # Add this
+
 if 'test' in sys.argv:
     EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'test_media')

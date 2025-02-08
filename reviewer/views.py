@@ -1,6 +1,9 @@
 # reviewer/views.py
+from datetime import timezone
+
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -15,7 +18,8 @@ def is_reviewer(user):
     return user.is_staff and user.groups.filter(name='Reviewers').exists()
 
 
-@user_passes_test(is_reviewer)
+@login_required
+@user_passes_test(is_reviewer, login_url='accounts:login')
 def dashboard(request):
     pending_applications = BusinessApplication.objects.filter(status='submitted').count()
     under_review = BusinessApplication.objects.filter(status='under_review').count()
