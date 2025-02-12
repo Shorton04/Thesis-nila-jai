@@ -4,297 +4,175 @@
 
 {% block content %}
 <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <!-- Header -->
-    <div class="md:flex md:items-center md:justify-between mb-6">
-        <div class="flex-1 min-w-0">
-            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-                Required Documents
-            </h2>
-            <div class="mt-1 text-sm text-gray-500">
-                Upload or take a picture of your required documents for business permit {{ application.application_number }}
-            </div>
+    <!-- Progress Overview -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Requirements Progress</h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                Upload all required documents to complete your application
+            </p>
         </div>
-        <div class="mt-4 flex md:mt-0 md:ml-4">
-            <a href="{% url 'applications:application_detail' application.id %}" 
-               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Back to Application
-            </a>
-        </div>
-    </div>
-
-    <!-- Document Guidelines -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
-        <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                Document Guidelines
-            </h3>
-            <div class="mt-2 max-w-xl text-sm text-gray-500">
-                <ul class="list-disc pl-5 space-y-1">
-                    <li>Accepted file formats: PDF, JPG, JPEG, PNG</li>
-                    <li>Maximum file size: 10MB</li>
-                    <li>Documents must be clear and legible</li>
-                    <li>All pages must be included in a single file</li>
-                    <li>Image resolution should be at least 300 DPI</li>
-                </ul>
+        <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+            <div class="relative pt-1">
+                <div class="flex mb-2 items-center justify-between">
+                    <div>
+                        <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-200">
+                            Progress
+                        </span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-semibold inline-block text-indigo-600">
+                            {{ completion_percentage|floatformat:0 }}%
+                        </span>
+                    </div>
+                </div>
+                <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-200">
+                    <div style="width:{{ completion_percentage }}%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Requirements List -->
     <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <ul role="list" class="divide-y divide-gray-200">
-            {% for requirement in requirements %}
-            <li class="p-4 hover:bg-gray-50">
-                <div class="flex items-center justify-between">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center">
-                            {% if requirement.is_submitted %}
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Required Documents</h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">Supported formats: PDF, JPG, PNG (Max size: 10MB)</p>
+        </div>
+        <div class="border-t border-gray-200">
+            <ul role="list" class="divide-y divide-gray-200">
+                {% for requirement in requirements %}
+                <li class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-start">
                             <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            {% endif %}
-                            <div class="ml-4">
-                                <h4 class="text-lg font-medium text-gray-900">{{ requirement.requirement_name }}</h4>
                                 {% if requirement.is_submitted %}
-                                <p class="mt-1 text-sm text-gray-500">
-                                    Submitted on {{ requirement.updated_at|date:"F d, Y" }}
+                                <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                {% else %}
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3 3m0 0l-3-3m3 3V8"/>
+                                </svg>
+                                {% endif %}
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-900">
+                                    {{ requirement.requirement_name }}
+                                    {% if requirement.is_required %}
+                                    <span class="text-red-500">*</span>
+                                    {% endif %}
                                 </p>
+                                {% if requirement.remarks %}
+                                <p class="mt-1 text-sm text-gray-500">{{ requirement.remarks }}</p>
                                 {% endif %}
                             </div>
                         </div>
-                    </div>
-                    <div class="ml-4 flex-shrink-0">
-                        {% if requirement.is_submitted %}
+                        <div class="ml-4 flex-shrink-0">
+                            {% if requirement.is_submitted %}
                             <div class="flex space-x-2">
-                                <button type="button" onclick="viewDocument('{{ requirement.id }}')"
-                                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <a href="{% url 'applications:view_requirement' application.id requirement.id %}" 
+                                   class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
                                     View
-                                </button>
-                                <button type="button" onclick="replaceDocument('{{ requirement.id }}')"
-                                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                </a>
+                                {% if can_edit %}
+                                <button type="button"
+                                        onclick="openUploadModal('{{ requirement.id }}')"
+                                        class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                                     Replace
                                 </button>
+                                {% endif %}
                             </div>
-                        {% else %}
-                            <button type="button" onclick="showUploadModal('{{ requirement.id }}')"
-                                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                Upload Document
+                            {% else %}
+                            <button type="button"
+                                    onclick="openUploadModal('{{ requirement.id }}')"
+                                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                                Upload
                             </button>
-                        {% endif %}
-                    </div>
-                </div>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-
-    <!-- Upload Modal -->
-    <div id="uploadModal" class="fixed inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <!-- Background overlay -->
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-
-            <!-- Modal panel -->
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <form id="uploadForm" method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <input type="hidden" id="requirementId" name="requirement_id">
-                    
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                    Upload Document
-                                </h3>
-                                <div class="mt-4">
-                                    <!-- Upload Area -->
-                                    <div id="uploadArea" class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                                        <div class="space-y-1 text-center">
-                                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4-4m4-4h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                            <div class="flex text-sm text-gray-600">
-                                                <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
-                                                    <span>Upload a file</span>
-                                                    <input id="file-upload" name="document" type="file" class="sr-only" accept="image/*,application/pdf">
-                                                </label>
-                                                <p class="pl-1">or drag and drop</p>
-                                            </div>
-                                            <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Camera Capture Area -->
-                                    <div class="mt-4">
-                                        <button type="button" onclick="toggleCamera()" 
-                                                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                            <svg class="mr-2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                            </svg>
-                                            Take Picture
-                                        </button>
-                                        <div id="cameraArea" class="mt-4 hidden">
-                                            <video id="camera" autoplay playsinline class="w-full rounded-lg"></video>
-                                            <canvas id="canvas" class="hidden"></canvas>
-                                            <button type="button" onclick="capturePhoto()" 
-                                                    class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                                Capture
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- Preview Area -->
-                                    <div id="previewArea" class="mt-4 hidden">
-                                        <img id="preview" class="max-h-48 rounded mx-auto">
-                                        <button type="button" onclick="removePreview()" 
-                                                class="mt-2 inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                            Remove
-                                        </button>
-                                    </div>
-
-                                    <!-- Remarks -->
-                                    <div class="mt-4">
-                                        <label for="remarks" class="block text-sm font-medium text-gray-700">
-                                            Remarks (Optional)
-                                        </label>
-                                        <textarea id="remarks" name="remarks" rows="3" 
-                                                  class="mt-1 block w-full shadow-sm sm:text-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md"></textarea>
-                                    </div>
-                                </div>
-                            </div>
+                            {% endif %}
                         </div>
                     </div>
-
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-                            Upload
-                        </button>
-                        <button type="button" onclick="hideUploadModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
+                </li>
+                {% endfor %}
+            </ul>
         </div>
     </div>
-<!-- Document Preview Modal -->
-<div id="previewModal" class="fixed inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <!-- Background overlay -->
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+</div>
 
-        <!-- Modal panel -->
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+<!-- Upload Modal -->
+<div id="uploadModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <form id="uploadForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="requirementId" name="requirement_id">
+                
                 <div class="sm:flex sm:items-start">
                     <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="preview-modal-title">
-                            Document Preview
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            Upload Document
                         </h3>
-                        <div class="mt-4">
-                            <div id="documentPreviewArea" class="relative w-full" style="min-height: 400px;">
-                                <!-- Preview content will be loaded here -->
+                        <div class="mt-2">
+                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                                <div class="space-y-1 text-center">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <div class="flex text-sm text-gray-600">
+                                        <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500">
+                                            <span>Upload a file</span>
+                                            <input id="file-upload" name="document" type="file" class="sr-only" accept=".pdf,.jpg,.jpeg,.png">
+                                        </label>
+                                        <p class="pl-1">or drag and drop</p>
+                                    </div>
+                                    <p class="text-xs text-gray-500">
+                                        PDF, JPG, PNG up to 10MB
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label for="remarks" class="block text-sm font-medium text-gray-700">
+                                    Remarks (optional)
+                                </label>
+                                <textarea id="remarks" name="remarks" rows="3" class="mt-1 block w-full shadow-sm sm:text-sm focus:ring-indigo-500 focus:border-indigo-500 border border-gray-300 rounded-md"></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" onclick="window.open(currentPreviewUrl, '_blank')" 
-                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-                    Open in New Tab
-                </button>
-                <button type="button" onclick="hidePreviewModal()"
-                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                    Close
-                </button>
-            </div>
+                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Upload
+                    </button>
+                    <button type="button" onclick="closeUploadModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+                        Cancel
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
-</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let stream = null;
-let uploadedFile = null;
+let currentRequirementId = null;
 
-// Modal Functions
-function showUploadModal(requirementId) {
+function openUploadModal(requirementId) {
+    currentRequirementId = requirementId;
     document.getElementById('requirementId').value = requirementId;
     document.getElementById('uploadModal').classList.remove('hidden');
 }
 
-function hideUploadModal() {
+function closeUploadModal() {
     document.getElementById('uploadModal').classList.add('hidden');
-    stopCamera();
-    resetForm();
+    document.getElementById('uploadForm').reset();
 }
 
-// Camera Functions
-async function startCamera() {
-    try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                facingMode: 'environment',
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
-            } 
-        });
-        const video = document.getElementById('camera');
-        video.srcObject = stream;
-        document.getElementById('cameraArea').classList.remove('hidden');
-    } catch (err) {
-        console.error('Error accessing camera:', err);
-        alert('Could not access camera. Please ensure you have granted camera permissions.');
-    }
-}
-
-function stopCamera() {
-    if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        stream = null;
-        document.getElementById('cameraArea').classList.add('hidden');
-    }
-}
-
-function toggleCamera() {
-    const cameraArea = document.getElementById('cameraArea');
-    if (cameraArea.classList.contains('hidden')) {
-        startCamera();
-    } else {
-        stopCamera();
-    }
-}
-
-async function capturePhoto() {
-    const video = document.getElementById('camera');
-    const canvas = document.getElementById('canvas');
-    const preview = document.getElementById('preview');
-    
-    // Set canvas size to match video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    // Draw video frame to canvas
-    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // Convert canvas to file
-    canvas.toBlob(async (blob) => {
-        uploadedFile = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
-        preview.src = URL.createObjectURL(blob);
-        document.getElementById('previewArea').classList.remove('hidden');
-        stopCamera();
-    }, 'image/jpeg', 0.8);
-}
-
-// File Upload Handling
-const dropZone = document.getElementById('uploadArea');
+// Handle drag and drop
+const dropZone = document.querySelector('.border-dashed');
 const fileInput = document.getElementById('file-upload');
 
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -315,183 +193,55 @@ function preventDefaults(e) {
 });
 
 function highlight(e) {
-    dropZone.classList.add('border-indigo-500', 'border-2');
+    dropZone.classList.add('border-indigo-500');
 }
 
 function unhighlight(e) {
-    dropZone.classList.remove('border-indigo-500', 'border-2');
+    dropZone.classList.remove('border-indigo-500');
 }
 
 dropZone.addEventListener('drop', handleDrop, false);
 
 function handleDrop(e) {
     const dt = e.dataTransfer;
-    uploadedFile = dt.files[0];
-    handleFiles(dt.files);
+    const files = dt.files;
+    fileInput.files = files;
 }
 
-fileInput.addEventListener('change', function(e) {
-    uploadedFile = e.target.files[0];
-    handleFiles(e.target.files);
-});
-
-function handleFiles(files) {
-    if (files.length === 0) return;
-    
-    const file = files[0];
-    validateAndPreviewFile(file);
-}
-
-function validateAndPreviewFile(file) {
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
-    if (!validTypes.includes(file.type)) {
-        alert('Invalid file type. Please upload a PDF or image file.');
-        return;
-    }
-
-    // Validate file size (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-        alert('File is too large. Maximum size is 10MB.');
-        return;
-    }
-
-    // Show preview
-    const preview = document.getElementById('preview');
-    if (file.type.startsWith('image/')) {
-        preview.src = URL.createObjectURL(file);
-        document.getElementById('previewArea').classList.remove('hidden');
-    } else {
-        // For PDFs, show an icon instead
-        preview.src = '/static/images/pdf-icon.png';
-        document.getElementById('previewArea').classList.remove('hidden');
-    }
-}
-
-function removePreview() {
-    document.getElementById('previewArea').classList.add('hidden');
-    document.getElementById('preview').src = '';
-    uploadedFile = null;
-    fileInput.value = '';
-}
-
-function resetForm() {
-    removePreview();
-    stopCamera();
-    document.getElementById('remarks').value = '';
-}
-
-// Form Submission
+// Handle form submission
 document.getElementById('uploadForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-
-    if (!uploadedFile) {
-        alert('Please select a file or take a picture first.');
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('requirement_id', document.getElementById('requirementId').value);
-    formData.append('document', uploadedFile);
-    formData.append('remarks', document.getElementById('remarks').value);
-    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-
+    
+    const formData = new FormData(this);
+    
     try {
-        const submitButton = e.target.querySelector('button[type="submit"]');
-        const originalText = submitButton.innerHTML;
-        submitButton.disabled = true;
-        submitButton.innerHTML = `
-            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Uploading...
-        `;
-
-        const response = await fetch('{% url "applications:upload_requirement" application.id "0" %}'.replace('0', document.getElementById('requirementId').value), {
+        const response = await fetch(`/applications/${currentRequirementId}/upload/`, {
             method: 'POST',
             body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
         });
-
-        const result = await response.json();
-
-        if (result.success) {
-            location.reload();
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Reload the page to show updated status
+            window.location.reload();
         } else {
-            alert(result.error || 'Upload failed. Please try again.');
-            submitButton.disabled = false;
-            submitButton.innerHTML = originalText;
+            alert(data.error || 'Upload failed. Please try again.');
         }
     } catch (error) {
-        console.error('Upload error:', error);
-        alert('An error occurred during upload. Please try again.');
+        alert('An error occurred. Please try again.');
     }
 });
 
-// Document Preview
-function viewDocument(requirementId) {
-    window.open(`{% url 'applications:view_requirement' application.id '0' %}`.replace('0', requirementId), '_blank');
-}
-
-function replaceDocument(requirementId) {
-    showUploadModal(requirementId);
-}
-
-// Add these functions to your existing JavaScript
-let currentPreviewUrl = '';
-
-function viewDocument(requirementId) {
-    const previewUrl = `{% url 'applications:view_requirement' application.id '0' %}`.replace('0', requirementId);
-    currentPreviewUrl = previewUrl;
-    
-    // Check if it's an image by file extension
-    fetch(previewUrl, { method: 'HEAD' })
-        .then(response => {
-            const contentType = response.headers.get('content-type');
-            const previewArea = document.getElementById('documentPreviewArea');
-            
-            if (contentType && contentType.startsWith('image/')) {
-                // Display image preview
-                previewArea.innerHTML = `<img src="${previewUrl}" class="max-w-full h-auto mx-auto" alt="Document Preview">`;
-            } else {
-                // Show PDF or file icon with download link
-                previewArea.innerHTML = `
-                    <div class="text-center p-8">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                        </svg>
-                        <p class="mt-4 text-sm text-gray-600">
-                            This document cannot be previewed. Click "Open in New Tab" to view or download.
-                        </p>
-                    </div>
-                `;
-            }
-            
-            document.getElementById('previewModal').classList.remove('hidden');
-        })
-        .catch(error => {
-            console.error('Error checking document type:', error);
-            alert('Error previewing document. Please try again.');
-        });
-}
-
-function hidePreviewModal() {
-    document.getElementById('previewModal').classList.add('hidden');
-    document.getElementById('documentPreviewArea').innerHTML = '';
-    currentPreviewUrl = '';
-}
-
-// Close modal when clicking outside
-document.getElementById('previewModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        hidePreviewModal();
-    }
-});
-
-// Close modal with escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && !document.getElementById('previewModal').classList.contains('hidden')) {
-        hidePreviewModal();
+// Show file name when selected
+fileInput.addEventListener('change', function(e) {
+    const fileName = e.target.files[0]?.name;
+    if (fileName) {
+        const fileNameDisplay = dropZone.querySelector('p');
+        fileNameDisplay.textContent = fileName;
     }
 });
 </script>

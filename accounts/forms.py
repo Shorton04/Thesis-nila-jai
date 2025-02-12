@@ -18,8 +18,8 @@ class CustomUserCreationForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('email', 'username', 'phone_number', 'company_name',
-                  'position', 'business_type', 'password1', 'password2')
+        fields = ('email', 'phone_number', 'company_name', 'position', 'business_type', 'password1', 'password2')
+
 
     def clean_phone_number(self):
         phone_number = self.cleaned_data.get('phone_number')
@@ -40,6 +40,7 @@ class CustomUserCreationForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
+        user.username = self.cleaned_data['email']  # Set username to email
         user.phone_number = self.cleaned_data['phone_number']
         user.company_name = self.cleaned_data['company_name']
         user.position = self.cleaned_data['position']
@@ -52,22 +53,28 @@ class CustomUserCreationForm(UserCreationForm):
         return user
 
 
-class CustomUserChangeForm(UserChangeForm):
+class CustomUserChangeForm(forms.ModelForm):
     class Meta:
-        model = User
-        fields = ('email', 'phone_number', 'company_name', 'position', 'business_type')
-
+        model = CustomUser
+        fields = ('company_name', 'position', 'business_type', 'phone_number')
+        widgets = {
+            'company_name': forms.TextInput(attrs={'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'}),
+            'position': forms.TextInput(attrs={'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'}),
+            'business_type': forms.TextInput(attrs={'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'}),
+            'phone_number': forms.TextInput(attrs={'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'}),
+        }
 
 class UserProfileForm(forms.ModelForm):
-    date_of_birth = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date'}),
-        required=False
-    )
-
     class Meta:
         model = UserProfile
-        fields = ('profile_picture', 'address', 'city', 'state',
-                  'postal_code', 'country', 'date_of_birth')
+        fields = ('profile_picture', 'address', 'city', 'state', 'postal_code', 'country')
+        widgets = {
+            'address': forms.TextInput(attrs={'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'}),
+            'city': forms.TextInput(attrs={'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'}),
+            'state': forms.TextInput(attrs={'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'}),
+            'postal_code': forms.TextInput(attrs={'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'}),
+            'country': forms.TextInput(attrs={'class': 'mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md'}),
+        }
 
     def clean_profile_picture(self):
         profile_picture = self.cleaned_data.get('profile_picture')

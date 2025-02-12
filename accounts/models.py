@@ -5,6 +5,8 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 import uuid
 
+USERNAME_FIELD = 'email'
+REQUIRED_FIELDS = ['username']
 
 class CustomUser(AbstractUser):
     email = models.EmailField(_('email address'), unique=True)

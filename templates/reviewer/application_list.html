@@ -1,62 +1,178 @@
-{# templates/reviewer/application_list.html #}
 {% extends 'reviewer/base.html' %}
 
 {% block content %}
 <div class="card">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold">Applications</h2>
-        <form method="get" class="flex gap-2">
-            <input type="text" name="search" value="{{ search }}" 
-                   placeholder="Search applications..." class="form-control">
-            <select name="status" class="form-control">
+    <div class="card-header mb-6">
+        <h2 class="card-title">Applications</h2>
+        <form method="get" class="flex flex-wrap gap-3">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" 
+                       name="search" 
+                       value="{{ search }}" 
+                       placeholder="Search applications..." 
+                       class="form-control pl-10">
+            </div>
+
+            <select name="status" class="form-control min-w-[150px]">
                 <option value="">All Status</option>
-                <option value="submitted" {% if current_status == 'submitted' %}selected{% endif %}>Submitted</option>
-                <option value="under_review" {% if current_status == 'under_review' %}selected{% endif %}>Under Review</option>
-                <option value="requires_revision" {% if current_status == 'requires_revision' %}selected{% endif %}>Requires Revision</option>
+                <option value="submitted" {% if current_status == 'submitted' %}selected{% endif %}>
+                    Submitted
+                </option>
+                <option value="under_review" {% if current_status == 'under_review' %}selected{% endif %}>
+                    Under Review
+                </option>
+                <option value="requires_revision" {% if current_status == 'requires_revision' %}selected{% endif %}>
+                    Requires Revision
+                </option>
+                <option value="approved" {% if current_status == 'approved' %}selected{% endif %}>
+                    Approved
+                </option>
+                <option value="rejected" {% if current_status == 'rejected' %}selected{% endif %}>
+                    Rejected
+                </option>
             </select>
-            <select name="type" class="form-control">
+
+            <select name="type" class="form-control min-w-[150px]">
                 <option value="">All Types</option>
-                <option value="new" {% if current_type == 'new' %}selected{% endif %}>New Permit</option>
-                <option value="renewal" {% if current_type == 'renewal' %}selected{% endif %}>Renewal</option>
-                <option value="amendment" {% if current_type == 'amendment' %}selected{% endif %}>Amendment</option>
-                <option value="closure" {% if current_type == 'closure' %}selected{% endif %}>Closure</option>
+                <option value="new" {% if current_type == 'new' %}selected{% endif %}>
+                    New Permit
+                </option>
+                <option value="renewal" {% if current_type == 'renewal' %}selected{% endif %}>
+                    Renewal
+                </option>
+                <option value="amendment" {% if current_type == 'amendment' %}selected{% endif %}>
+                    Amendment
+                </option>
+                <option value="closure" {% if current_type == 'closure' %}selected{% endif %}>
+                    Closure
+                </option>
             </select>
-            <button type="submit" class="btn btn-primary">Filter</button>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter"></i>
+                Apply Filters
+            </button>
         </form>
     </div>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Application #</th>
-                <th>Business Name</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Submitted</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for app in applications %}
-            <tr>
-                <td>{{ app.application_number }}</td>
-                <td>{{ app.business_name }}</td>
-                <td>{{ app.get_application_type_display }}</td>
-                <td>
-                    <span class="status-badge status-{{ app.status }}">
-                        {{ app.get_status_display }}
-                    </span>
-                </td>
-                <td>{{ app.submission_date|date:"M d, Y" }}</td>
-                <td>
-                    <a href="{% url 'reviewer:application_detail' app.id %}" 
-                       class="btn btn-primary btn-sm">Review</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>
+                        <div class="flex items-center gap-2">
+                            <span>Application #</span>
+                            <i class="fas fa-sort text-gray-400"></i>
+                        </div>
+                    </th>
+                    <th>Business Name</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th class="text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="font-medium">{{ app.application_number }}</td>
+                    <td>{{ app.business_name }}</td>
+                    <td>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                   {% if app.application_type == 'new' %}bg-blue-100 text-blue-800
+                                   {% elif app.application_type == 'renewal' %}bg-green-100 text-green-800
+                                   {% elif app.application_type == 'amendment' %}bg-purple-100 text-purple-800
+                                   {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ app.get_application_type_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ app.status }}">
+                            {{ app.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="flex flex-col">
+                            <span class="text-sm">{{ app.submission_date|date:"M d, Y" }}</span>
+                            <span class="text-xs text-gray-500">{{ app.submission_date|time:"H:i" }}</span>
+                        </div>
+                    </td>
+                    <td class="text-right">
+                        <a href="{% url 'reviewer:application_detail' app.id %}" 
+                           class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye"></i>
+                            Review
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-8 text-gray-500">
+                        <div class="flex flex-col items-center gap-2">
+                            <i class="fas fa-folder-open text-4xl"></i>
+                            <p>No applications found</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-    {% include "reviewer/components/pagination.html" with page_obj=applications %}
+    {% if applications.has_other_pages %}
+    <div class="flex justify-center gap-2 mt-6">
+        {% if applications.has_previous %}
+        <a href="?page={{ applications.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" 
+           class="btn btn-primary btn-sm">
+            <i class="fas fa-chevron-left"></i>
+            Previous
+        </a>
+        {% endif %}
+        
+        <span class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md">
+            Page {{ applications.number }} of {{ applications.paginator.num_pages }}
+        </span>
+        
+        {% if applications.has_next %}
+        <a href="?page={{ applications.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" 
+           class="btn btn-primary btn-sm">
+            Next
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
+
+<script>
+    // Handle table sorting
+    document.querySelectorAll('th').forEach(header => {
+        header.addEventListener('click', () => {
+            const sortIcon = header.querySelector('.fa-sort');
+            if (sortIcon) {
+                // Toggle sort direction
+                if (sortIcon.classList.contains('fa-sort')) {
+                    sortIcon.classList.remove('fa-sort');
+                    sortIcon.classList.add('fa-sort-up');
+                } else if (sortIcon.classList.contains('fa-sort-up')) {
+                    sortIcon.classList.remove('fa-sort-up');
+                    sortIcon.classList.add('fa-sort-down');
+                } else {
+                    sortIcon.classList.remove('fa-sort-down');
+                    sortIcon.classList.add('fa-sort');
+                }
+            }
+        });
+    });
+
+    // Auto-submit form on select change
+    document.querySelectorAll('select[name="status"], select[name="type"]').forEach(select => {
+        select.addEventListener('change', () => {
+            select.closest('form').submit();
+        });
+    });
+</script>
 {% endblock %}

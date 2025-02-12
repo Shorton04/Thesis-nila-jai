@@ -21,32 +21,40 @@ def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = True  # User needs to verify email
-            user.verification_token = uuid.uuid4()
-            user.save()
+            try:
+                user = form.save(commit=False)
+                user.is_active = True
+                user.verification_token = uuid.uuid4()
+                user.save()
 
-            # Send verification email
-            verification_url = f"{request.scheme}://{request.get_host()}/accounts/verify-email/{user.verification_token}/"
-            context = {
-                'user': user,
-                'verification_url': verification_url,
-            }
+                # Send verification email
+                verification_url = f"{request.scheme}://{request.get_host()}/accounts/verify-email/{user.verification_token}/"
+                context = {
+                    'user': user,
+                    'verification_url': verification_url,
+                }
 
-            html_message = render_to_string('accounts/email/verification.html', context)
-            text_message = render_to_string('accounts/email/verification.txt', context)
+                html_message = render_to_string('accounts/email/verification.html', context)
+                text_message = render_to_string('accounts/email/verification.txt', context)
 
-            send_mail(
-                'Verify your email address',
-                text_message,
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-                html_message=html_message,
-                fail_silently=False,
-            )
+                send_mail(
+                    'Verify your email address',
+                    text_message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
 
-            messages.success(request, 'Registration successful. Please check your email to verify your account.')
-            return redirect('accounts:login')
+                messages.success(request, 'Registration successful. Please check your email to verify your account.')
+                return redirect('accounts:login')
+            except Exception as e:
+                print(f"Registration error: {str(e)}")  # For debugging
+                messages.error(request, 'An error occurred during registration. Please try again.')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = CustomUserCreationForm()
 
@@ -160,29 +168,37 @@ def profile(request):
         'login_history': LoginHistory.objects.filter(user=request.user)[:5]
     })
 
+
 @login_required
 def edit_profile(request):
-    user_profile = UserProfile.get_or_create_profile(request.user)
+    user_profile = UserProfile.objects.get_or_create(user=request.user)[0]
+
     if request.method == 'POST':
         user_form = CustomUserChangeForm(request.POST, instance=request.user)
-        profile_form = UserProfileForm(
-            request.POST,
-            request.FILES,
-            instance=user_profile
-        )
+        profile_form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
 
         if user_form.is_valid() and profile_form.is_valid():
-            user_form.save()
-            profile_form.save()
-            messages.success(request, 'Profile updated successfully.')
-            return redirect('accounts:profile')
+            try:
+                user_form.save()
+                profile_form.save()
+                messages.success(request, 'Your profile has been updated successfully.')
+                return redirect('accounts:profile')
+            except Exception as e:
+                messages.error(request, f'An error occurred: {str(e)}')
+        else:
+            for form in [user_form, profile_form]:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f'{field}: {error}')
     else:
         user_form = CustomUserChangeForm(instance=request.user)
         profile_form = UserProfileForm(instance=user_profile)
 
     return render(request, 'accounts/edit_profile.html', {
         'user_form': user_form,
-        'profile_form': profile_form
+        'profile_form': profile_form,
+        'user': request.user,
+        'profile': user_profile
     })
 
 @login_required

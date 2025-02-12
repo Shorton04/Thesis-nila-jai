@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'documents',
     'notifications',
     'reviewer',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -136,15 +137,16 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.CustomUser'
+LOGIN_REDIRECT_URL = 'applications:dashboard', 'reviewer:dashboard'
 
 # Add this to your settings.py if not already present
 MAX_LOGIN_ATTEMPTS = 3  # or whatever number you prefer
 
 LOGIN_URL = 'accounts:login'
-LOGIN_REDIRECT_URL = 'reviewer:dashboard'  # Add this
+
 
 if 'test' in sys.argv:
-    EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'test_media')
     PASSWORD_HASHERS = [
         'django.contrib.auth.hashers.MD5PasswordHasher',

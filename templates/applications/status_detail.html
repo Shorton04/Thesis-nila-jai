@@ -1,0 +1,386 @@
+{# templates/applications/status_detail.html #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <!-- Status Banner -->
+    <div class="mb-8">
+        <div class="rounded-md {% if application.status == 'approved' %}bg-green-50{% elif application.status == 'rejected' %}bg-red-50{% else %}bg-blue-50{% endif %} p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    {% if application.status == 'approved' %}
+                    <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    {% elif application.status == 'rejected' %}
+                    <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    {% else %}
+                    <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {% endif %}
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium {% if application.status == 'approved' %}text-green-800{% elif application.status == 'rejected' %}text-red-800{% else %}text-blue-800{% endif %}">
+                        Application Status: {{ application.get_status_display }}
+                    </h3>
+                    <div class="mt-2 text-sm {% if application.status == 'approved' %}text-green-700{% elif application.status == 'rejected' %}text-red-700{% else %}text-blue-700{% endif %}">
+                        <p>Application Number: {{ application.application_number }}</p>
+                        <p>Tracking Number: {{ application.tracking_number }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="lg:grid lg:grid-cols-12 lg:gap-x-5">
+        <!-- Left Column - Application Details and Timeline -->
+        <div class="space-y-6 sm:px-6 lg:px-0 lg:col-span-9">
+            <!-- Application Details -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Business Application Details</h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                        Submitted on {{ application.created_at|date:"F d, Y" }}
+                    </p>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <dl class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+                        <div class="sm:col-span-2">
+                            <dt class="text-sm font-medium text-gray-500">Business Name</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ application.business_name }}</dd>
+                        </div>
+                        <div class="sm:col-span-1">
+                            <dt class="text-sm font-medium text-gray-500">Business Type</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ application.get_business_type_display }}</dd>
+                        </div>
+                        <div class="sm:col-span-1">
+                            <dt class="text-sm font-medium text-gray-500">Payment Mode</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ application.get_payment_mode_display }}</dd>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <dt class="text-sm font-medium text-gray-500">Business Address</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ application.business_address }}</dd>
+                        </div>
+                        <div class="sm:col-span-1">
+                            <dt class="text-sm font-medium text-gray-500">Contact Number</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ application.telephone }}</dd>
+                        </div>
+                        <div class="sm:col-span-1">
+                            <dt class="text-sm font-medium text-gray-500">Email</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ application.email }}</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Requirements Progress -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Requirements Progress</h3>
+                    <p class="mt-1 text-sm text-gray-500">{{ completed_requirements }} of {{ total_requirements }} requirements completed</p>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <div class="relative pt-1">
+                        <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
+                            <div style="width:{{ completion_percentage }}%" 
+                                 class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500 transition-all duration-500"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-600">
+                            <span>{{ completion_percentage }}% Complete</span>
+                            <a href="{% url 'applications:requirements' application.id %}" class="text-indigo-600 hover:text-indigo-900">
+                                View Requirements →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Timeline -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Application Timeline</h3>
+                </div>
+                <div class="border-t border-gray-200">
+                    <ul role="list" class="divide-y divide-gray-200">
+                        {% for activity in activities %}
+                        <li class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        {% if activity.activity_type == 'create' %}
+                                        <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                        {% elif activity.activity_type == 'update' %}
+                                        <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                                        </svg>
+                                        {% elif activity.activity_type == 'submit' %}
+                                        <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">{{ activity.description }}</p>
+                                        <p class="text-sm text-gray-500">{{ activity.performed_by.get_full_name }}</p>
+                                    </div>
+                                </div>
+                                <div class="ml-6 flex-shrink-0">
+                                    <p class="text-sm text-gray-500">{{ activity.performed_at|date:"M d, Y H:i" }}</p>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Actions -->
+        <div class="space-y-6 sm:px-6 lg:px-0 lg:col-span-3">
+            {% if can_submit %}
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Submit Application</h3>
+                    <div class="mt-2 max-w-xl text-sm text-gray-500">
+                        <p>Once submitted, your application will be reviewed by our team.</p>
+                    </div>
+                    <div class="mt-5">
+                        <button type="button" onclick="submitApplication()" 
+                                class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Submit Application
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if can_pay and assessment %}
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Payment Required</h3>
+                    <div class="mt-2 max-w-xl text-sm text-gray-500">
+                        <p>Amount Due: ₱{{ assessment.total_amount|floatformat:2 }}</p>
+                        <p class="mt-1">Deadline: {{ assessment.payment_deadline|date:"F d, Y" }}</p>
+                    </div>
+                    <div class="mt-5">
+                        <button type="button" onclick="window.location.href='{% url 'applications:payment' application.id %}'"
+                                class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Proceed to Payment
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if application.status == 'draft' %}
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Cancel Application</h3>
+                    <div class="mt-2 max-w-xl text-sm text-gray-500">
+                        <p>Cancel this application if you no longer wish to proceed.</p>
+                    </div>
+                    <div class="mt-5">
+                        <button type="button" onclick="cancelApplication()"
+                                class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel Application
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function submitApplication() {
+    if (confirm('Are you sure you want to submit this application? Please ensure all requirements are complete.')) {
+        let form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{% url 'applications:submit_application' application.id %}";
+
+        let csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = '{{ csrf_token }}';
+        form.appendChild(csrfInput);
+
+        let actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'submit';
+        form.appendChild(actionInput);
+
+        try {
+            document.body.appendChild(form);
+            form.submit();
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            alert('An error occurred while submitting the application. Please try again.');
+        }
+    }
+}
+
+function cancelApplication() {
+    if (confirm('Are you sure you want to cancel this application? This action cannot be undone.')) {
+        let form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{% url 'applications:cancel_application' application.id %}";
+
+        let csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = '{{ csrf_token }}';
+        form.appendChild(csrfInput);
+
+        let actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'cancel';
+        form.appendChild(actionInput);
+
+        let reasonInput = document.createElement('textarea');
+        reasonInput.name = 'cancel_reason';
+        reasonInput.style.display = 'none';
+        let reason = prompt('Please provide a reason for cancellation (optional):');
+        reasonInput.value = reason || '';
+        form.appendChild(reasonInput);
+
+        try {
+            document.body.appendChild(form);
+            form.submit();
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            alert('An error occurred while canceling the application. Please try again.');
+        }
+    }
+}
+
+// Poll for status updates
+function pollStatus() {
+    fetch(`/applications/api/${applicationId}/status-update/`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status !== currentStatus) {
+            window.location.reload();
+        }
+    })
+    .catch(error => console.error('Error polling status:', error));
+}
+
+// Initialize polling if application is under review
+{% if application.status == 'submitted' or application.status == 'under_review' %}
+    const statusPollInterval = setInterval(pollStatus, 30000); // Poll every 30 seconds
+    const currentStatus = '{{ application.status }}';
+    const applicationId = '{{ application.id }}';
+{% endif %}
+
+// Handle payment verification
+function verifyPayment(paymentReference) {
+    fetch(`/applications/{{ application.id }}/verify-payment/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            payment_reference: paymentReference
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.error || 'Payment verification failed');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred during payment verification');
+    });
+}
+
+// Handle notification messages
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-hide notifications after 5 seconds
+    const notifications = document.querySelectorAll('.notification');
+    notifications.forEach(notification => {
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 500);
+        }, 5000);
+    });
+
+    // Track requirement progress
+    const requiredCount = {{ requirements.count }};
+    const submittedCount = {{ requirements.submitted_count }};
+    
+    if (requiredCount > 0) {
+        const progress = (submittedCount / requiredCount) * 100;
+        document.querySelector('.progress-bar').style.width = `${progress}%`;
+    }
+});
+
+// Print application details
+function printApplicationDetails() {
+    window.print();
+}
+
+// Clean up intervals when leaving the page
+window.addEventListener('beforeunload', function() {
+    if (typeof statusPollInterval !== 'undefined') {
+        clearInterval(statusPollInterval);
+    }
+});
+</script>
+
+<style>
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        .print-only {
+            display: block !important;
+        }
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: #e5e7eb;
+    }
+    
+    .timeline-item:last-child::before {
+        height: 50%;
+    }
+    
+    .notification {
+        transition: opacity 0.5s ease-in-out;
+    }
+    
+    .progress-bar {
+        transition: width 0.5s ease-in-out;
+    }
+</style>
+{% endblock %}

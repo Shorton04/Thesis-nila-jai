@@ -91,12 +91,6 @@
             animation: slideDown 0.2s ease-out;
         }
     </style>
-{% if user.is_staff %}
-<div class="admin-nav">
-    <a href="{% url 'accounts:admin_user_list' %}">Manage Users</a>
-    <a href="{% url 'accounts:admin_login_history' %}">Login History</a>
-</div>
-{% endif %}
 </head>
 <body>
     <!-- Navigation -->
@@ -112,22 +106,11 @@
                         <span class="text-white font-semibold text-lg">BPLO Dashboard</span>
                     </a>
                 </div>
-
                 <!-- Navigation Links -->
                 <nav class="hidden md:flex space-x-8">
                     <a href="{% url 'applications:dashboard' %}" class="nav-link text-gray-100 hover:text-white px-3 py-2 text-sm font-medium">
                         <i class="fas fa-home mr-2"></i>Home
                     </a>
-                    {% if user.is_staff and user.groups.all %}
-    {% for group in user.groups.all %}
-        {% if group.name == 'Reviewers' %}
-        <div class="reviewer-nav">
-            <a href="{% url 'reviewer:dashboard' %}">Reviewer Dashboard</a>
-            <a href="{% url 'reviewer:application_list' %}">Review Applications</a>
-        </div>
-        {% endif %}
-    {% endfor %}
-{% endif %}
                     <a href="{% url 'applications:new_application' %}" class="nav-link text-gray-100 hover:text-white px-3 py-2 text-sm font-medium">
                         <i class="fas fa-file-alt mr-2"></i>New Application
                     </a>
@@ -137,6 +120,17 @@
                             <i class="fas fa-chevron-down ml-2 text-xs"></i>
                         </a>
                         <!-- Dropdown Menu -->
+                    <div class="hidden group-hover:block absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 dropdown-content">
+                                           {% if user.is_staff and user.groups.all %}
+                   {% for group in user.groups.all %}
+                       {% if group.name == 'Reviewers' %}
+                          <div class="reviewer-nav">
+                              <a href="{% url 'reviewer:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                  <i class="fas fa-admin-circle mr-2"></i>Reviewer Dashboard</a>
+                          </div>
+                      {% endif %}
+                  {% endfor %}
+                  {% endif %}
                         <div class="hidden group-hover:block absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 dropdown-content">
                             <a href="{% url 'accounts:profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                 <i class="fas fa-user-circle mr-2"></i>My Profile

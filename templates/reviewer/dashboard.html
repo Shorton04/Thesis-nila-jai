@@ -1,65 +1,126 @@
-{# templates/reviewer/dashboard.html #}
 {% extends 'reviewer/base.html' %}
 
 {% block content %}
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-    <div class="card">
-        <h3 class="text-lg font-semibold mb-2">Pending Applications</h3>
-        <p class="text-3xl font-bold">{{ pending_applications }}</p>
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-title">Pending Applications</div>
+            <div class="stat-icon" style="background: var(--primary)">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ pending_applications }}</div>
     </div>
-    <div class="card">
-        <h3 class="text-lg font-semibold mb-2">Under Review</h3>
-        <p class="text-3xl font-bold">{{ under_review }}</p>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-title">Under Review</div>
+            <div class="stat-icon" style="background: var(--warning)">
+                <i class="fas fa-search"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ under_review }}</div>
     </div>
-    <div class="card">
-        <h3 class="text-lg font-semibold mb-2">Requires Revision</h3>
-        <p class="text-3xl font-bold">{{ requires_revision }}</p>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-title">Requires Revision</div>
+            <div class="stat-icon" style="background: var(--danger)">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ requires_revision }}</div>
     </div>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="card">
-        <h3 class="text-xl font-semibold mb-4">Recent Applications</h3>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Application #</th>
-                    <th>Business Name</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for app in recent_applications %}
-                <tr>
-                    <td>{{ app.application_number }}</td>
-                    <td>{{ app.business_name }}</td>
-                    <td>{{ app.get_application_type_display }}</td>
-                    <td>
-                        <span class="status-badge status-{{ app.status }}">
-                            {{ app.get_status_display }}
-                        </span>
-                    </td>
-                    <td>
-                        <a href="{% url 'reviewer:application_detail' app.id %}" 
-                           class="btn btn-primary btn-sm">Review</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-file-alt mr-2"></i>
+                Recent Applications
+            </h3>
+            <a href="{% url 'reviewer:application_list' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-list"></i>
+                View All
+            </a>
+        </div>
+        
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Application #</th>
+                        <th>Business Name</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in recent_applications %}
+                    <tr>
+                        <td>{{ app.application_number }}</td>
+                        <td>{{ app.business_name }}</td>
+                        <td>
+                            <span class="text-sm font-medium">
+                                {{ app.get_application_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ app.status }}">
+                                {{ app.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'reviewer:application_detail' app.id %}" 
+                               class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye"></i>
+                                Review
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="card">
-        <h3 class="text-xl font-semibold mb-4">Recent Activities</h3>
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-history mr-2"></i>
+                Recent Activities
+            </h3>
+        </div>
+
         <div class="space-y-4">
             {% for activity in recent_activities %}
-            <div class="border-b pb-4">
-                <p class="font-medium">{{ activity.description }}</p>
-                <p class="text-sm text-gray-600">
-                    {{ activity.performed_at|date:"M d, Y H:i" }} by {{ activity.performed_by.get_full_name }}
-                </p>
+            <div class="flex items-start gap-3 pb-4 border-b border-gray-200 last:border-0">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center 
+                            {% if activity.activity_type == 'review' %}bg-blue-100 text-blue-600
+                            {% elif activity.activity_type == 'revise' %}bg-yellow-100 text-yellow-600
+                            {% elif activity.activity_type == 'approve' %}bg-green-100 text-green-600
+                            {% elif activity.activity_type == 'reject' %}bg-red-100 text-red-600
+                            {% else %}bg-gray-100 text-gray-600{% endif %}">
+                    {% if activity.activity_type == 'review' %}
+                        <i class="fas fa-search"></i>
+                    {% elif activity.activity_type == 'revise' %}
+                        <i class="fas fa-edit"></i>
+                    {% elif activity.activity_type == 'approve' %}
+                        <i class="fas fa-check"></i>
+                    {% elif activity.activity_type == 'reject' %}
+                        <i class="fas fa-times"></i>
+                    {% else %}
+                        <i class="fas fa-dot-circle"></i>
+                    {% endif %}
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">{{ activity.description }}</p>
+                    <p class="text-xs text-gray-500">
+                        {{ activity.performed_at|date:"M d, Y H:i" }} by {{ activity.performed_by.get_full_name }}
+                    </p>
+                </div>
             </div>
             {% endfor %}
         </div>

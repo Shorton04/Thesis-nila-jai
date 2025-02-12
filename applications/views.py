@@ -1,3 +1,4 @@
+# applications/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -701,3 +702,161 @@ def application_history(request, application_id):
         'activities': activities,
     }
     return render(request, 'applications/history.html', context)
+
+
+@login_required
+def status_detail(request, application_id):
+    """Handle status detail view for an application."""
+    application = get_object_or_404(BusinessApplication, id=application_id, applicant=request.user)
+
+    # Get requirements with submission status
+    requirements = ApplicationRequirement.objects.filter(application=application)
+    total_requirements = requirements.filter(is_required=True).count()
+    completed_requirements = requirements.filter(is_required=True, is_submitted=True).count()
+    completion_percentage = (completed_requirements / total_requirements * 100) if total_requirements > 0 else 0
+
+    # Get application timeline
+    activities = ApplicationActivity.objects.filter(
+        application=application
+    ).select_related('performed_by').order_by('-performed_at')
+
+    # Check permissions for various actions
+    can_edit = application.status in ['draft', 'requires_revision']
+    can_submit = application.status == 'draft' and completion_percentage == 100
+    can_pay = hasattr(application, 'assessment') and not application.assessment.is_paid
+
+    # Handle POST requests (submit/cancel actions)
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        try:
+            if action == 'submit' and can_submit:
+                with transaction.atomic():
+                    application.status = 'submitted'
+                    application.submission_date = timezone.now()
+                    application.save()
+
+                    ApplicationActivity.objects.create(
+                        application=application,
+                        activity_type='submit',
+                        performed_by=request.user,
+                        description='Application submitted for review'
+                    )
+
+                messages.success(request, 'Application submitted successfully.')
+                return redirect('applications:application_detail', application.id)
+
+            elif action == 'cancel' and application.status == 'draft':
+                with transaction.atomic():
+                    application.status = 'cancelled'
+                    application.save()
+
+                    ApplicationActivity.objects.create(
+                        application=application,
+                        activity_type='cancel',
+                        performed_by=request.user,
+                        description='Application cancelled' +
+                                    (f": {request.POST.get('cancel_reason')}" if request.POST.get(
+                                        'cancel_reason') else '')
+                    )
+
+                messages.success(request, 'Application cancelled successfully.')
+                return redirect('applications:dashboard')
+
+        except Exception as e:
+            messages.error(request, f'Error processing request: {str(e)}')
+            return redirect('applications:status_detail', application.id)
+
+    context = {
+        'application': application,
+        'requirements': requirements,
+        'activities': activities,
+        'total_requirements': total_requirements,
+        'completed_requirements': completed_requirements,
+        'completion_percentage': completion_percentage,
+        'can_edit': can_edit,
+        'can_submit': can_submit,
+        'can_pay': can_pay,
+    }
+
+    return render(request, 'applications/status_detail.html', context)
+
+
+@login_required
+def delete_requirement(request, application_id, requirement_id):
+    """Handle deletion of an application requirement document."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+    try:
+        application = get_object_or_404(BusinessApplication,
+                                        id=application_id,
+                                        applicant=request.user)
+
+        # Only allow deletion if application is in draft or requires revision
+        if application.status not in ['draft', 'requires_revision']:
+            raise PermissionDenied('Cannot modify requirements at this stage')
+
+        requirement = get_object_or_404(ApplicationRequirement,
+                                        id=requirement_id,
+                                        application=application)
+
+        if requirement.document:
+            # Delete the actual file
+            requirement.document.delete(save=False)
+
+            # Update requirement status
+            requirement.is_submitted = False
+            requirement.is_verified = False
+            requirement.verification_date = None
+            requirement.verified_by = None
+            requirement.remarks = ''
+            requirement.save()
+
+            # Log the activity
+            ApplicationActivity.objects.create(
+                application=application,
+                activity_type='update',
+                performed_by=request.user,
+                description=f'Document deleted for {requirement.requirement_name}'
+            )
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Document deleted successfully'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'No document found'
+            })
+
+    except PermissionDenied as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=403)
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error deleting document: {str(e)}'
+        }, status=500)
+
+
+@login_required
+def status_update(request, application_id):
+    """API endpoint for checking application status updates."""
+    try:
+        application = get_object_or_404(BusinessApplication,
+                                        id=application_id,
+                                        applicant=request.user)
+
+        return JsonResponse({
+            'status': application.status,
+            'updated_at': application.updated_at.isoformat()
+        })
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)
