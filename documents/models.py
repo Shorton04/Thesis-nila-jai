@@ -1,61 +1,112 @@
 # documents/models.py
 from django.db import models
-from django.core.validators import FileExtensionValidator
+from django.conf import settings
 from applications.models import BusinessApplication
+import uuid
+import os
 
+def document_upload_path(instance, filename):
+    # Generate path like: documents/application_id/document_type/filename
+    ext = filename.split('.')[-1]
+    filename = f"{uuid.uuid4()}.{ext}"
+    return os.path.join('documents', str(instance.application.id), instance.document_type, filename)
 
 class Document(models.Model):
-    DOCUMENT_TYPES = (
-        ('dti_sec_registration', 'DTI/SEC Registration'),
+    DOCUMENT_TYPES = [
+        ('dti_registration', 'DTI Registration'),
         ('business_permit', 'Business Permit'),
+        ('valid_id', 'Valid ID'),
         ('lease_contract', 'Lease Contract'),
-        ('fire_safety', 'Fire Safety Certificate'),
         ('sanitary_permit', 'Sanitary Permit'),
+        ('fire_safety', 'Fire Safety Permit'),
         ('barangay_clearance', 'Barangay Clearance'),
-        ('other', 'Other'),
-    )
+        ('zoning_clearance', 'Zoning Clearance'),
+        ('tax_declaration', 'Tax Declaration'),
+        ('other', 'Other Document')
+    ]
 
+    VERIFICATION_STATUS = [
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('verified', 'Verified'),
+        ('rejected', 'Rejected')
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     application = models.ForeignKey(BusinessApplication, on_delete=models.CASCADE)
     document_type = models.CharField(max_length=50, choices=DOCUMENT_TYPES)
-    file = models.FileField(
-        upload_to='documents/%Y/%m/%d/',
-        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png'])]
-    )
+    file = models.FileField(upload_to=document_upload_path)
+    filename = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=100)
+    file_size = models.IntegerField()  # Size in bytes
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    is_verified = models.BooleanField(default=False)
-
-    # OCR Results
-    extracted_text = models.TextField(blank=True)
-    confidence_score = models.FloatField(default=0.0)
-
-    # Fraud Detection Results
-    fraud_score = models.FloatField(default=0.0)
-    fraud_flags = models.JSONField(default=dict)
-    is_flagged = models.BooleanField(default=False)
-
-    # NLP Validation Results
-    validation_results = models.JSONField(default=dict)
-    is_valid = models.BooleanField(default=False)
+    verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS, default='pending')
+    verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='verified_documents'
+    )
+    verified_at = models.DateTimeField(null=True, blank=True)
+    verification_remarks = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    metadata = models.JSONField(default=dict, blank=True)
 
     class Meta:
         ordering = ['-uploaded_at']
+        indexes = [
+            models.Index(fields=['application', 'document_type']),
+            models.Index(fields=['verification_status']),
+        ]
 
     def __str__(self):
-        return f"{self.get_document_type_display()} - {self.application.business_name}"
+        return f"{self.get_document_type_display()} - {self.filename}"
 
+    def get_file_extension(self):
+        return os.path.splitext(self.filename)[1].lower()
 
-class DocumentVersion(models.Model):
+    def is_image(self):
+        image_extensions = ['.jpg', '.jpeg', '.png', '.gif']
+        return self.get_file_extension() in image_extensions
+
+    def is_pdf(self):
+        return self.get_file_extension() == '.pdf'
+
+class DocumentVerificationResult(models.Model):
+    document = models.OneToOneField(Document, on_delete=models.CASCADE)
+    verification_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    is_authentic = models.BooleanField(default=False)
+    fraud_score = models.FloatField(default=0.0)
+    extracted_text = models.TextField(blank=True)
+    extracted_data = models.JSONField(default=dict)
+    verification_details = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Verification Result - {self.document.filename}"
+
+class DocumentActivity(models.Model):
+    ACTIVITY_TYPES = [
+        ('upload', 'Upload'),
+        ('verify', 'Verify'),
+        ('reject', 'Reject'),
+        ('delete', 'Delete'),
+        ('view', 'View')
+    ]
+
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
-    file = models.FileField(
-        upload_to='documents/versions/%Y/%m/%d/',
-        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png'])]
-    )
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    version_number = models.IntegerField()
-    notes = models.TextField(blank=True)
+    activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES)
+    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    performed_at = models.DateTimeField(auto_now_add=True)
+    details = models.TextField(blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
 
     class Meta:
-        ordering = ['-version_number']
+        ordering = ['-performed_at']
+        verbose_name_plural = 'Document activities'
 
     def __str__(self):
-        return f"Version {self.version_number} of {self.document}"
+        return f"{self.get_activity_type_display()} - {self.document.filename}"

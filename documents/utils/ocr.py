@@ -1,146 +1,158 @@
 # documents/utils/ocr.py
-'''
 import pytesseract
 from PIL import Image
 import cv2
 import numpy as np
-import re
-from pdf2image import convert_from_path
-import os
+from pdf2image import convert_from_bytes
+import io
+from typing import Dict
+
+
+class ImagePreprocessor:
+    """Handles image preprocessing for better OCR results."""
+
+    @staticmethod
+    def enhance_for_ocr(image: Image.Image) -> Image.Image:
+        """
+        Enhance image quality for better OCR results.
+        Args:
+            image: PIL Image object
+        Returns:
+            Enhanced PIL Image
+        """
+        try:
+            # Convert PIL Image to OpenCV format
+            np_image = np.array(image)
+
+            # Convert to grayscale if needed
+            if len(np_image.shape) == 3:
+                gray = cv2.cvtColor(np_image, cv2.COLOR_RGB2GRAY)
+            else:
+                gray = np_image
+
+            # Apply adaptive thresholding
+            thresh = cv2.adaptiveThreshold(
+                gray,
+                255,
+                cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                cv2.THRESH_BINARY,
+                11,
+                2
+            )
+
+            # Noise removal
+            denoised = cv2.fastNlMeansDenoising(thresh)
+
+            # Convert back to PIL Image
+            enhanced_image = Image.fromarray(denoised)
+
+            return enhanced_image
+
+        except Exception as e:
+            print(f"Image Enhancement Error: {str(e)}")
+            return image  # Return original image if enhancement fails
 
 
 class OCRProcessor:
-    def __init__(self):
-        # Configure Tesseract path if needed
-        # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-        self.supported_formats = {'pdf', 'jpg', 'jpeg', 'png'}
+    """Handles OCR processing for documents."""
 
-    def preprocess_image(self, image):
-        """Improve image quality for better OCR results."""
-        # Convert to grayscale
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-        # Apply thresholding to preprocess the image
-        gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-
-        # Apply dilation to connect text components
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-        gray = cv2.dilate(gray, kernel, iterations=1)
-
-        # Apply median blur to remove noise
-        gray = cv2.medianBlur(gray, 3)
-
-        return gray
-
-    def extract_text_from_image(self, image_path):
-        """Extract text from an image file."""
-        # Read image using OpenCV
-        image = cv2.imread(image_path)
-
-        # Preprocess the image
-        processed_image = self.preprocess_image(image)
-
-        # Perform OCR
-        custom_config = r'--oem 3 --psm 6'
-        text = pytesseract.image_to_string(processed_image, config=custom_config)
-
-        # Get confidence scores
-        data = pytesseract.image_to_data(processed_image, output_type=pytesseract.Output.DICT)
-        confidences = [int(conf) for conf in data['conf'] if conf != '-1']
-        avg_confidence = sum(confidences) / len(confidences) if confidences else 0
-
-        return text.strip(), avg_confidence / 100
-
-    def extract_text_from_pdf(self, pdf_path):
-        """Extract text from a PDF file."""
-        # Convert PDF to images
-        images = convert_from_path(pdf_path)
-
-        full_text = []
-        total_confidence = 0
-
-        # Process each page
-        for i, image in enumerate(images):
-            # Save image temporarily
-            temp_path = f"temp_page_{i}.png"
-            image.save(temp_path, 'PNG')
-
-            # Extract text from the page
-            text, confidence = self.extract_text_from_image(temp_path)
-            full_text.append(text)
-            total_confidence += confidence
-
-            # Clean up temporary file
-            os.remove(temp_path)
-
-        avg_confidence = total_confidence / len(images) if images else 0
-        return '\n'.join(full_text), avg_confidence
-
-    def extract_specific_fields(self, text):
-        """Extract specific fields from the extracted text."""
-        fields = {
-            'registration_number': None,
-            'business_name': None,
-            'address': None,
-            'owner_name': None,
-            'contact_number': None,
-        }
-
-        # Registration number pattern (e.g., DTI/SEC number)
-        reg_pattern = r'(?i)registration(?:\s+no\.?|\s+number)?[\s:]+([A-Z0-9-]+)'
-        reg_match = re.search(reg_pattern, text)
-        if reg_match:
-            fields['registration_number'] = reg_match.group(1)
-
-        # Business name pattern
-        business_pattern = r'(?i)business\s+name[\s:]+([^\n]+)'
-        business_match = re.search(business_pattern, text)
-        if business_match:
-            fields['business_name'] = business_match.group(1).strip()
-
-        # Address pattern
-        address_pattern = r'(?i)address[\s:]+([^\n]+)'
-        address_match = re.search(address_pattern, text)
-        if address_match:
-            fields['address'] = address_match.group(1).strip()
-
-        # Owner name pattern
-        owner_pattern = r'(?i)owner[\s:]+([^\n]+)'
-        owner_match = re.search(owner_pattern, text)
-        if owner_match:
-            fields['owner_name'] = owner_match.group(1).strip()
-
-        # Contact number pattern
-        contact_pattern = r'(?i)(?:contact|phone|tel(?:ephone)?)(?:\s+no\.?|\s+number)?[\s:]+([0-9\s+-]+)'
-        contact_match = re.search(contact_pattern, text)
-        if contact_match:
-            fields['contact_number'] = contact_match.group(1).strip()
-
-        return fields
-
-    def process_document(self, file_path):
-        """Main method to process a document and extract information."""
-        file_extension = file_path.split('.')[-1].lower()
-
-        if file_extension not in self.supported_formats:
-            raise ValueError(f"Unsupported file format: {file_extension}")
-
+    @staticmethod
+    def process_image(image_bytes: bytes) -> Dict:
+        """
+        Extract text from image bytes.
+        Args:
+            image_bytes: Image file in bytes
+        Returns:
+            Dictionary with OCR results
+        """
         try:
-            if file_extension == 'pdf':
-                text, confidence = self.extract_text_from_pdf(file_path)
-            else:
-                text, confidence = self.extract_text_from_image(file_path)
+            # Convert bytes to PIL Image
+            image = Image.open(io.BytesIO(image_bytes))
 
-            # Extract specific fields
-            fields = self.extract_specific_fields(text)
+            # Convert to grayscale if needed
+            if image.mode != 'L':
+                image = image.convert('L')
+
+            # Enhance image
+            enhanced_image = ImagePreprocessor.enhance_for_ocr(image)
+
+            # Perform OCR
+            text = pytesseract.image_to_string(enhanced_image)
+
+            # Get confidence scores
+            data = pytesseract.image_to_data(enhanced_image, output_type=pytesseract.Output.DICT)
+            confidence_scores = [conf for conf in data['conf'] if conf != -1]
+            avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0
 
             return {
-                'text': text,
-                'confidence': confidence,
-                'fields': fields
+                'success': True,
+                'full_text': text.strip(),
+                'confidence': avg_confidence,
+                'word_count': len(text.split()),
+                'details': {
+                    'confidence_scores': confidence_scores,
+                    'words': data['text']
+                }
             }
 
         except Exception as e:
-            raise Exception(f"Error processing document: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
 
-'''
+    @staticmethod
+    def process_pdf(pdf_bytes: bytes) -> Dict:
+        """
+        Extract text from PDF bytes.
+        Args:
+            pdf_bytes: PDF file in bytes
+        Returns:
+            Dictionary with OCR results
+        """
+        try:
+            # Convert PDF to images
+            images = convert_from_bytes(pdf_bytes)
+
+            # Process each page
+            pages_text = []
+            total_confidence = 0
+            word_count = 0
+
+            for i, image in enumerate(images, 1):
+                # Process each page as an image
+                result = OCRProcessor.process_image(
+                    OCRProcessor._pil_to_bytes(image)
+                )
+
+                if result['success']:
+                    pages_text.append(f"Page {i}:\n{result['full_text']}")
+                    total_confidence += result['confidence']
+                    word_count += result['word_count']
+
+            # Calculate average confidence across all pages
+            avg_confidence = total_confidence / len(images) if images else 0
+
+            return {
+                'success': True,
+                'full_text': '\n\n'.join(pages_text),
+                'confidence': avg_confidence,
+                'page_count': len(images),
+                'word_count': word_count,
+                'details': {
+                    'pages': pages_text
+                }
+            }
+
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e)
+            }
+
+    @staticmethod
+    def _pil_to_bytes(image: Image.Image) -> bytes:
+        """Convert PIL Image to bytes."""
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='PNG')
+        return img_byte_arr.getvalue()
