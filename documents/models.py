@@ -36,10 +36,16 @@ class Document(models.Model):
     application = models.ForeignKey(BusinessApplication, on_delete=models.CASCADE)
     document_type = models.CharField(max_length=50, choices=DOCUMENT_TYPES)
     file = models.FileField(upload_to=document_upload_path)
-    filename = models.CharField(max_length=255)
-    content_type = models.CharField(max_length=100)
-    file_size = models.IntegerField()  # Size in bytes
-    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    filename = models.CharField(max_length=255, default='document.pdf')  # Added default
+    content_type = models.CharField(max_length=100, default='application/pdf')  # Added default
+    file_size = models.IntegerField(default=0)  # Added default
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,  # Changed to SET_NULL
+        null=True,
+        blank=True,
+        related_name='uploaded_documents'  # Added related_name
+    )
     uploaded_at = models.DateTimeField(auto_now_add=True)
     verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS, default='pending')
     verified_by = models.ForeignKey(
@@ -74,6 +80,7 @@ class Document(models.Model):
     def is_pdf(self):
         return self.get_file_extension() == '.pdf'
 
+
 class DocumentVerificationResult(models.Model):
     document = models.OneToOneField(Document, on_delete=models.CASCADE)
     verification_id = models.UUIDField(default=uuid.uuid4, editable=False)
@@ -88,6 +95,7 @@ class DocumentVerificationResult(models.Model):
     def __str__(self):
         return f"Verification Result - {self.document.filename}"
 
+
 class DocumentActivity(models.Model):
     ACTIVITY_TYPES = [
         ('upload', 'Upload'),
@@ -99,7 +107,11 @@ class DocumentActivity(models.Model):
 
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
     activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES)
-    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,  # Changed to SET_NULL
+        null=True  # Added null=True
+    )
     performed_at = models.DateTimeField(auto_now_add=True)
     details = models.TextField(blank=True)
     metadata = models.JSONField(default=dict, blank=True)
