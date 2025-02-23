@@ -29,7 +29,16 @@ class Document(models.Model):
         ('pending', 'Pending'),
         ('in_progress', 'In Progress'),
         ('verified', 'Verified'),
-        ('rejected', 'Rejected')
+        ('rejected', 'Rejected'),
+        ('quarantined', 'Quarantined')
+    ]
+
+    QUARANTINE_REASONS = [
+        ('tampering', 'Signs of Tampering'),
+        ('low_quality', 'Low Quality'),
+        ('suspicious_noise', 'Suspicious Noise Patterns'),
+        ('resolution', 'Poor Resolution'),
+        ('other', 'Other')
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -59,6 +68,23 @@ class Document(models.Model):
     verification_remarks = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     metadata = models.JSONField(default=dict, blank=True)
+    is_quarantined = models.BooleanField(default=False)
+    quarantine_reason = models.CharField(
+        max_length=50,
+        choices=QUARANTINE_REASONS,
+        null=True,
+        blank=True
+    )
+    quarantine_date = models.DateTimeField(null=True, blank=True)
+    quarantine_notes = models.TextField(blank=True)
+    release_date = models.DateTimeField(null=True, blank=True)
+    released_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='released_documents'
+    )
 
     class Meta:
         ordering = ['-uploaded_at']
