@@ -1,4 +1,5 @@
 # applications/views.py
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
 from documents.services.document_workflow import DocumentWorkflow
 from django.contrib.auth.decorators import login_required
@@ -53,7 +54,8 @@ STEP_TEMPLATES = {
     1: 'applications/steps/basic_information.html',
     2: 'applications/steps/business_details.html',
     3: 'applications/steps/owner_details.html',
-    4: 'applications/steps/review.html'
+    4: 'applications/steps/review.html',
+    5: 'applications/steps/document_upload.html'
 }
 
 
@@ -61,7 +63,7 @@ STEP_TEMPLATES = {
 def new_application(request):
     """Handle new business permit application with multi-step form."""
     current_step = int(request.session.get('application_step', 1))
-    total_steps = 4
+    total_steps = 5
     draft_id = request.session.get('draft_application_id')
     draft_application = None
 
@@ -126,6 +128,24 @@ def new_application(request):
                             description='Application created and submitted'
                         )
                         create_default_requirements(application)
+
+                        # Process uploaded documents (if any)
+                        for req_name, field_name in {
+                            'Proof of Registration (DTI/SEC/CDA)': 'dti_registration',
+                            'Proof of Legal Ownership': 'legal_ownership',
+                            'Picture with Signage': 'signage_photo',
+                            'Barangay Clearance': 'barangay_clearance'
+                        }.items():
+                            if field_name in request.FILES:
+                                # Create the requirement if it doesn't exist
+                                requirement, created = ApplicationRequirement.objects.get_or_create(
+                                    application=application,
+                                    requirement_name=req_name,
+                                    defaults={'is_required': True}
+                                )
+                                requirement.document = request.FILES[field_name]
+                                requirement.is_submitted = True
+                                requirement.save()
 
                         # Clear session
                         request.session.pop('application_step', None)
@@ -350,9 +370,10 @@ def application_detail(request, application_id):
     }
     return render(request, 'applications/application_detail.html', context)
 
+
 @login_required
 def requirement_upload(request, application_id, requirement_id):
-    """Handle requirement document upload."""
+    """Handle requirement document upload with AI analysis."""
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
@@ -363,26 +384,25 @@ def requirement_upload(request, application_id, requirement_id):
         if 'document' not in request.FILES:
             return JsonResponse({'success': False, 'error': 'No document provided'})
 
-        document = request.FILES['document']
+        document_file = request.FILES['document']
 
-        # Validate file size (10MB limit)
-        if document.size > 10 * 1024 * 1024:
+        # Validate file size and type
+        if document_file.size > 10 * 1024 * 1024:
             return JsonResponse({'success': False, 'error': 'File size must not exceed 10MB'})
 
-        # Validate file type
         allowed_types = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif']
-        content_type = document.content_type.lower()
+        content_type = document_file.content_type.lower()
         if content_type not in allowed_types:
             return JsonResponse({'success': False, 'error': 'Invalid file type. Only PDF and images are allowed.'})
 
-        # Save the document
-        requirement.document = document
+        # Save document to requirement
+        requirement.document = document_file
         requirement.remarks = request.POST.get('remarks', '')
         requirement.is_submitted = True
         requirement.updated_at = timezone.now()
         requirement.save()
 
-        # Log the activity
+        # Log activity
         ApplicationActivity.objects.create(
             application=application,
             activity_type='update',
@@ -390,7 +410,53 @@ def requirement_upload(request, application_id, requirement_id):
             description=f'Document uploaded for {requirement.requirement_name}'
         )
 
-        return JsonResponse({'success': True})
+        # Create Document record for AI analysis
+        document = Document.objects.create(
+            application=application,
+            document_type=requirement.requirement_name.lower().replace(' ', '_'),
+            file=document_file,
+            filename=document_file.name,
+            content_type=content_type,
+            file_size=document_file.size,
+            uploaded_by=request.user
+        )
+
+        # Run AI analysis asynchronously
+        from django.core.files.base import ContentFile
+        document_bytes = document_file.read()
+
+        # Initialize validator
+        validator = DocumentValidator()
+
+        # Run validation
+        validation_results = validator.validate_document(document_bytes)
+
+        # Store validation results
+        DocumentVerificationResult.objects.create(
+            document=document,
+            is_authentic=not validation_results.get('fraud_detection_results', {}).get('tampering_detected', False),
+            fraud_score=validation_results.get('fraud_detection_results', {}).get('confidence_score', 0.0),
+            extracted_text=validation_results.get('ocr_results', {}).get('full_text', ''),
+            extracted_data=validation_results.get('validation_results', {}),
+            verification_details=validation_results
+        )
+
+        # If potential fraud detected, flag document
+        fraud_detected = validation_results.get('fraud_detection_results', {}).get('tampering_detected', False)
+        if fraud_detected:
+            document.verification_status = 'quarantined'
+            document.quarantine_reason = 'tampering'
+            document.quarantine_date = timezone.now()
+            document.is_quarantined = True
+            document.save()
+
+        return JsonResponse({
+            'success': True,
+            'verification': {
+                'status': 'fraud_detected' if fraud_detected else 'verified',
+                'message': 'Document scanned successfully.'
+            }
+        })
 
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
@@ -732,34 +798,39 @@ def status_detail(request, application_id):
 
         try:
             if action == 'submit' and can_submit:
-                with transaction.atomic():
-                    application.status = 'submitted'
-                    application.submission_date = timezone.now()
-                    application.save()
+                # Update application status
+                application.status = 'submitted'
+                application.submission_date = timezone.now()
+                application.save()
 
-                    ApplicationActivity.objects.create(
-                        application=application,
-                        activity_type='submit',
-                        performed_by=request.user,
-                        description='Application submitted for review'
-                    )
+                # Create activity log
+                ApplicationActivity.objects.create(
+                    application=application,
+                    activity_type='submit',
+                    performed_by=request.user,
+                    description='Application submitted for review'
+                )
 
                 messages.success(request, 'Application submitted successfully.')
                 return redirect('applications:application_detail', application.id)
 
             elif action == 'cancel' and application.status == 'draft':
-                with transaction.atomic():
-                    application.status = 'cancelled'
-                    application.save()
+                # Update application status
+                application.status = 'cancelled'
+                application.save()
 
-                    ApplicationActivity.objects.create(
-                        application=application,
-                        activity_type='cancel',
-                        performed_by=request.user,
-                        description='Application cancelled' +
-                                    (f": {request.POST.get('cancel_reason')}" if request.POST.get(
-                                        'cancel_reason') else '')
-                    )
+                # Create activity log
+                cancel_reason = request.POST.get('cancel_reason', '')
+                description = 'Application cancelled'
+                if cancel_reason:
+                    description += f": {cancel_reason}"
+
+                ApplicationActivity.objects.create(
+                    application=application,
+                    activity_type='cancel',
+                    performed_by=request.user,
+                    description=description
+                )
 
                 messages.success(request, 'Application cancelled successfully.')
                 return redirect('applications:dashboard')

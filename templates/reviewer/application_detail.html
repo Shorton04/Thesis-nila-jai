@@ -89,32 +89,27 @@
             <div class="mb-6">
                 <h3 class="text-lg font-semibold mb-4">Requirements</h3>
                 <div class="space-y-4">
-                    {% for req in requirements %}
-                    <div class="border rounded-lg overflow-hidden">
-                        <div class="flex justify-between items-start p-4">
-                            <div>
-                                <h4 class="font-medium">{{ req.requirement_name }}</h4>
-                                <p class="text-sm text-gray-600">
-                                    Submitted: {{ req.updated_at|date:"M d, Y" }}
-                                </p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                {% if req.is_submitted and not req.is_verified %}
-                                <button onclick="verifyDocument('{{ req.id }}')" 
-                                        class="btn btn-primary btn-sm">
-                                    <i class="fas fa-check"></i>
-                                    Verify
-                                </button>
-                                {% endif %}
-                                {% if req.document %}
-                                <a href="{{ req.document.url }}" 
-                                   target="_blank" 
-                                   class="btn btn-secondary btn-sm">
-                                    <i class="fas fa-eye"></i>
-                                    View
-                                </a>
-                                {% endif %}
-                            </div>
+                    {{% for req in requirements %}
+<div class="border rounded-lg overflow-hidden">
+    <div class="flex justify-between items-start p-4">
+        <div>
+            <h4 class="font-medium">{{ req.requirement_name }}</h4>
+            <p class="text-sm text-gray-600">
+                Submitted: {{ req.updated_at|date:"M d, Y" }}
+            </p>
+            {% if req.document %}
+                {% with doc=req.document.document_set.first %}
+                    {% if doc and doc.is_quarantined %}
+                    <div class="mt-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                        <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        Potential Fraud Detected
+                    </div>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
+        </div>
                         </div>
                         {% if req.is_verified %}
                         <div class="bg-green-50 p-3 border-t">
@@ -125,6 +120,34 @@
                             {% if req.remarks %}
                             <p class="text-sm text-gray-600 mt-1">{{ req.remarks }}</p>
                             {% endif %}
+                        </div>
+                        {% endif %}
+                        {% if req.document and req.document.metadata.validation_results %}
+                        <div class="border-t p-3 bg-blue-50">
+                            <div class="flex items-center justify-between mb-2">
+                                <h5 class="font-medium text-sm">AI Validation</h5>
+                                <span class="text-xs {% if req.document.is_quarantined %}text-red-600{% else %}text-green-600{% endif %}">
+                                    {% if req.document.is_quarantined %}
+                                    <i class="fas fa-exclamation-triangle"></i> Quarantined
+                                    {% else %}
+                                    <i class="fas fa-shield-alt"></i> Passed
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="text-xs">
+                                    <span class="text-gray-500">Tampering:</span> 
+                                    <span class="font-medium {% if req.document.metadata.validation_results.ela_score < 50 %}text-green-600{% else %}text-red-600{% endif %}">
+                                        {{ req.document.metadata.validation_results.ela_score|floatformat:1 }}
+                                    </span>
+                                </div>
+                                <div class="text-xs">
+                                    <span class="text-gray-500">Quality:</span> 
+                                    <span class="font-medium {% if req.document.metadata.validation_results.text_quality >= 50 %}text-green-600{% else %}text-red-600{% endif %}">
+                                        {{ req.document.metadata.validation_results.text_quality|floatformat:1 }}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                         {% endif %}
                     </div>
@@ -243,6 +266,64 @@
     </div>
 </div>
 
+<!-- AI Analysis Modal -->
+<div id="aiAnalysisModal" class="modal">
+    <div class="modal-content max-w-3xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold">AI Document Analysis</h3>
+            <button onclick="hideModal('aiAnalysisModal')" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div id="aiAnalysisContent" class="mb-4">
+            <!-- Content will be loaded here -->
+            <div class="animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end">
+            <button onclick="hideModal('aiAnalysisModal')" class="btn btn-secondary">Close</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px;
+}
+
+.max-w-3xl {
+    max-width: 48rem;
+}
+</style>
+
 <script>
 function verifyDocument(requirementId) {
     const remarks = prompt('Enter verification remarks (optional):');
@@ -267,6 +348,121 @@ function verifyDocument(requirementId) {
         console.error('Error:', error);
         alert('An error occurred while verifying the document');
     });
+}
+
+function viewAIAnalysis(requirementId) {
+    showModal('aiAnalysisModal');
+    
+    // Reset content to loading state
+    document.getElementById('aiAnalysisContent').innerHTML = `
+        <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="h-20 bg-gray-200 rounded"></div>
+                <div class="h-20 bg-gray-200 rounded"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="h-20 bg-gray-200 rounded"></div>
+                <div class="h-20 bg-gray-200 rounded"></div>
+            </div>
+        </div>
+    `;
+    
+    // Fetch AI analysis data
+    fetch(`/reviewer/document-analysis/${requirementId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Render analysis results
+                document.getElementById('aiAnalysisContent').innerHTML = renderAnalysisResults(data.results);
+            } else {
+                document.getElementById('aiAnalysisContent').innerHTML = `
+                    <div class="p-4 bg-red-50 text-red-800 rounded">
+                        <p>${data.error || 'Error loading analysis results'}</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('aiAnalysisContent').innerHTML = `
+                <div class="p-4 bg-red-50 text-red-800 rounded">
+                    <p>Failed to load analysis results. Please try again.</p>
+                </div>
+            `;
+        });
+}
+
+function renderAnalysisResults(results) {
+    // Helper function to create a gauge with score
+    const createGauge = (title, score, maxScore, thresholdGood, color) => {
+        // ... existing gauge code ...
+    };
+    
+    // Generate regions to highlight
+    const highlightRegions = results.suspicious_regions ? results.suspicious_regions.map(region => {
+        return `<div class="absolute border-2 border-red-500 bg-red-100 bg-opacity-30 pointer-events-none"
+                    style="left: ${region.x}px; top: ${region.y}px; width: ${region.width}px; height: ${region.height}px;">
+                </div>`;
+    }).join('') : '';
+    
+    // Render the complete analysis results
+    return `
+        <div class="bg-white p-1">
+            <div class="mb-4">
+                <div class="flex items-center mb-2">
+                    <h3 class="text-lg font-semibold">Document Status:</h3>
+                    <span class="ml-2 px-2 py-1 rounded text-sm font-medium 
+                        ${results.is_quarantined ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
+                        ${results.is_quarantined ? 'Quarantined' : 'Passed Validation'}
+                    </span>
+                </div>
+                ${results.quarantine_reason ? `
+                <div class="p-3 bg-red-50 text-red-700 rounded text-sm">
+                    <strong>Quarantine Reason:</strong> ${results.quarantine_reason}
+                </div>` : ''}
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                ${createGauge('Tampering Detection', results.validation_results.ela_score, 100, 50, 'blue')}
+                ${createGauge('Noise Analysis', results.validation_results.noise_score, 50, 25, 'indigo')}
+                ${createGauge('Text Quality', results.validation_results.text_quality, 100, 50, 'green')}
+                ${createGauge('Resolution', results.validation_results.resolution_score, 100, 50, 'purple')}
+            </div>
+            
+            <div class="mb-4">
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Document Preview</h4>
+                <div class="border rounded overflow-hidden relative">
+                    <img src="${results.document_url}" alt="Document" class="max-w-full h-auto">
+                    ${highlightRegions}
+                </div>
+            </div>
+            
+            ${results.extracted_text ? `
+            <div class="mb-4">
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Extracted Text</h4>
+                <div class="p-3 bg-gray-50 rounded text-sm font-mono overflow-auto max-h-48">
+                    ${results.extracted_text.replace(/\n/g, '<br>')}
+                </div>
+            </div>` : ''}
+            
+            <div class="flex flex-col gap-2">
+                <h4 class="text-sm font-medium text-gray-900">Document Assessment</h4>
+                <p class="text-sm ${results.is_quarantined ? 'text-red-700' : 'text-gray-700'}">
+                    ${results.validation_message || 'No assessment available'}
+                </p>
+            </div>
+        </div>
+    `;
+}
+
+function showModal(modalId) {
+    document.getElementById(modalId).classList.add('show');
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).classList.remove('show');
 }
 </script>
 {% endblock %}

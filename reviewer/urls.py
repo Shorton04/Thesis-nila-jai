@@ -13,4 +13,5 @@ urlpatterns = [
          views.verify_requirement, name='verify_requirement'),
     path('create-assessment/<uuid:application_id>/',
          views.create_assessment, name='create_assessment'),
+    path('document-analysis/<uuid:requirement_id>/', views.document_analysis, name='document_analysis'),
 ]

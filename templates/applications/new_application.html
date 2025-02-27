@@ -5,27 +5,30 @@
 {% block content %}
 <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <!-- Progress Steps -->
-    <div class="mb-8">
-        <div class="relative">
-            <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                <div class="w-full border-t border-gray-300"></div>
-            </div>
-            <div class="relative flex justify-between">
-                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 1 %}text-indigo-600{% else %}text-gray-500{% endif %}">
-                    Basic Information
-                </span>
-                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 2 %}text-indigo-600{% else %}text-gray-500{% endif %}">
-                    Business Details
-                </span>
-                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 3 %}text-indigo-600{% else %}text-gray-500{% endif %}">
-                    Owner Details
-                </span>
-                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 4 %}text-indigo-600{% else %}text-gray-500{% endif %}">
-                    Review
-                </span>
-            </div>
-        </div>
-    </div>
+<div class="mb-8">
+   <div class="relative">
+       <div class="absolute inset-0 flex items-center" aria-hidden="true">
+           <div class="w-full border-t border-gray-300"></div>
+       </div>
+       <div class="relative flex justify-between">
+           <span class="bg-white px-4 text-sm font-medium {% if current_step >= 1 %}text-indigo-600{% else %}text-gray-500{% endif %}">
+               Basic Information
+           </span>
+           <span class="bg-white px-4 text-sm font-medium {% if current_step >= 2 %}text-indigo-600{% else %}text-gray-500{% endif %}">
+               Business Details
+           </span>
+           <span class="bg-white px-4 text-sm font-medium {% if current_step >= 3 %}text-indigo-600{% else %}text-gray-500{% endif %}">
+               Owner Details
+           </span>
+           <span class="bg-white px-4 text-sm font-medium {% if current_step >= 4 %}text-indigo-600{% else %}text-gray-500{% endif %}">
+               Review
+           </span>
+           <span class="bg-white px-4 text-sm font-medium {% if current_step >= 5 %}text-indigo-600{% else %}text-gray-500{% endif %}">
+               Documents
+           </span>
+       </div>
+   </div>
+</div>
 
     <!-- Form Section -->
     <div class="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -38,7 +41,7 @@
             </p>
         </div>
 
-        <form method="POST" class="space-y-8 divide-y divide-gray-200" id="applicationForm">
+        <form method="POST" class="space-y-8 divide-y divide-gray-200" id="applicationForm" enctype="multipart/form-data">
             {% csrf_token %}
 
             {% if form.non_field_errors %}
@@ -97,6 +100,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('applicationForm');
     
+    // Original form validation code
     form.addEventListener('submit', function(e) {
         // Don't prevent default form submission
         const submitButton = e.submitter;
@@ -137,6 +141,164 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+    
+    // Camera and document handling code
+    // Store for camera file name being captured
+    let currentCameraField = null;
+    let mediaStream = null;
+    
+    // Camera handling
+    const cameraModal = document.getElementById('cameraModal');
+    const cameraStream = document.getElementById('camera-stream');
+    const cameraCanvas = document.getElementById('camera-canvas');
+    const captureButton = document.getElementById('capture-button');
+    const retakeButton = document.getElementById('retake-button');
+    const usePhotoButton = document.getElementById('use-photo-button');
+    const closeCameraButton = document.getElementById('close-camera-button');
+    const captureUI = document.getElementById('capture-ui');
+    const retakeUI = document.getElementById('retake-ui');
+    
+    // Open camera modal
+    window.openCamera = function(fieldName) {
+        currentCameraField = fieldName;
+        cameraModal.classList.remove('hidden');
+        captureUI.classList.remove('hidden');
+        retakeUI.classList.add('hidden');
+        cameraStream.classList.remove('hidden');
+        cameraCanvas.classList.add('hidden');
+        
+        // Request camera access
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(stream => {
+                mediaStream = stream;
+                cameraStream.srcObject = stream;
+            })
+            .catch(err => {
+                console.error('Camera error:', err);
+                alert('Unable to access camera. Please use the upload option instead.');
+                closeCameraModal();
+            });
+    };
+    
+    // Close camera modal and clean up
+    function closeCameraModal() {
+        cameraModal.classList.add('hidden');
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            mediaStream = null;
+        }
+    }
+    
+    // Capture photo
+    captureButton.addEventListener('click', function() {
+        const context = cameraCanvas.getContext('2d');
+        cameraCanvas.width = cameraStream.videoWidth;
+        cameraCanvas.height = cameraStream.videoHeight;
+        
+        context.drawImage(cameraStream, 0, 0, cameraCanvas.width, cameraCanvas.height);
+        
+        captureUI.classList.add('hidden');
+        retakeUI.classList.remove('hidden');
+        cameraStream.classList.add('hidden');
+        cameraCanvas.classList.remove('hidden');
+    });
+    
+    // Retake photo
+    retakeButton.addEventListener('click', function() {
+        captureUI.classList.remove('hidden');
+        retakeUI.classList.add('hidden');
+        cameraStream.classList.remove('hidden');
+        cameraCanvas.classList.add('hidden');
+    });
+    
+    // Use captured photo
+    usePhotoButton.addEventListener('click', function() {
+        if (currentCameraField) {
+            cameraCanvas.toBlob(blob => {
+                const fileName = `camera_capture_${Date.now()}.jpg`;
+                const file = new File([blob], fileName, { type: 'image/jpeg' });
+                
+                // Create a FileList-like object (browser doesn't allow creating real FileList)
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                
+                // Set file input value
+                const fileInput = document.getElementById(currentCameraField);
+                fileInput.files = dataTransfer.files;
+                
+                // Trigger change event to update UI
+                const event = new Event('change', { bubbles: true });
+                fileInput.dispatchEvent(event);
+                
+                // Close modal
+                closeCameraModal();
+            }, 'image/jpeg', 0.95);
+        }
+    });
+    
+    // Close camera modal with close button
+    closeCameraButton.addEventListener('click', closeCameraModal);
+    
+    // Handle file selection
+    window.handleFileSelect = function(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const fieldName = input.id;
+            const previewDiv = document.getElementById(`${fieldName}_preview`);
+            const nameSpan = previewDiv.querySelector('.document-name');
+            
+            // Update preview with file name
+            nameSpan.textContent = file.name;
+            previewDiv.classList.remove('hidden');
+            
+            // AI validation indication could be added here
+            // For example, show a loading indicator while checking document
+            
+            // Call AI validation service (simulated)
+            validateDocument(file, fieldName);
+        }
+    };
+    
+    // Remove file
+    window.removeFile = function(fieldName) {
+        const input = document.getElementById(fieldName);
+        const previewDiv = document.getElementById(`${fieldName}_preview`);
+        
+        // Clear file input
+        input.value = '';
+        
+        // Hide preview
+        previewDiv.classList.add('hidden');
+    };
+    
+    // Simulate AI document validation
+    function validateDocument(file, fieldName) {
+        // In a real implementation, you would send the file to the server for AI validation
+        console.log(`Validating ${file.name} for ${fieldName}...`);
+        
+        // Simulate server processing time
+        setTimeout(() => {
+            const previewDiv = document.getElementById(`${fieldName}_preview`);
+            
+            // Add validation indicator (green checkmark)
+            const validationSpan = document.createElement('span');
+            validationSpan.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-2';
+            validationSpan.innerHTML = `
+                <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Validated
+            `;
+            
+            // Add to preview if not already there
+            if (!previewDiv.querySelector('.validation-indicator')) {
+                validationSpan.classList.add('validation-indicator');
+                previewDiv.querySelector('.document-name').appendChild(validationSpan);
+            }
+            
+            console.log(`Document ${file.name} validated successfully`);
+        }, 1500);
+    }
 });
 </script>
 {% endblock %}

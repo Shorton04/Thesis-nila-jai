@@ -31,6 +31,41 @@
         </div>
         <div class="stat-value">{{ requires_revision }}</div>
     </div>
+
+<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="bg-red-50 overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-red-100 rounded-md p-3">
+                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Quarantined Documents
+                            </dt>
+                            <dd>
+                                <div class="text-lg font-medium text-red-900">
+                                    {{ quarantined_count }}
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-red-100 px-4 py-2">
+                <div class="text-sm">
+                    <a href="{% url 'reviewer:quarantined_documents' %}" class="font-medium text-red-700 hover:text-red-900">
+                        View all
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- More statistics tiles... -->
+    </div>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
