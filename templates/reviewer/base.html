@@ -416,7 +416,7 @@
         document.addEventListener('click', (e) => {
             const sidebar = document.querySelector('.sidebar');
             const toggleBtn = document.querySelector('.sidebar-toggle');
-            
+
             if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
                 sidebar.classList.remove('show');
             }

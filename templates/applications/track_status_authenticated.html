@@ -1,0 +1,1020 @@
+{% extends 'auyh_base.html' %}
+{% load static %}
+
+{% block title %}My Applications - Business Permit System{% endblock %}
+
+{% block content %}
+<style>
+    /* Track Status styles */
+    .track-status-wrapper {
+        background-color: #f7fafc;
+        padding: 1.5rem 0;
+        min-height: calc(100vh - 200px);
+    }
+    
+    .status-card {
+        background-color: #fff;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .status-card:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    .status-header {
+        background: linear-gradient(to right, #4338ca, #6366f1);
+        color: white;
+        padding: 1rem;
+    }
+    
+    .search-form {
+        background-color: #fff;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #4338ca;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    
+    .search-btn {
+        background-color: #4338ca;
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .search-btn:hover {
+        background-color: #3730a3;
+    }
+    
+    .reset-btn {
+        background-color: #e5e7eb;
+        color: #4b5563;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .reset-btn:hover {
+        background-color: #d1d5db;
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .status-badge.approved {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+    
+    .status-badge.rejected {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .status-badge.pending {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    .status-badge.revision {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+    
+    .status-badge.draft {
+        background-color: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+    
+    /* Stat cards */
+    .stat-card {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 4px;
+        width: 100%;
+    }
+    
+    .stat-card.primary::before {
+        background: linear-gradient(to right, #4338ca, #6366f1);
+    }
+    
+    .stat-card.warning::before {
+        background: linear-gradient(to right, #f59e0b, #fbbf24);
+    }
+    
+    .stat-card.success::before {
+        background: linear-gradient(to right, #10b981, #34d399);
+    }
+    
+    .stat-card.danger::before {
+        background: linear-gradient(to right, #ef4444, #f87171);
+    }
+    
+    .stat-card.info::before {
+        background: linear-gradient(to right, #3b82f6, #60a5fa);
+    }
+    
+    .stat-card .icon-circle {
+        height: 40px;
+        width: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+    }
+    
+    .stat-card.primary .icon-circle {
+        background-color: rgba(99, 102, 241, 0.1);
+        color: #4338ca;
+    }
+    
+    .stat-card.warning .icon-circle {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    .stat-card.success .icon-circle {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+    
+    .stat-card.danger .icon-circle {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .stat-card.info .icon-circle {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+    
+    /* Table styles */
+    .data-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .data-table th {
+        background-color: #f9fafb;
+        color: #4b5563;
+        font-weight: 600;
+        text-align: left;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .data-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .data-table tr:hover {
+        background-color: #f9fafb;
+    }
+    
+    .data-table .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 1.75rem;
+        width: 1.75rem;
+        border-radius: 0.375rem;
+        color: #4b5563;
+        background-color: #f3f4f6;
+        transition: all 0.2s ease;
+    }
+    
+    .data-table .action-btn:hover {
+        background-color: #e5e7eb;
+        color: #1f2937;
+    }
+    
+    .data-table .action-btn.view {
+        color: #4338ca;
+        background-color: rgba(99, 102, 241, 0.1);
+    }
+    
+    .data-table .action-btn.view:hover {
+        background-color: rgba(99, 102, 241, 0.2);
+    }
+    
+    .data-table .action-btn.edit {
+        color: #f59e0b;
+        background-color: rgba(245, 158, 11, 0.1);
+    }
+    
+    .data-table .action-btn.edit:hover {
+        background-color: rgba(245, 158, 11, 0.2);
+    }
+    
+    .data-table .action-btn.delete {
+        color: #ef4444;
+        background-color: rgba(239, 68, 68, 0.1);
+    }
+    
+    .data-table .action-btn.delete:hover {
+        background-color: rgba(239, 68, 68, 0.2);
+    }
+    
+    /* Pagination */
+    .pagination {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .page-item {
+        margin: 0 0.25rem;
+    }
+    
+    .page-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2rem;
+        height: 2rem;
+        padding: 0 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        background-color: #fff;
+        color: #4b5563;
+        font-size: 0.875rem;
+        transition: all 0.15s ease;
+    }
+    
+    .page-link:hover {
+        background-color: #f9fafb;
+        color: #4338ca;
+    }
+    
+    .page-link.active {
+        background-color: #4338ca;
+        border-color: #4338ca;
+        color: #fff;
+    }
+    
+    .progress-bar {
+        height: 0.5rem;
+        border-radius: 9999px;
+        background-color: #e5e7eb;
+        overflow: hidden;
+    }
+    
+    .progress-bar-inner {
+        height: 100%;
+        border-radius: 9999px;
+        transition: width 0.5s ease;
+    }
+    
+    .progress-bar-inner.draft {
+        background-color: #9ca3af;
+    }
+    
+    .progress-bar-inner.submitted, .progress-bar-inner.pending {
+        background-color: #f59e0b;
+    }
+    
+    .progress-bar-inner.requires_revision, .progress-bar-inner.revision {
+        background-color: #3b82f6;
+    }
+    
+    .progress-bar-inner.approved {
+        background-color: #10b981;
+    }
+    
+    .progress-bar-inner.rejected {
+        background-color: #ef4444;
+    }
+    
+    .quick-filter {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.375rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        margin: 0 0.25rem 0.5rem 0;
+        cursor: pointer;
+    }
+    
+    .quick-filter:hover {
+        transform: translateY(-1px);
+    }
+    
+    .quick-filter.all {
+        background-color: #f3f4f6;
+        color: #4b5563;
+    }
+    
+    .quick-filter.all:hover, .quick-filter.all.active {
+        background-color: #9ca3af;
+        color: white;
+    }
+    
+    .quick-filter.draft {
+        background-color: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+    
+    .quick-filter.draft:hover, .quick-filter.draft.active {
+        background-color: #6b7280;
+        color: white;
+    }
+    
+    .quick-filter.submitted {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    .quick-filter.submitted:hover, .quick-filter.submitted.active {
+        background-color: #f59e0b;
+        color: white;
+    }
+    
+    .quick-filter.approved {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+    
+    .quick-filter.approved:hover, .quick-filter.approved.active {
+        background-color: #10b981;
+        color: white;
+    }
+    
+    .quick-filter.rejected {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .quick-filter.rejected:hover, .quick-filter.rejected.active {
+        background-color: #ef4444;
+        color: white;
+    }
+    
+    .quick-filter.revision {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+    
+    .quick-filter.revision:hover, .quick-filter.revision.active {
+        background-color: #3b82f6;
+        color: white;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .empty-state-icon {
+        font-size: 3rem;
+        color: #9ca3af;
+        margin-bottom: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .status-card .card-body {
+            padding: 1rem;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 0.5rem;
+        }
+        
+        .stat-card .icon-circle {
+            height: 32px;
+            width: 32px;
+        }
+    }
+</style>
+
+<div class="track-status-wrapper">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">My Applications</h1>
+            <p class="text-gray-600 mt-2">Track and manage all your business permit applications</p>
+        </div>
+        
+        <!-- Statistics Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            <!-- Total Applications -->
+            <div class="status-card stat-card primary">
+                <div class="p-4">
+                    <div class="flex items-center">
+                        <div class="icon-circle">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-xs font-medium text-gray-500">Total</h3>
+                            <p class="text-xl font-semibold text-gray-800">{{ application_counts.total }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Draft Applications -->
+            <div class="status-card stat-card">
+                <div class="p-4">
+                    <div class="flex items-center">
+                        <div class="icon-circle" style="background-color: rgba(107, 114, 128, 0.1); color: #6b7280;">
+                            <i class="fas fa-pencil-alt"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-xs font-medium text-gray-500">Draft</h3>
+                            <p class="text-xl font-semibold text-gray-800">{{ application_counts.draft }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Applications -->
+            <div class="status-card stat-card warning">
+                <div class="p-4">
+                    <div class="flex items-center">
+                        <div class="icon-circle">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-xs font-medium text-gray-500">Pending</h3>
+                            <p class="text-xl font-semibold text-gray-800">{{ application_counts.submitted }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approved Applications -->
+            <div class="status-card stat-card success">
+                <div class="p-4">
+                    <div class="flex items-center">
+                        <div class="icon-circle">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-xs font-medium text-gray-500">Approved</h3>
+                            <p class="text-xl font-semibold text-gray-800">{{ application_counts.approved }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rejected Applications -->
+            <div class="status-card stat-card danger">
+                <div class="p-4">
+                    <div class="flex items-center">
+                        <div class="icon-circle">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-xs font-medium text-gray-500">Rejected</h3>
+                            <p class="text-xl font-semibold text-gray-800">{{ application_counts.rejected }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Filter and Search Section -->
+        <div class="status-card mb-6">
+            <div class="status-header flex justify-between items-center">
+                <h2 class="text-lg font-semibold">
+                    <i class="fas fa-filter mr-2"></i> Filter Applications
+                </h2>
+            </div>
+            <div class="p-4">
+                <div class="mb-4">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Quick Filters</h3>
+                    <div class="flex flex-wrap">
+                        <div class="quick-filter all active" data-status="all">
+                            <i class="fas fa-list-ul mr-1"></i> All
+                        </div>
+                        <div class="quick-filter draft" data-status="draft">
+                            <i class="fas fa-pencil-alt mr-1"></i> Draft
+                        </div>
+                        <div class="quick-filter submitted" data-status="submitted">
+                            <i class="fas fa-clock mr-1"></i> Pending
+                        </div>
+                        <div class="quick-filter revision" data-status="requires_revision">
+                            <i class="fas fa-redo-alt mr-1"></i> Needs Revision
+                        </div>
+                        <div class="quick-filter approved" data-status="approved">
+                            <i class="fas fa-check-circle mr-1"></i> Approved
+                        </div>
+                        <div class="quick-filter rejected" data-status="rejected">
+                            <i class="fas fa-times-circle mr-1"></i> Rejected
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="get" action="{% url 'applications:my_applications' %}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="search_query" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                            <input 
+                                type="text" 
+                                name="search_query" 
+                                id="search_query" 
+                                placeholder="Search by business name or permit #" 
+                                class="form-input pl-10"
+                                value="{{ request.GET.search_query|default:'' }}"
+                            >
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="application_type" class="block text-sm font-medium text-gray-700 mb-1">Application Type</label>
+                        <select name="application_type" id="application_type" class="form-input">
+                            <option value="">All Types</option>
+                            <option value="new" {% if request.GET.application_type == 'new' %}selected{% endif %}>New Application</option>
+                            <option value="renewal" {% if request.GET.application_type == 'renewal' %}selected{% endif %}>Renewal</option>
+                            <option value="amendment" {% if request.GET.application_type == 'amendment' %}selected{% endif %}>Amendment</option>
+                            <option value="closure" {% if request.GET.application_type == 'closure' %}selected{% endif %}>Closure</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="date_range" class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                        <select name="date_range" id="date_range" class="form-input">
+                            <option value="">Any Time</option>
+                            <option value="today" {% if request.GET.date_range == 'today' %}selected{% endif %}>Today</option>
+                            <option value="week" {% if request.GET.date_range == 'week' %}selected{% endif %}>This Week</option>
+                            <option value="month" {% if request.GET.date_range == 'month' %}selected{% endif %}>This Month</option>
+                            <option value="quarter" {% if request.GET.date_range == 'quarter' %}selected{% endif %}>Last 3 Months</option>
+                            <option value="year" {% if request.GET.date_range == 'year' %}selected{% endif %}>This Year</option>
+                        </select>
+                    </div>
+                    
+                    <input type="hidden" name="status" id="status_filter" value="{{ request.GET.status|default:'' }}">
+                    
+                    <div class="flex md:items-end md:col-span-2">
+                        <button type="submit" class="search-btn mr-2">
+                            <i class="fas fa-search mr-1"></i> Search
+                        </button>
+                        <a href="{% url 'applications:my_applications' %}" class="reset-btn">
+                            <i class="fas fa-undo-alt mr-1"></i> Reset
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Applications List -->
+        <div class="status-card mb-6">
+            <div class="status-header flex justify-between items-center">
+                <h2 class="text-lg font-semibold">
+                    <i class="fas fa-list mr-2"></i> My Applications
+                </h2>
+                <a href="{% url 'applications:new_application' %}" class="search-btn">
+                    <i class="fas fa-plus mr-1"></i> New Application
+                </a>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Business Name</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Progress</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for application in page_obj %}
+                        <tr data-status="{{ application.status }}">
+                            <td>
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 mr-3">
+                                        <div class="h-10 w-10 rounded-full flex items-center justify-center
+                                            {% if application.status == 'approved' %}bg-green-100 text-green-600
+                                            {% elif application.status == 'rejected' %}bg-red-100 text-red-600
+                                            {% elif application.status == 'submitted' %}bg-yellow-100 text-yellow-600
+                                            {% elif application.status == 'requires_revision' %}bg-blue-100 text-blue-600
+                                            {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                            <i class="fas 
+                                                {% if application.status == 'approved' %}fa-check
+                                                {% elif application.status == 'rejected' %}fa-times
+                                                {% elif application.status == 'submitted' %}fa-clock
+                                                {% elif application.status == 'requires_revision' %}fa-redo-alt
+                                                {% else %}fa-pencil-alt{% endif %}"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">{{ application.business_name }}</div>
+                                        <div class="text-xs text-gray-500">
+                                            {% if application.permit_no %}
+                                                Permit #: {{ application.permit_no }}
+                                            {% else %}
+                                                Application #: {{ application.id|truncatechars:8 }}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ application.get_application_type_display }}</td>
+                            <td>
+                                <span class="status-badge 
+                                    {% if application.status == 'approved' %}approved
+                                    {% elif application.status == 'rejected' %}rejected
+                                    {% elif application.status == 'submitted' %}pending
+                                    {% elif application.status == 'requires_revision' %}revision
+                                    {% else %}draft{% endif %}">
+                                    {{ application.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="w-32">
+                                <div class="progress-bar">
+                                    <div class="progress-bar-inner {{ application.status }}" 
+                                        style="width: 
+                                        {% if application.status == 'approved' %}100%
+                                        {% elif application.status == 'rejected' %}100%
+                                        {% elif application.status == 'submitted' %}60%
+                                        {% elif application.status == 'requires_revision' %}70%
+                                        {% else %}30%{% endif %}">
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ application.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="flex space-x-1">
+                                    <a href="{% url 'applications:application_detail' application.id %}" class="action-btn view" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    
+                                    {% if application.status == 'draft' or application.status == 'requires_revision' %}
+                                    <a href="{% url 'applications:edit_application' application.id %}" class="action-btn edit" title="Edit Application">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                    
+                                    <a href="{% url 'applications:status_detail' application.id %}" class="action-btn" title="Track Status">
+                                        <i class="fas fa-chart-line"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">
+                                        <i class="fas fa-clipboard-list"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-gray-700 mb-2">No applications found</h3>
+                                    
+                                    {% if request.GET.search_query or request.GET.status or request.GET.application_type or request.GET.date_range %}
+                                        <p class="text-gray-600 mb-4">No applications match your current filters.</p>
+                                        <a href="{% url 'applications:my_applications' %}" class="reset-btn">
+                                            <i class="fas fa-undo-alt mr-1"></i> Clear Filters
+                                        </a>
+                                    {% else %}
+                                        <p class="text-gray-600 mb-4">You haven't created any applications yet.</p>
+                                        <a href="{% url 'applications:new_application' %}" class="search-btn">
+                                            <i class="fas fa-plus mr-1"></i> Create Your First Application
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+                <div class="hidden md:block text-sm text-gray-700">
+                    Showing <span class="font-medium">{{ page_obj.start_index }}</span> to 
+                    <span class="font-medium">{{ page_obj.end_index }}</span> of 
+                    <span class="font-medium">{{ page_obj.paginator.count }}</span> results
+                </div>
+                <div>
+                    <ul class="pagination">
+                        <!-- Start Button - First page -->
+                        {% if page_obj.number > 1 %}
+                        <li class="page-item">
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1" class="page-link" title="First Page">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    
+                        <!-- Previous Button -->
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" class="page-link">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <!-- Page Numbers -->
+                        {% for i in page_obj.paginator.page_range %}
+                            {% if page_obj.number == i %}
+                            <li class="page-item">
+                                <span class="page-link active">{{ i }}</span>
+                            </li>
+                            {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ i }}" class="page-link">{{ i }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- Next Button -->
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" class="page-link">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <!-- End Button - Last page -->
+                        {% if page_obj.number < page_obj.paginator.num_pages %}
+                        <li class="page-item">
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}" class="page-link" title="Last Page">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        <!-- Help Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="status-card p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Application Status Guide</h3>
+                <div class="space-y-3">
+                    <div class="flex items-start">
+                        <span class="status-badge draft mr-2">Draft</span>
+                        <p class="text-sm text-gray-600">Application is saved but not yet submitted for review.</p>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="status-badge pending mr-2">Pending</span>
+                        <p class="text-sm text-gray-600">Application has been submitted and is awaiting review.</p>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="status-badge revision mr-2">Revision Needed</span>
+                        <p class="text-sm text-gray-600">Application requires changes before it can be approved.</p>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="status-badge approved mr-2">Approved</span>
+                        <p class="text-sm text-gray-600">Application has been approved and permit is ready.</p>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="status-badge rejected mr-2">Rejected</span>
+                        <p class="text-sm text-gray-600">Application has been rejected. See details for more information.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status-card p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Need Help?</h3>
+                <p class="text-sm text-gray-600 mb-4">If you need assistance with your application, please contact our support team or visit our help center for guidance.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <a href="#" class="search-btn bg-gray-500 hover:bg-gray-600 text-center">
+                        <i class="fas fa-question-circle mr-2"></i> Help Center
+                    </a>
+                    <a href="#" class="search-btn text-center">
+                        <i class="fas fa-headset mr-2"></i> Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Quick filters functionality
+        const quickFilters = document.querySelectorAll('.quick-filter');
+        const statusFilter = document.getElementById('status_filter');
+        const applicationRows = document.querySelectorAll('tr[data-status]');
+        
+        // Initialize filters based on URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeStatus = urlParams.get('status') || 'all';
+        
+        quickFilters.forEach(filter => {
+            // Set active filter based on URL
+            if (filter.dataset.status === activeStatus) {
+                filter.classList.add('active');
+            } else {
+                filter.classList.remove('active');
+            }
+            
+            // Add click event listener
+            filter.addEventListener('click', function() {
+                const status = this.dataset.status;
+                
+                // Update active class
+                quickFilters.forEach(f => f.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update hidden input
+                statusFilter.value = status === 'all' ? '' : status;
+                
+                // If it's a quick filter without other filters, submit immediately
+                if (!urlParams.has('search_query') && 
+                    !urlParams.has('application_type') && 
+                    !urlParams.has('date_range')) {
+                    
+                    // Find the form and submit it
+                    this.closest('form').submit();
+                }
+                
+                // Visual filtering of currently displayed rows (for better UX before page refresh)
+                if (status === 'all') {
+                    applicationRows.forEach(row => row.style.display = '');
+                } else {
+                    applicationRows.forEach(row => {
+                        if (row.dataset.status === status) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                }
+            });
+        });
+        
+        // Application type dropdown change handler for immediate filtering
+        const appTypeSelect = document.getElementById('application_type');
+        if (appTypeSelect) {
+            appTypeSelect.addEventListener('change', function() {
+                if (this.value && 
+                    !urlParams.has('search_query') && 
+                    !urlParams.has('date_range')) {
+                    // Submit form on change if it's a simple filter
+                    this.closest('form').submit();
+                }
+            });
+        }
+        
+        // Date range dropdown change handler for immediate filtering
+        const dateRangeSelect = document.getElementById('date_range');
+        if (dateRangeSelect) {
+            dateRangeSelect.addEventListener('change', function() {
+                if (this.value && 
+                    !urlParams.has('search_query') && 
+                    !urlParams.has('application_type')) {
+                    // Submit form on change if it's a simple filter
+                    this.closest('form').submit();
+                }
+            });
+        }
+        
+        // Form validation for search
+        const searchForm = document.querySelector('form[action*="my_applications"]');
+        if (searchForm) {
+            searchForm.addEventListener('submit', function(e) {
+                const searchQuery = document.getElementById('search_query');
+                
+                // If search query is very short (1-2 chars) and not empty, show warning
+                if (searchQuery.value.trim().length > 0 && searchQuery.value.trim().length < 3) {
+                    // If there's no existing error message, add one
+                    if (!searchQuery.nextElementSibling || !searchQuery.nextElementSibling.classList.contains('text-red-500')) {
+                        const errorMsg = document.createElement('div');
+                        errorMsg.className = 'text-red-500 text-xs mt-1';
+                        errorMsg.textContent = 'Please enter at least 3 characters for search';
+                        searchQuery.parentNode.appendChild(errorMsg);
+                    }
+                    
+                    // Add error styling
+                    searchQuery.classList.add('border-red-500');
+                    
+                    e.preventDefault();
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            // Clear error styling on input change
+            const searchInput = document.getElementById('search_query');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    this.classList.remove('border-red-500');
+                    
+                    // Remove any existing error message
+                    const errorMsg = this.parentNode.querySelector('.text-red-500');
+                    if (errorMsg) {
+                        errorMsg.remove();
+                    }
+                });
+            }
+        }
+        
+        // Auto-refresh data every 2 minutes to check for status updates
+        setInterval(function() {
+            // Only refresh if there are active applications
+            if (document.querySelectorAll('tr[data-status="submitted"], tr[data-status="requires_revision"]').length > 0) {
+                // Create a subtle indicator that we're checking for updates
+                const tableContainer = document.querySelector('.data-table').parentNode;
+                const updateIndicator = document.createElement('div');
+                updateIndicator.className = 'text-xs text-gray-500 text-right py-1 px-3';
+                updateIndicator.innerHTML = '<i class="fas fa-sync fa-spin mr-1"></i> Checking for updates...';
+                
+                tableContainer.appendChild(updateIndicator);
+                
+                // AJAX request to check for status updates
+                fetch(window.location.href)
+                    .then(response => response.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        
+                        // Compare application statuses to see if any have changed
+                        const newRows = doc.querySelectorAll('tr[data-status]');
+                        const currentRows = document.querySelectorAll('tr[data-status]');
+                        
+                        let hasChanges = false;
+                        
+                        if (newRows.length !== currentRows.length) {
+                            hasChanges = true;
+                        } else {
+                            for (let i = 0; i < newRows.length; i++) {
+                                if (newRows[i].dataset.status !== currentRows[i].dataset.status) {
+                                    hasChanges = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // If there are changes, refresh the page
+                        if (hasChanges) {
+                            window.location.reload();
+                        } else {
+                            // Update the "last checked" indicator
+                            updateIndicator.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Updated just now';
+                            
+                            // Remove the indicator after a few seconds
+                            setTimeout(() => {
+                                updateIndicator.remove();
+                            }, 3000);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking for updates:', error);
+                        updateIndicator.remove();
+                    });
+            }
+        }, 120000); // Check every 2 minutes
+    });
+</script>
+{% endblock %}

@@ -1,132 +1,149 @@
 {% extends 'reviewer/base.html' %}
 
+{% block title %}{{ application.business_name }} - Application Review{% endblock %}
+
 {% block content %}
-<div class="grid grid-cols-3 gap-6">
-    <div class="col-span-2">
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+    <div>
         <div class="card">
-            <div class="flex justify-between items-start mb-6">
-                <div>
-                    <div class="flex items-center gap-3 mb-2">
-                        <h2 class="text-2xl font-bold">{{ application.business_name }}</h2>
-                        <span class="status-badge status-{{ application.status }}">
-                            {{ application.get_status_display }}
-                        </span>
+            <div class="card-header" style="margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <h3 class="card-title">{{ application.business_name }}</h3>
+                            <span class="status-badge status-{{ application.status }}">
+                                {{ application.get_status_display }}
+                            </span>
+                        </div>
+                        <p style="color: var(--gray-700);">
+                            Application #: {{ application.application_number }}<br>
+                            Type: {{ application.get_application_type_display }}
+                        </p>
                     </div>
-                    <p class="text-gray-600">
-                        Application #: {{ application.application_number }}<br>
-                        Type: {{ application.get_application_type_display }}
-                    </p>
-                </div>
-                <div class="flex gap-2">
-                    {% if application.status == 'submitted' %}
-                        <form method="post">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="start_review">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-play"></i>
-                                Start Review
-                            </button>
-                        </form>
-                    {% endif %}
-                    
-                    {% if application.status == 'under_review' %}
-                        {% if assessment %}
+                    <div style="display: flex; gap: 0.5rem;">
+                        {% if application.status == 'submitted' %}
                             <form method="post">
                                 {% csrf_token %}
-                                <input type="hidden" name="action" value="approve">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-check"></i>
-                                    Approve
+                                <input type="hidden" name="action" value="start_review">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-play mr-2"></i>
+                                    Start Review
                                 </button>
                             </form>
                         {% endif %}
-                        <button onclick="showModal('rejectModal')" class="btn btn-danger">
-                            <i class="fas fa-times"></i>
-                            Reject
-                        </button>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-6 mb-6">
-                <div class="p-4 bg-gray-50 rounded-lg">
-                    <h3 class="text-sm font-semibold text-gray-600 mb-3">Submission Details</h3>
-                    <div class="space-y-2">
-                        <div>
-                            <label class="text-xs text-gray-500">Submitted On</label>
-                            <p class="font-medium">{{ application.submission_date|date:"M d, Y H:i" }}</p>
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-500">Registration Number</label>
-                            <p class="font-medium">{{ application.registration_number }}</p>
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-500">Registration Date</label>
-                            <p class="font-medium">{{ application.registration_date|date:"M d, Y" }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-4 bg-gray-50 rounded-lg">
-                    <h3 class="text-sm font-semibold text-gray-600 mb-3">Business Details</h3>
-                    <div class="space-y-2">
-                        <div>
-                            <label class="text-xs text-gray-500">Business Type</label>
-                            <p class="font-medium">{{ application.get_business_type_display }}</p>
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-500">Business Area</label>
-                            <p class="font-medium">{{ application.business_area }} sqm</p>
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-500">Line of Business</label>
-                            <p class="font-medium">{{ application.line_of_business }}</p>
-                        </div>
+                        
+                        {% if application.status == 'under_review' %}
+                            {% if assessment %}
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="approve">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-check mr-2"></i>
+                                        Approve
+                                    </button>
+                                </form>
+                            {% endif %}
+                            <button onclick="showModal('rejectModal')" class="btn btn-danger">
+                                <i class="fas fa-times mr-2"></i>
+                                Reject
+                            </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold mb-4">Requirements</h3>
-                <div class="space-y-4">
-                    {{% for req in requirements %}
-<div class="border rounded-lg overflow-hidden">
-    <div class="flex justify-between items-start p-4">
-        <div>
-            <h4 class="font-medium">{{ req.requirement_name }}</h4>
-            <p class="text-sm text-gray-600">
-                Submitted: {{ req.updated_at|date:"M d, Y" }}
-            </p>
-            {% if req.document %}
-                {% with doc=req.document.document_set.first %}
-                    {% if doc and doc.is_quarantined %}
-                    <div class="mt-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                        <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        Potential Fraud Detected
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div style="padding: 1rem; background: var(--gray-100); border-radius: 0.5rem;">
+                    <h3 style="font-size: 0.875rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.75rem;">Submission Details</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div>
+                            <label style="font-size: 0.75rem; color: var(--gray-700);">Submitted On</label>
+                            <p style="font-weight: 500;">{{ application.submission_date|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; color: var(--gray-700);">Registration Number</label>
+                            <p style="font-weight: 500;">{{ application.registration_number }}</p>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; color: var(--gray-700);">Registration Date</label>
+                            <p style="font-weight: 500;">{{ application.registration_date|date:"M d, Y" }}</p>
+                        </div>
                     </div>
-                    {% endif %}
-                {% endwith %}
-            {% endif %}
-        </div>
+                </div>
+
+                <div style="padding: 1rem; background: var(--gray-100); border-radius: 0.5rem;">
+                    <h3 style="font-size: 0.875rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.75rem;">Business Details</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div>
+                            <label style="font-size: 0.75rem; color: var(--gray-700);">Business Type</label>
+                            <p style="font-weight: 500;">{{ application.get_business_type_display }}</p>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; color: var(--gray-700);">Business Area</label>
+                            <p style="font-weight: 500;">{{ application.business_area }} sqm</p>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; color: var(--gray-700);">Line of Business</label>
+                            <p style="font-weight: 500;">{{ application.line_of_business }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Requirements</h3>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% for req in requirements %}
+                    <div style="border: 1px solid var(--gray-200); border-radius: 0.5rem; overflow: hidden;">
+                        <div style="padding: 1rem; display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div>
+                                <h4 style="font-weight: 500; margin-bottom: 0.25rem;">{{ req.requirement_name }}</h4>
+                                <p style="font-size: 0.875rem; color: var(--gray-700);">
+                                    Submitted: {{ req.updated_at|date:"M d, Y" }}
+                                </p>
+                                {% if req.document %}
+                                    {% with doc=req.document.document_set.first %}
+                                        {% if doc and doc.is_quarantined %}
+                                        <div style="margin-top: 0.5rem; display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 500; background: var(--danger); opacity: 0.1; color: var(--danger);">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                                            Potential Fraud Detected
+                                        </div>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% endif %}
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                {% if req.document %}
+                                <a href="{{ req.document.file.url }}" target="_blank" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye mr-1"></i> View
+                                </a>
+                                <button onclick="viewAIAnalysis('{{ req.id }}')" class="btn btn-info btn-sm">
+                                    <i class="fas fa-robot mr-1"></i> AI Analysis
+                                </button>
+                                {% endif %}
+                                {% if not req.is_verified %}
+                                <button onclick="verifyDocument('{{ req.id }}')" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check-circle mr-1"></i> Verify
+                                </button>
+                                {% endif %}
+                            </div>
                         </div>
                         {% if req.is_verified %}
-                        <div class="bg-green-50 p-3 border-t">
-                            <div class="flex items-center gap-2 text-green-700">
+                        <div style="padding: 0.75rem; background: var(--success); opacity: 0.1; border-top: 1px solid var(--gray-200);">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--success);">
                                 <i class="fas fa-check-circle"></i>
-                                <span class="font-medium">Verified</span>
+                                <span style="font-weight: 500;">Verified</span>
                             </div>
                             {% if req.remarks %}
-                            <p class="text-sm text-gray-600 mt-1">{{ req.remarks }}</p>
+                            <p style="font-size: 0.875rem; color: var(--gray-700); margin-top: 0.25rem;">{{ req.remarks }}</p>
                             {% endif %}
                         </div>
                         {% endif %}
                         {% if req.document and req.document.metadata.validation_results %}
-                        <div class="border-t p-3 bg-blue-50">
-                            <div class="flex items-center justify-between mb-2">
-                                <h5 class="font-medium text-sm">AI Validation</h5>
-                                <span class="text-xs {% if req.document.is_quarantined %}text-red-600{% else %}text-green-600{% endif %}">
+                        <div style="padding: 0.75rem; background: var(--info); opacity: 0.1; border-top: 1px solid var(--gray-200);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <h5 style="font-size: 0.875rem; font-weight: 500;">AI Validation</h5>
+                                <span style="font-size: 0.75rem; {% if req.document.is_quarantined %}color: var(--danger);{% else %}color: var(--success);{% endif %}">
                                     {% if req.document.is_quarantined %}
                                     <i class="fas fa-exclamation-triangle"></i> Quarantined
                                     {% else %}
@@ -134,16 +151,16 @@
                                     {% endif %}
                                 </span>
                             </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="text-xs">
-                                    <span class="text-gray-500">Tampering:</span> 
-                                    <span class="font-medium {% if req.document.metadata.validation_results.ela_score < 50 %}text-green-600{% else %}text-red-600{% endif %}">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                <div style="font-size: 0.75rem;">
+                                    <span style="color: var(--gray-700);">Tampering:</span> 
+                                    <span style="font-weight: 500; {% if req.document.metadata.validation_results.ela_score < 50 %}color: var(--success);{% else %}color: var(--danger);{% endif %}">
                                         {{ req.document.metadata.validation_results.ela_score|floatformat:1 }}
                                     </span>
                                 </div>
-                                <div class="text-xs">
-                                    <span class="text-gray-500">Quality:</span> 
-                                    <span class="font-medium {% if req.document.metadata.validation_results.text_quality >= 50 %}text-green-600{% else %}text-red-600{% endif %}">
+                                <div style="font-size: 0.75rem;">
+                                    <span style="color: var(--gray-700);">Quality:</span> 
+                                    <span style="font-weight: 500; {% if req.document.metadata.validation_results.text_quality >= 50 %}color: var(--success);{% else %}color: var(--danger);{% endif %}">
                                         {{ req.document.metadata.validation_results.text_quality|floatformat:1 }}
                                     </span>
                                 </div>
@@ -155,17 +172,17 @@
                 </div>
             </div>
 
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold mb-4">Activity Log</h3>
-                <div class="space-y-4">
+            <div>
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Activity Log</h3>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
                     {% for activity in activities %}
-                    <div class="flex items-start gap-3">
-                        <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center 
-                                    {% if activity.activity_type == 'review' %}bg-blue-100 text-blue-600
-                                    {% elif activity.activity_type == 'revise' %}bg-yellow-100 text-yellow-600
-                                    {% elif activity.activity_type == 'approve' %}bg-green-100 text-green-600
-                                    {% elif activity.activity_type == 'reject' %}bg-red-100 text-red-600
-                                    {% else %}bg-gray-100 text-gray-600{% endif %}">
+                    <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                        <div style="width: 2rem; height: 2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+                                    {% if activity.activity_type == 'review' %}background: var(--info); opacity: 0.1; color: var(--info);
+                                    {% elif activity.activity_type == 'revise' %}background: var(--warning); opacity: 0.1; color: var(--warning);
+                                    {% elif activity.activity_type == 'approve' %}background: var(--success); opacity: 0.1; color: var(--success);
+                                    {% elif activity.activity_type == 'reject' %}background: var(--danger); opacity: 0.1; color: var(--danger);
+                                    {% else %}background: var(--gray-200); color: var(--gray-700);{% endif %}">
                             <i class="fas fa-{% if activity.activity_type == 'review' %}search
                                         {% elif activity.activity_type == 'revise' %}edit
                                         {% elif activity.activity_type == 'approve' %}check
@@ -173,8 +190,8 @@
                                         {% else %}dot-circle{% endif %}"></i>
                         </div>
                         <div>
-                            <p class="text-sm">{{ activity.description }}</p>
-                            <p class="text-xs text-gray-500">
+                            <p style="font-size: 0.875rem;">{{ activity.description }}</p>
+                            <p style="font-size: 0.75rem; color: var(--gray-700);">
                                 {{ activity.performed_at|date:"M d, Y H:i" }} by {{ activity.performed_by.get_full_name }}
                             </p>
                         </div>
@@ -185,46 +202,52 @@
         </div>
     </div>
 
-    <div class="col-span-1">
-        <div class="card mb-6">
-            <h3 class="text-lg font-semibold mb-4">Assessment</h3>
+    <div>
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-calculator mr-2"></i>
+                    Assessment
+                </h3>
+            </div>
+            
             {% if assessment %}
-            <div class="space-y-4">
+            <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
                 <div>
-                    <label class="text-sm text-gray-600">Total Amount</label>
-                    <p class="text-2xl font-bold text-primary">₱{{ assessment.total_amount|floatformat:2 }}</p>
+                    <label style="font-size: 0.875rem; color: var(--gray-700);">Total Amount</label>
+                    <p style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">₱{{ assessment.total_amount|floatformat:2 }}</p>
                 </div>
                 <div>
-                    <label class="text-sm text-gray-600">Payment Status</label>
+                    <label style="font-size: 0.875rem; color: var(--gray-700);">Payment Status</label>
                     <p>
                         {% if assessment.is_paid %}
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span class="status-badge status-approved">
                             <i class="fas fa-check-circle mr-1"></i> Paid
                         </span>
                         {% else %}
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        <span class="status-badge status-under_review">
                             <i class="fas fa-clock mr-1"></i> Pending
                         </span>
                         {% endif %}
                     </p>
                 </div>
                 <div>
-                    <label class="text-sm text-gray-600">Due Date</label>
-                    <p class="font-medium">{{ assessment.payment_deadline|date:"M d, Y" }}</p>
+                    <label style="font-size: 0.875rem; color: var(--gray-700);">Due Date</label>
+                    <p style="font-weight: 500;">{{ assessment.payment_deadline|date:"M d, Y" }}</p>
                 </div>
                 {% if assessment.remarks %}
                 <div>
-                    <label class="text-sm text-gray-600">Remarks</label>
-                    <p class="text-sm">{{ assessment.remarks }}</p>
+                    <label style="font-size: 0.875rem; color: var(--gray-700);">Remarks</label>
+                    <p style="font-size: 0.875rem;">{{ assessment.remarks }}</p>
                 </div>
                 {% endif %}
             </div>
             {% else %}
-            <form method="post" action="{% url 'reviewer:create_assessment' application.id %}" class="space-y-4">
+            <form method="post" action="{% url 'reviewer:create_assessment' application.id %}" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
                 {% csrf_token %}
                 {{ assessment_form.as_p }}
-                <button type="submit" class="btn btn-primary w-full">
-                    <i class="fas fa-plus"></i>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-plus mr-2"></i>
                     Create Assessment
                 </button>
             </form>
@@ -232,13 +255,19 @@
         </div>
 
         <div class="card">
-            <h3 class="text-lg font-semibold mb-4">Request Revision</h3>
-            <form method="post" class="space-y-4">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-edit mr-2"></i>
+                    Request Revision
+                </h3>
+            </div>
+            
+            <form method="post" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="request_revision">
                 {{ revision_form.as_p }}
-                <button type="submit" class="btn btn-warning w-full">
-                    <i class="fas fa-edit"></i>
+                <button type="submit" class="btn btn-warning" style="width: 100%;">
+                    <i class="fas fa-edit mr-2"></i>
                     Request Revision
                 </button>
             </form>
@@ -249,15 +278,21 @@
 <!-- Reject Modal -->
 <div id="rejectModal" class="modal">
     <div class="modal-content">
-        <h3 class="text-xl font-semibold mb-4">Reject Application</h3>
-        <form method="post">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-times-circle mr-2"></i>
+                Reject Application
+            </h3>
+        </div>
+        
+        <form method="post" style="margin-top: 1rem;">
             {% csrf_token %}
             <input type="hidden" name="action" value="reject">
-            <div class="mb-4">
+            <div style="margin-bottom: 1rem;">
                 <label class="form-label">Reason for Rejection</label>
                 <textarea name="reject_reason" class="form-control" rows="3" required></textarea>
             </div>
-            <div class="flex justify-end gap-2">
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
                 <button type="button" onclick="hideModal('rejectModal')" 
                         class="btn btn-secondary">Cancel</button>
                 <button type="submit" class="btn btn-danger">Reject Application</button>
@@ -268,62 +303,38 @@
 
 <!-- AI Analysis Modal -->
 <div id="aiAnalysisModal" class="modal">
-    <div class="modal-content max-w-3xl">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-semibold">AI Document Analysis</h3>
-            <button onclick="hideModal('aiAnalysisModal')" class="text-gray-500 hover:text-gray-700">
-                <i class="fas fa-times"></i>
-            </button>
+    <div class="modal-content" style="max-width: 48rem;">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-robot mr-2"></i>
+                AI Document Analysis
+            </h3>
         </div>
         
-        <div id="aiAnalysisContent" class="mb-4">
+        <div id="aiAnalysisContent" style="margin: 1rem 0;">
             <!-- Content will be loaded here -->
-            <div class="animate-pulse">
-                <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="height: 1rem; background: var(--gray-200); border-radius: 0.25rem; width: 75%;"></div>
+                <div style="height: 1rem; background: var(--gray-200); border-radius: 0.25rem; width: 50%;"></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
+                    <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
+                    <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
+                </div>
             </div>
         </div>
         
-        <div class="flex justify-end">
+        <div style="display: flex; justify-content: flex-end; padding-top: 1rem; border-top: 1px solid var(--gray-200);">
             <button onclick="hideModal('aiAnalysisModal')" class="btn btn-secondary">Close</button>
         </div>
     </div>
 </div>
+{% endblock %}
 
-<style>
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-}
-
-.modal.show {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: auto;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 500px;
-}
-
-.max-w-3xl {
-    max-width: 48rem;
-}
-</style>
-
+{% block scripts %}
 <script>
 function verifyDocument(requirementId) {
     const remarks = prompt('Enter verification remarks (optional):');
@@ -355,16 +366,16 @@ function viewAIAnalysis(requirementId) {
     
     // Reset content to loading state
     document.getElementById('aiAnalysisContent').innerHTML = `
-        <div class="animate-pulse">
-            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div class="h-20 bg-gray-200 rounded"></div>
-                <div class="h-20 bg-gray-200 rounded"></div>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="height: 1rem; background: var(--gray-200); border-radius: 0.25rem; width: 75%;"></div>
+            <div style="height: 1rem; background: var(--gray-200); border-radius: 0.25rem; width: 50%;"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
+                <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="h-20 bg-gray-200 rounded"></div>
-                <div class="h-20 bg-gray-200 rounded"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
+                <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
             </div>
         </div>
     `;
@@ -378,7 +389,7 @@ function viewAIAnalysis(requirementId) {
                 document.getElementById('aiAnalysisContent').innerHTML = renderAnalysisResults(data.results);
             } else {
                 document.getElementById('aiAnalysisContent').innerHTML = `
-                    <div class="p-4 bg-red-50 text-red-800 rounded">
+                    <div style="padding: 1rem; background: var(--danger); opacity: 0.1; color: var(--danger); border-radius: 0.5rem;">
                         <p>${data.error || 'Error loading analysis results'}</p>
                     </div>
                 `;
@@ -387,7 +398,7 @@ function viewAIAnalysis(requirementId) {
         .catch(error => {
             console.error('Error:', error);
             document.getElementById('aiAnalysisContent').innerHTML = `
-                <div class="p-4 bg-red-50 text-red-800 rounded">
+                <div style="padding: 1rem; background: var(--danger); opacity: 0.1; color: var(--danger); border-radius: 0.5rem;">
                     <p>Failed to load analysis results. Please try again.</p>
                 </div>
             `;
@@ -397,72 +408,79 @@ function viewAIAnalysis(requirementId) {
 function renderAnalysisResults(results) {
     // Helper function to create a gauge with score
     const createGauge = (title, score, maxScore, thresholdGood, color) => {
-        // ... existing gauge code ...
+        const percentage = Math.min(100, (score/maxScore) * 100);
+        const status = score >= thresholdGood ? 'color: var(--danger);' : 'color: var(--success);';
+        
+        return `
+            <div style="background: var(--gray-100); border-radius: 0.5rem; padding: 1rem;">
+                <h4 style="font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">${title}</h4>
+                <div style="display: flex; align-items: center; margin-bottom: 0.25rem;">
+                    <div style="width: 100%; background: var(--gray-200); border-radius: 9999px; height: 0.5rem;">
+                        <div style="background: var(--${color}); height: 0.5rem; border-radius: 9999px; width: ${percentage}%;"></div>
+                    </div>
+                    <span style="margin-left: 0.5rem; font-size: 0.875rem; font-weight: 500; ${status}">${score.toFixed(1)}</span>
+                </div>
+                <p style="font-size: 0.75rem; color: var(--gray-700);">
+                    ${score >= thresholdGood ? 'Suspicious' : 'Normal'}
+                </p>
+            </div>
+        `;
     };
     
     // Generate regions to highlight
     const highlightRegions = results.suspicious_regions ? results.suspicious_regions.map(region => {
-        return `<div class="absolute border-2 border-red-500 bg-red-100 bg-opacity-30 pointer-events-none"
-                    style="left: ${region.x}px; top: ${region.y}px; width: ${region.width}px; height: ${region.height}px;">
+        return `<div style="position: absolute; border: 2px solid var(--danger); background: var(--danger); opacity: 0.1; pointer-events: none;
+                    left: ${region.x}px; top: ${region.y}px; width: ${region.width}px; height: ${region.height}px;">
                 </div>`;
     }).join('') : '';
     
     // Render the complete analysis results
     return `
-        <div class="bg-white p-1">
-            <div class="mb-4">
-                <div class="flex items-center mb-2">
-                    <h3 class="text-lg font-semibold">Document Status:</h3>
-                    <span class="ml-2 px-2 py-1 rounded text-sm font-medium 
-                        ${results.is_quarantined ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
+        <div style="padding: 1rem;">
+            <div style="margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-right: 0.5rem;">Document Status:</h3>
+                    <span class="status-badge ${results.is_quarantined ? 'status-requires_revision' : 'status-approved'}">
                         ${results.is_quarantined ? 'Quarantined' : 'Passed Validation'}
                     </span>
                 </div>
                 ${results.quarantine_reason ? `
-                <div class="p-3 bg-red-50 text-red-700 rounded text-sm">
+                <div style="padding: 0.75rem; background: var(--danger); opacity: 0.1; color: var(--danger); border-radius: 0.5rem; font-size: 0.875rem;">
                     <strong>Quarantine Reason:</strong> ${results.quarantine_reason}
                 </div>` : ''}
             </div>
             
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                ${createGauge('Tampering Detection', results.validation_results.ela_score, 100, 50, 'blue')}
-                ${createGauge('Noise Analysis', results.validation_results.noise_score, 50, 25, 'indigo')}
-                ${createGauge('Text Quality', results.validation_results.text_quality, 100, 50, 'green')}
-                ${createGauge('Resolution', results.validation_results.resolution_score, 100, 50, 'purple')}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                ${createGauge('Tampering Detection', results.validation_results.ela_score, 100, 50, 'danger')}
+                ${createGauge('Noise Analysis', results.validation_results.noise_score, 50, 25, 'warning')}
+                ${createGauge('Text Quality', results.validation_results.text_quality, 100, 50, 'info')}
+                ${createGauge('Resolution', results.validation_results.resolution_score, 100, 50, 'primary')}
             </div>
             
-            <div class="mb-4">
-                <h4 class="text-sm font-medium text-gray-900 mb-2">Document Preview</h4>
-                <div class="border rounded overflow-hidden relative">
-                    <img src="${results.document_url}" alt="Document" class="max-w-full h-auto">
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">Document Preview</h4>
+                <div style="border: 1px solid var(--gray-200); border-radius: 0.5rem; overflow: hidden; position: relative;">
+                    <img src="${results.document_url}" alt="Document" style="max-width: 100%; height: auto;">
                     ${highlightRegions}
                 </div>
             </div>
             
             ${results.extracted_text ? `
-            <div class="mb-4">
-                <h4 class="text-sm font-medium text-gray-900 mb-2">Extracted Text</h4>
-                <div class="p-3 bg-gray-50 rounded text-sm font-mono overflow-auto max-h-48">
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">Extracted Text</h4>
+                <div style="padding: 0.75rem; background: var(--gray-100); border-radius: 0.5rem; font-size: 0.875rem; font-family: monospace; overflow: auto; max-height: 12rem;">
                     ${results.extracted_text.replace(/\n/g, '<br>')}
                 </div>
             </div>` : ''}
             
-            <div class="flex flex-col gap-2">
-                <h4 class="text-sm font-medium text-gray-900">Document Assessment</h4>
-                <p class="text-sm ${results.is_quarantined ? 'text-red-700' : 'text-gray-700'}">
+            <div>
+                <h4 style="font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">Document Assessment</h4>
+                <p style="font-size: 0.875rem; color: ${results.is_quarantined ? 'var(--danger)' : 'var(--gray-700)'};">
                     ${results.validation_message || 'No assessment available'}
                 </p>
             </div>
         </div>
     `;
-}
-
-function showModal(modalId) {
-    document.getElementById(modalId).classList.add('show');
-}
-
-function hideModal(modalId) {
-    document.getElementById(modalId).classList.remove('show');
 }
 </script>
 {% endblock %}

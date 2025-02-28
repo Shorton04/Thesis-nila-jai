@@ -1,6 +1,10 @@
+{# templates/reviewer/dashboard.html #}
 {% extends 'reviewer/base.html' %}
 
+{% block title %}Reviewer Dashboard{% endblock %}
+
 {% block content %}
+<!-- Stats Grid Section -->
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-header">
@@ -31,134 +35,184 @@
         </div>
         <div class="stat-value">{{ requires_revision }}</div>
     </div>
+</div>
 
-<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="bg-red-50 overflow-hidden shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-red-100 rounded-md p-3">
-                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">
-                                Quarantined Documents
-                            </dt>
-                            <dd>
-                                <div class="text-lg font-medium text-red-900">
-                                    {{ quarantined_count }}
-                                </div>
-                            </dd>
-                        </dl>
-                    </div>
+<!-- AI Document Analysis Section -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-robot mr-2"></i>
+            AI Document Analysis
+        </h3>
+    </div>
+    
+    <!-- Fraud statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-title">Quarantined Documents</div>
+                <div class="stat-icon" style="background: var(--danger)">
+                    <i class="fas fa-exclamation-triangle"></i>
                 </div>
             </div>
-            <div class="bg-red-100 px-4 py-2">
-                <div class="text-sm">
-                    <a href="{% url 'reviewer:quarantined_documents' %}" class="font-medium text-red-700 hover:text-red-900">
-                        View all
-                    </a>
-                </div>
+            <div class="stat-value">{{ quarantined_count|default:"0" }}</div>
+            <div class="text-right mt-4">
+                <a href="{% url 'reviewer:quarantined_documents' %}" class="btn btn-danger btn-sm">
+                    <i class="fas fa-eye"></i> View all
+                </a>
             </div>
         </div>
         
-        <!-- More statistics tiles... -->
-    </div>
-</div>
-
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-file-alt mr-2"></i>
-                Recent Applications
-            </h3>
-            <a href="{% url 'reviewer:application_list' %}" class="btn btn-primary btn-sm">
-                <i class="fas fa-list"></i>
-                View All
-            </a>
-        </div>
-        
-        <div class="table-container">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Application #</th>
-                        <th>Business Name</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for app in recent_applications %}
-                    <tr>
-                        <td>{{ app.application_number }}</td>
-                        <td>{{ app.business_name }}</td>
-                        <td>
-                            <span class="text-sm font-medium">
-                                {{ app.get_application_type_display }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="status-badge status-{{ app.status }}">
-                                {{ app.get_status_display }}
-                            </span>
-                        </td>
-                        <td>
-                            <a href="{% url 'reviewer:application_detail' app.id %}" 
-                               class="btn btn-primary btn-sm">
-                                <i class="fas fa-eye"></i>
-                                Review
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-history mr-2"></i>
-                Recent Activities
-            </h3>
-        </div>
-
-        <div class="space-y-4">
-            {% for activity in recent_activities %}
-            <div class="flex items-start gap-3 pb-4 border-b border-gray-200 last:border-0">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center 
-                            {% if activity.activity_type == 'review' %}bg-blue-100 text-blue-600
-                            {% elif activity.activity_type == 'revise' %}bg-yellow-100 text-yellow-600
-                            {% elif activity.activity_type == 'approve' %}bg-green-100 text-green-600
-                            {% elif activity.activity_type == 'reject' %}bg-red-100 text-red-600
-                            {% else %}bg-gray-100 text-gray-600{% endif %}">
-                    {% if activity.activity_type == 'review' %}
-                        <i class="fas fa-search"></i>
-                    {% elif activity.activity_type == 'revise' %}
-                        <i class="fas fa-edit"></i>
-                    {% elif activity.activity_type == 'approve' %}
-                        <i class="fas fa-check"></i>
-                    {% elif activity.activity_type == 'reject' %}
-                        <i class="fas fa-times"></i>
-                    {% else %}
-                        <i class="fas fa-dot-circle"></i>
-                    {% endif %}
-                </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-900">{{ activity.description }}</p>
-                    <p class="text-xs text-gray-500">
-                        {{ activity.performed_at|date:"M d, Y H:i" }} by {{ activity.performed_by.get_full_name }}
-                    </p>
+        <!-- OCR Statistics -->
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-title">OCR Processed</div>
+                <div class="stat-icon" style="background: var(--info)">
+                    <i class="fas fa-file-alt"></i>
                 </div>
             </div>
-            {% endfor %}
+            <div class="stat-value">{{ ocr_processed_count|default:"0" }}</div>
+            <div class="text-right mt-4">
+                <a href="#" class="btn btn-primary btn-sm">
+                    <i class="fas fa-eye"></i> View details
+                </a>
+            </div>
+        </div>
+        
+        <!-- NLP Validation Statistics -->
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-title">NLP Validated</div>
+                <div class="stat-icon" style="background: var(--success)">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ nlp_validated_count|default:"0" }}</div>
+            <div class="text-right mt-4">
+                <a href="#" class="btn btn-success btn-sm">
+                    <i class="fas fa-eye"></i> View details
+                </a>
+            </div>
+        </div>
+        
+        <!-- AI Processing Statistics -->
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-title">Processing Time (avg)</div>
+                <div class="stat-icon" style="background: var(--secondary)">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ avg_processing_time|default:"0" }}s</div>
+            <div class="text-right mt-4">
+                <a href="#" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-chart-bar"></i> View metrics
+                </a>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Recent Applications Card -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-file-alt mr-2"></i>
+            Recent Applications
+        </h3>
+        <a href="{% url 'reviewer:application_list' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-list"></i>
+            View All
+        </a>
+    </div>
+    
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Application #</th>
+                    <th>Business Name</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in recent_applications %}
+                <tr>
+                    <td>{{ app.application_number }}</td>
+                    <td>{{ app.business_name }}</td>
+                    <td>
+                        <span class="text-sm font-medium">
+                            {{ app.get_application_type_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ app.status }}">
+                            {{ app.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'reviewer:application_detail' app.id %}" 
+                           class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye"></i>
+                            Review
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Recent Activities Card -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-history mr-2"></i>
+            Recent Activities
+        </h3>
+    </div>
+
+    <div style="display: grid; gap: 1rem;">
+        {% for activity in recent_activities %}
+        <div style="display: flex; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--gray-200);">
+            <div style="width: 2.5rem; height: 2.5rem; border-radius: 9999px; display: flex; align-items: center; justify-content: center;
+                    {% if activity.activity_type == 'review' %}background: #dbeafe; color: #1e40af;
+                    {% elif activity.activity_type == 'revise' %}background: #fef3c7; color: #92400e;
+                    {% elif activity.activity_type == 'approve' %}background: #dcfce7; color: #166534;
+                    {% elif activity.activity_type == 'reject' %}background: #fee2e2; color: #991b1b;
+                    {% else %}background: var(--gray-100); color: var(--gray-700);{% endif %}">
+                {% if activity.activity_type == 'review' %}
+                    <i class="fas fa-search"></i>
+                {% elif activity.activity_type == 'revise' %}
+                    <i class="fas fa-edit"></i>
+                {% elif activity.activity_type == 'approve' %}
+                    <i class="fas fa-check"></i>
+                {% elif activity.activity_type == 'reject' %}
+                    <i class="fas fa-times"></i>
+                {% else %}
+                    <i class="fas fa-dot-circle"></i>
+                {% endif %}
+            </div>
+            <div>
+                <p style="font-weight: 500; color: var(--gray-800);">{{ activity.description }}</p>
+                <p style="font-size: 0.875rem; color: var(--gray-700);">
+                    {{ activity.performed_at|date:"M d, Y H:i" }} by {{ activity.performed_by.get_full_name }}
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Any dashboard-specific JavaScript can go here
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Reviewer dashboard loaded');
+    });
+</script>
 {% endblock %}

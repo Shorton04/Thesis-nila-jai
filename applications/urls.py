@@ -18,6 +18,9 @@ urlpatterns = [
     path('<uuid:application_id>/status/', views.status_detail, name='status_detail'),
     path('<uuid:application_id>/requirements/', views.requirements, name='requirements'),
     path('<uuid:application_id>/history/', views.application_history, name='history'),
+    path('track-status/', views.track_status, name='track_status'),
+    path('my-applications/', views.track_status_authenticated, name='my_applications'),
+    path('<uuid:application_id>/status-update/', views.status_update, name='status_update'),
 
     # Document Management
     path('<uuid:application_id>/requirement/<int:requirement_id>/upload/',

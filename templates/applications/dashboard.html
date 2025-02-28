@@ -1,359 +1,1259 @@
-<!-- applications/dashboard.html -->
-{% extends 'base.html' %}
+{% extends 'auyh_base.html' %}
 {% load static %}
+
+{% block title %}Dashboard - Business Permit System{% endblock %}
 
 {% block content %}
 <style>
-    body {
+    /* Dashboard styles */
+    .dashboard-wrapper {
         background-color: #f7fafc;
+        padding: 1.5rem 0;
     }
+    
+    /* Card styles */
+    .card {
+        background-color: #fff;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    /* Stat cards */
     .stat-card {
-        background: linear-gradient(45deg, #4c51bf, #667eea);
-        color: #fff;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        position: relative;
+        overflow: hidden;
     }
-    .stat-card .icon {
-        background: rgba(255, 255, 255, 0.2);
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 4px;
+        width: 100%;
     }
-    .action-button {
-        background: linear-gradient(45deg, #fc8181, #f56565);
+    
+    .stat-card.primary::before {
+        background: linear-gradient(to right, #4338ca, #6366f1);
+    }
+    
+    .stat-card.warning::before {
+        background: linear-gradient(to right, #f59e0b, #fbbf24);
+    }
+    
+    .stat-card.success::before {
+        background: linear-gradient(to right, #10b981, #34d399);
+    }
+    
+    .stat-card.danger::before {
+        background: linear-gradient(to right, #ef4444, #f87171);
+    }
+    
+    .stat-card .icon-circle {
+        height: 48px;
+        width: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+    }
+    
+    .stat-card.primary .icon-circle {
+        background-color: rgba(99, 102, 241, 0.1);
+        color: #4338ca;
+    }
+    
+    .stat-card.warning .icon-circle {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    .stat-card.success .icon-circle {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+    
+    .stat-card.danger .icon-circle {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    /* Action buttons */
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        font-size: 0.875rem;
         color: #fff;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         transition: all 0.3s ease;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }
-    .action-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
-    .search-filter {
-        background: #fff;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    .action-btn.primary {
+        background-color: #4338ca;
     }
+    
+    .action-btn.primary:hover {
+        background-color: #3730a3;
+    }
+    
+    .action-btn.success {
+        background-color: #10b981;
+    }
+    
+    .action-btn.success:hover {
+        background-color: #059669;
+    }
+    
+    .action-btn.warning {
+        background-color: #f59e0b;
+    }
+    
+    .action-btn.warning:hover {
+        background-color: #d97706;
+    }
+    
+    .action-btn.danger {
+        background-color: #ef4444;
+    }
+    
+    .action-btn.danger:hover {
+        background-color: #dc2626;
+    }
+    
+    /* Search form */
+    .search-card {
+        background-color: #fff;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        margin-bottom: 1.5rem;
+    }
+    
+    .search-card-header {
+        background: linear-gradient(to right, #4338ca, #6366f1);
+        color: white;
+        padding: 1rem;
+        border-top-left-radius: 0.5rem;
+        border-top-right-radius: 0.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .input-icon-wrapper {
+        position: relative;
+    }
+    
+    .input-icon-wrapper .form-input {
+        padding-left: 2.5rem;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #4338ca;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    
+    .form-icon {
+        position: absolute;
+        top: 50%;
+        left: 0.75rem;
+        transform: translateY(-50%);
+        color: #9ca3af;
+    }
+    
+    /* Active filter styles */
+    .active-filters {
+        background-color: #f9fafb;
+        border-radius: 0.375rem;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .filter-tag {
+        display: inline-flex;
+        align-items: center;
+        background-color: #e5e7eb;
+        border-radius: 9999px;
+        padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.75rem;
+        color: #4b5563;
+    }
+    
+    .filter-tag .remove-filter {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 0.5rem;
+        height: 1.25rem;
+        width: 1.25rem;
+        border-radius: 9999px;
+        background-color: #d1d5db;
+        color: #4b5563;
+        transition: all 0.15s ease;
+    }
+    
+    .filter-tag .remove-filter:hover {
+        background-color: #9ca3af;
+        color: #fff;
+    }
+    
+    /* Application list */
     .application-list {
-        background: #fff;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        background-color: #fff;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
     }
-    .application-list li {
+    
+    .application-header {
+        background: linear-gradient(to right, #10b981, #34d399);
+        color: white;
+        padding: 1rem;
+    }
+    
+    .application-item {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
         transition: all 0.3s ease;
     }
-    .application-list li:hover {
-        background-color: #f7fafc;
-        transform: translateY(-2px);
+    
+    .application-item:hover {
+        background-color: #f9fafb;
     }
-        .pagination {
-        background: #fff;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    .application-item:last-child {
+        border-bottom: none;
     }
-    .pagination a, .pagination span {
-        transition: all 0.3s ease;
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
     }
-    .pagination a:hover {
-        background-color: #e2e8f0;
+    
+    .status-badge.approved {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
     }
-    .pagination .current {
-        background-color: #4c51bf;
+    
+    .status-badge.rejected {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .status-badge.pending {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    /* Table styles */
+    .data-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .data-table th {
+        background-color: #f9fafb;
+        color: #4b5563;
+        font-weight: 600;
+        text-align: left;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        cursor: pointer;
+    }
+    
+    .data-table th:hover {
+        background-color: #f3f4f6;
+    }
+    
+    .data-table th i {
+        margin-left: 0.25rem;
+    }
+    
+    .data-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .data-table tr:hover {
+        background-color: #f9fafb;
+    }
+    
+    /* Pagination */
+    .pagination {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .page-item {
+        margin: 0 0.25rem;
+    }
+    
+    .page-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2rem;
+        height: 2rem;
+        padding: 0 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        background-color: #fff;
+        color: #4b5563;
+        font-size: 0.875rem;
+        transition: all 0.15s ease;
+    }
+    
+    .page-link:hover {
+        background-color: #f9fafb;
+        color: #4338ca;
+    }
+    
+    .page-link.active {
+        background-color: #4338ca;
+        border-color: #4338ca;
         color: #fff;
+    }
+    
+    /* Loading indicator */
+    .table-loading {
+        position: relative;
+    }
+    
+    .table-loading::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+    }
+    
+    .table-loading::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 3px solid #e5e7eb;
+        border-top-color: #4338ca;
+        animation: spin 1s linear infinite;
+        z-index: 20;
+    }
+    
+    @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    
+    /* Search and filter section */
+    .search-filter-section {
+        background-color: #fff;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+    
+    .accordion-button {
+        width: 100%;
+        text-align: left;
+        background-color: #f9fafb;
+        padding: 1rem;
+        font-weight: 600;
+        color: #374151;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease;
+    }
+    
+    .accordion-button:hover {
+        background-color: #f3f4f6;
+    }
+    
+    .accordion-content {
+        padding: 1rem;
+        display: none;
+    }
+    
+    .accordion-content.show {
+        display: block;
+    }
+    
+    .search-btn {
+        background-color: #4338ca;
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .search-btn:hover {
+        background-color: #3730a3;
+    }
+    
+    .reset-btn {
+        background-color: #e5e7eb;
+        color: #4b5563;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .reset-btn:hover {
+        background-color: #d1d5db;
+    }
+    
+    .sort-indicator {
+        display: inline-block;
+        width: 0.5rem;
+        margin-left: 0.25rem;
+    }
+    
+    /* Responsive fixes */
+    @media (max-width: 768px) {
+        .hidden-sm {
+            display: none;
+        }
+        
+        .search-filter-section {
+            margin-bottom: 1rem;
+        }
+        
+        .data-table {
+            font-size: 0.875rem;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 0.5rem;
+        }
     }
 </style>
-    
-<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <!-- Statistics Section -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <!-- Total Applications -->
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
-                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">
-                                Total Applications
-                            </dt>
-                            <dd class="text-lg font-medium text-gray-900">
-                                {{ application_counts.total }}
-                            </dd>
-                        </dl>
-                    </div>
-                </div>
+
+<div class="dashboard-wrapper">
+    <div class="container">
+        <!-- Dashboard Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Business Permit Dashboard</h1>
+                <p class="text-gray-600 mt-1">Welcome back, {{ user.get_full_name|default:user.username }}</p>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <a href="{% url 'applications:new_application' %}" class="action-btn primary">
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    New Application
+                </a>
             </div>
         </div>
 
-        <!-- Pending Applications -->
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
-                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">
-                                Pending Review
-                            </dt>
-                            <dd class="text-lg font-medium text-gray-900">
-                                {{ application_counts.submitted }}
-                            </dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Approved Applications -->
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
-                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">
-                                Approved
-                            </dt>
-                            <dd class="text-lg font-medium text-gray-900">
-                                {{ application_counts.approved }}
-                            </dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Rejected Applications -->
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-red-500 rounded-md p-3">
-                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">
-                                Rejected
-                            </dt>
-                            <dd class="text-lg font-medium text-gray-900">
-                                {{ application_counts.rejected }}
-                            </dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Action Buttons -->
-    <div class="mb-8">
-        <div class="flex flex-wrap gap-4">
-            <a href="{% url 'applications:new_application' %}"
-               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                New Application
-            </a>
-            <a href="{% url 'applications:renewal_application' %}"
-               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                Renewal
-            </a>
-            <a href="{% url 'applications:amendment_application' %}"
-               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
-                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                </svg>
-                Amendment
-            </a>
-            <a href="{% url 'applications:closure_application' %}"
-               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-                Business Closure
-            </a>
-        </div>
-    </div>
-
-    <!-- Search and Filter -->
-    <div class="mb-8 bg-white shadow rounded-lg p-6">
-        <form method="GET" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label for="{{ search_form.search_field.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                        Search By
-                    </label>
-                    {{ search_form.search_field }}
-                </div>
-                <div>
-                    <label for="{{ search_form.search_query.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                        Search Query
-                    </label>
-                    {{ search_form.search_query }}
-                </div>
-                <div>
-                    <label for="{{ search_form.status.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                        Status
-                    </label>
-                    {{ search_form.status }}
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for="{{ search_form.date_from.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                        Date From
-                    </label>
-                    {{ search_form.date_from }}
-                </div>
-                <div>
-                    <label for="{{ search_form.date_to.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                        Date To
-                    </label>
-                    {{ search_form.date_to }}
-                </div>
-            </div>
-            <div class="flex justify-end">
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    Search
-                </button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Applications List -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul role="list" class="divide-y divide-gray-200">
-            {% for application in page_obj %}
-            <li>
-                <a href="{% url 'applications:application_detail' application.id %}" class="block hover:bg-gray-50">
-                    <div class="px-4 py-4 sm:px-6">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <p class="text-sm font-medium text-indigo-600 truncate">
-                                    {{ application.business_name }}
-                                </p>
-                                <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                    {% if application.status == 'approved' %}bg-green-100 text-green-800
-                                    {% elif application.status == 'rejected' %}bg-red-100 text-red-800
-                                    {% elif application.status == 'submitted' %}bg-yellow-100 text-yellow-800
-                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
-                                    {{ application.get_status_display }}
-                                </span>
-                            </div>
-                            <div class="ml-2 flex-shrink-0 flex">
-                                <p class="text-sm text-gray-500">
-                                    {{ application.created_at|date:"M d, Y" }}
-                                </p>
-                            </div>
+        <!-- Statistics Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <!-- Total Applications -->
+            <div class="card stat-card primary">
+                <div class="p-4">
+                    <div class="flex items-center">
+                        <div class="icon-circle">
+                            <i class="fas fa-file-alt fa-lg"></i>
                         </div>
-                        <div class="mt-2 sm:flex sm:justify-between">
-                            <div class="sm:flex">
-                                <p class="flex items-center text-sm text-gray-500">
-                                    <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                    </svg>
-                                    {{ application.get_application_type_display }}
-                                </p>
-                                <p class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                                    <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                    </svg>
-                                    {{ application.email }}
-                                </p>
-                            </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">Total Applications</h3>
+                            <p class="text-2xl font-semibold text-gray-800">{{ application_counts.total }}</p>
                         </div>
                     </div>
-                </a>
-            </li>
-            {% empty %}
-            <li class="px-4 py-8 text-center">
-                <p class="text-gray-500">No applications found.</p>
-                <p class="mt-2">
-                    <a href="{% url 'applications:new_application' %}" class="text-indigo-600 hover:text-indigo-500">
-                        Create your first application →
-                    </a>
-                </p>
-            </li>
-            {% endfor %}
-        </ul>
-
-        <!-- Pagination -->
-        {% if page_obj.has_other_pages %}
-        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-            <div class="flex-1 flex justify-between sm:hidden">
-                {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Previous
-                </a>
-                {% endif %}
-                {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Next
-                </a>
-                {% endif %}
-            </div>
-            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                    <p class="text-sm text-gray-700">
-                        Showing
-                        <span class="font-medium">{{ page_obj.start_index }}</span>
-                        to
-                        <span class="font-medium">{{ page_obj.end_index }}</span>
-                        of
-                        <span class="font-medium">{{ page_obj.paginator.count }}</span>
-                        results
-                    </p>
                 </div>
-                <div>
-                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                            <span class="sr-only">Previous</span>
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                            </svg>
+            </div>
+
+            <!-- Pending Applications -->
+            <div class="card stat-card warning">
+                <div class="p-4">
+                    <div class="flex items-center">
+                        <div class="icon-circle">
+                            <i class="fas fa-clock fa-lg"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">Pending Review</h3>
+                            <p class="text-2xl font-semibold text-gray-800">{{ application_counts.submitted }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approved Applications -->
+            <div class="card stat-card success">
+                <div class="p-4">
+                    <div class="flex items-center">
+                        <div class="icon-circle">
+                            <i class="fas fa-check-circle fa-lg"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">Approved</h3>
+                            <p class="text-2xl font-semibold text-gray-800">{{ application_counts.approved }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rejected Applications -->
+            <div class="card stat-card danger">
+                <div class="p-4">
+                    <div class="flex items-center">
+                        <div class="icon-circle">
+                            <i class="fas fa-times-circle fa-lg"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">Rejected</h3>
+                            <p class="text-2xl font-semibold text-gray-800">{{ application_counts.rejected }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Applications List Column -->
+            <div class="lg:col-span-2">
+                <!-- Action Buttons -->
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-3">Quick Actions</h2>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="{% url 'applications:new_application' %}" class="action-btn primary">
+                            <i class="fas fa-plus-circle mr-2"></i>
+                            New Application
                         </a>
-                        {% endif %}
+                        <a href="{% url 'applications:renewal_application' %}" class="action-btn success">
+                            <i class="fas fa-sync-alt mr-2"></i>
+                            Renewal
+                        </a>
+                        <a href="{% url 'applications:amendment_application' %}" class="action-btn warning">
+                            <i class="fas fa-edit mr-2"></i>
+                            Amendment
+                        </a>
+                        <a href="{% url 'applications:closure_application' %}" class="action-btn danger">
+                            <i class="fas fa-store-slash mr-2"></i>
+                            Closure
+                        </a>
+                    </div>
+                </div>
 
-                        {% for i in page_obj.paginator.page_range %}
-                            {% if page_obj.number == i %}
-                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-indigo-50 text-sm font-medium text-indigo-600">
-                                {{ i }}
-                            </span>
-                            {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
-                            <a href="?page={{ i }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                {{ i }}
+                <!-- Search and Filter Section -->
+                <div class="search-filter-section mb-6">
+                    <button class="accordion-button" id="searchAccordionBtn">
+                        <span><i class="fas fa-search mr-2"></i> Search & Filter Applications</span>
+                        <i class="fas fa-chevron-down" id="accordionIcon"></i>
+                    </button>
+                    <div class="accordion-content" id="searchAccordion">
+                        <form id="searchForm" method="get" action="{% url 'applications:dashboard' %}">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="form-group">
+                                    <label for="search_field" class="block text-sm font-medium text-gray-700 mb-1">Search By</label>
+                                    <select name="search_field" id="search_field" class="form-input">
+                                        <option value="business_name" {% if request.GET.search_field == 'business_name' %}selected{% endif %}>Business Name</option>
+                                        <option value="email" {% if request.GET.search_field == 'email' %}selected{% endif %}>Email</option>
+                                        <option value="permit_no" {% if request.GET.search_field == 'permit_no' %}selected{% endif %}>Permit Number</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="search_query" class="block text-sm font-medium text-gray-700 mb-1">Search Term</label>
+                                    <div class="input-icon-wrapper">
+                                        <i class="fas fa-search form-icon"></i>
+                                        <input type="text" name="search_query" id="search_query" placeholder="Enter search term..." 
+                                            class="form-input" value="{{ request.GET.search_query|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="form-group">
+                                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Application Status</label>
+                                    <select name="status" id="status" class="form-input">
+                                        <option value="">All Statuses</option>
+                                        <option value="submitted" {% if request.GET.status == 'submitted' %}selected{% endif %}>Pending</option>
+                                        <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Approved</option>
+                                        <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                                        <option value="revisions" {% if request.GET.status == 'revisions' %}selected{% endif %}>Needs Revision</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="application_type" class="block text-sm font-medium text-gray-700 mb-1">Application Type</label>
+                                    <select name="application_type" id="application_type" class="form-input">
+                                        <option value="">All Types</option>
+                                        <option value="new" {% if request.GET.application_type == 'new' %}selected{% endif %}>New Application</option>
+                                        <option value="renewal" {% if request.GET.application_type == 'renewal' %}selected{% endif %}>Renewal</option>
+                                        <option value="amendment" {% if request.GET.application_type == 'amendment' %}selected{% endif %}>Amendment</option>
+                                        <option value="closure" {% if request.GET.application_type == 'closure' %}selected{% endif %}>Closure</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="sort" class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                                    <select name="sort" id="sort" class="form-input">
+                                        <option value="-created_at" {% if request.GET.sort == '-created_at' or not request.GET.sort %}selected{% endif %}>Most Recent</option>
+                                        <option value="created_at" {% if request.GET.sort == 'created_at' %}selected{% endif %}>Oldest First</option>
+                                        <option value="business_name" {% if request.GET.sort == 'business_name' %}selected{% endif %}>Business Name (A-Z)</option>
+                                        <option value="-business_name" {% if request.GET.sort == '-business_name' %}selected{% endif %}>Business Name (Z-A)</option>
+                                        <option value="status" {% if request.GET.sort == 'status' %}selected{% endif %}>Status</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="form-group">
+                                    <label for="date_from" class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+                                    <div class="input-icon-wrapper">
+                                        <i class="fas fa-calendar form-icon"></i>
+                                        <input type="date" name="date_from" id="date_from" class="form-input" 
+                                            value="{{ request.GET.date_from|default:'' }}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="date_to" class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                                    <div class="input-icon-wrapper">
+                                        <i class="fas fa-calendar form-icon"></i>
+                                        <input type="date" name="date_to" id="date_to" class="form-input"
+                                            value="{{ request.GET.date_to|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between mt-4">
+                                <button type="button" id="resetSearch" class="reset-btn">
+                                    <i class="fas fa-undo mr-1"></i> Reset
+                                </button>
+                                <button type="submit" class="search-btn">
+                                    <i class="fas fa-search mr-1"></i> Search Applications
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Active Filters Section -->
+                {% if request.GET.search_query or request.GET.status or request.GET.application_type or request.GET.date_from or request.GET.date_to %}
+                <div class="active-filters mb-4">
+                    <div class="flex items-center mb-2">
+                        <h3 class="text-sm font-medium text-gray-700 mr-2">Active Filters:</h3>
+                        <a href="{% url 'applications:dashboard' %}{% if request.GET.sort %}?sort={{ request.GET.sort }}{% endif %}" class="text-xs text-indigo-600 hover:text-indigo-900">
+                            Clear All
+                        </a>
+                    </div>
+                    
+                    <div class="flex flex-wrap">
+                        {% if request.GET.search_query %}
+                        <div class="filter-tag">
+                            <span>{{ request.GET.search_field|default:'Business Name' }}: {{ request.GET.search_query }}</span>
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'search_field' and key != 'search_query' %}{{ key }}={{ value }}&{% endif %}{% endfor %}" class="remove-filter">
+                                <i class="fas fa-times text-xs"></i>
                             </a>
-                            {% endif %}
-                        {% endfor %}
-
-                        {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                            <span class="sr-only">Next</span>
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                            </svg>
-                        </a>
+                        </div>
                         {% endif %}
-                    </nav>
+                        
+                        {% if request.GET.status %}
+                        <div class="filter-tag">
+                            <span>Status: {% if request.GET.status == 'submitted' %}Pending{% elif request.GET.status == 'approved' %}Approved{% elif request.GET.status == 'rejected' %}Rejected{% elif request.GET.status == 'revisions' %}Needs Revision{% else %}{{ request.GET.status }}{% endif %}</span>
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'status' %}{{ key }}={{ value }}&{% endif %}{% endfor %}" class="remove-filter">
+                                <i class="fas fa-times text-xs"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if request.GET.application_type %}
+                        <div class="filter-tag">
+                            <span>Type: {% if request.GET.application_type == 'new' %}New Application{% elif request.GET.application_type == 'renewal' %}Renewal{% elif request.GET.application_type == 'amendment' %}Amendment{% elif request.GET.application_type == 'closure' %}Closure{% else %}{{ request.GET.application_type }}{% endif %}</span>
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'application_type' %}{{ key }}={{ value }}&{% endif %}{% endfor %}" class="remove-filter">
+                                <i class="fas fa-times text-xs"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if request.GET.date_from %}
+                        <div class="filter-tag">
+                            <span>From: {{ request.GET.date_from }}</span>
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'date_from' %}{{ key }}={{ value }}&{% endif %}{% endfor %}" class="remove-filter">
+                                <i class="fas fa-times text-xs"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if request.GET.date_to %}
+                        <div class="filter-tag">
+                            <span>To: {{ request.GET.date_to }}</span>
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'date_to' %}{{ key }}={{ value }}&{% endif %}{% endfor %}" class="remove-filter">
+                                <i class="fas fa-times text-xs"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Applications List -->
+                <div class="application-list">
+                    <div class="application-header flex justify-between items-center">
+                        <h2 class="text-lg font-semibold">
+                            <i class="fas fa-list mr-2"></i>
+                            My Applications
+                        </h2>
+                        <div id="tableStatus" class="text-sm text-white">
+                            {% if page_obj %}
+                                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto" id="applicationsTable">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="business_name" class="sortable-header">
+                                        Business
+                                        <span class="sort-indicator" id="sort-business_name">
+                                            {% if request.GET.sort == 'business_name' %}
+                                                <i class="fas fa-sort-up"></i>
+                                            {% elif request.GET.sort == '-business_name' %}
+                                                <i class="fas fa-sort-down"></i>
+                                            {% else %}
+                                                <i class="fas fa-sort"></i>
+                                            {% endif %}
+                                        </span>
+                                    </th>
+                                    <th data-sort="application_type" class="sortable-header">
+                                        Type
+                                        <span class="sort-indicator" id="sort-application_type">
+                                            {% if request.GET.sort == 'application_type' %}
+                                                <i class="fas fa-sort-up"></i>
+                                            {% elif request.GET.sort == '-application_type' %}
+                                                <i class="fas fa-sort-down"></i>
+                                            {% else %}
+                                                <i class="fas fa-sort"></i>
+                                            {% endif %}
+                                        </span>
+                                    </th>
+                                    <th data-sort="status" class="sortable-header">
+                                        Status
+                                        <span class="sort-indicator" id="sort-status">
+                                            {% if request.GET.sort == 'status' %}
+                                                <i class="fas fa-sort-up"></i>
+                                            {% elif request.GET.sort == '-status' %}
+                                                <i class="fas fa-sort-down"></i>
+                                            {% else %}
+                                                <i class="fas fa-sort"></i>
+                                            {% endif %}
+                                        </span>
+                                    </th>
+                                    <th data-sort="created_at" class="sortable-header">
+                                        Date
+                                        <span class="sort-indicator" id="sort-created_at">
+                                            {% if request.GET.sort == 'created_at' %}
+                                                <i class="fas fa-sort-up"></i>
+                                            {% elif request.GET.sort == '-created_at' or not request.GET.sort %}
+                                                <i class="fas fa-sort-down"></i>
+                                            {% else %}
+                                                <i class="fas fa-sort"></i>
+                                            {% endif %}
+                                        </span>
+                                    </th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for application in page_obj %}
+                                <tr>
+                                    <td>
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 mr-3">
+                                                <div class="h-10 w-10 rounded-full flex items-center justify-center
+                                                    {% if application.status == 'approved' %}bg-green-100 text-green-600
+                                                    {% elif application.status == 'rejected' %}bg-red-100 text-red-600
+                                                    {% elif application.status == 'submitted' %}bg-yellow-100 text-yellow-600
+                                                    {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                                    <i class="fas 
+                                                        {% if application.status == 'approved' %}fa-check
+                                                        {% elif application.status == 'rejected' %}fa-times
+                                                        {% elif application.status == 'submitted' %}fa-clock
+                                                        {% else %}fa-file{% endif %}"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="font-medium text-gray-900">{{ application.business_name }}</div>
+                                                <div class="text-xs text-gray-500">{{ application.email }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ application.get_application_type_display }}</td>
+                                    <td>
+                                        <span class="status-badge 
+                                            {% if application.status == 'approved' %}approved
+                                            {% elif application.status == 'rejected' %}rejected
+                                            {% elif application.status == 'submitted' %}pending
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {{ application.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ application.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'applications:application_detail' application.id %}" class="text-indigo-600 hover:text-indigo-900">
+                                            <i class="fas fa-eye mr-1"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-8">
+                                        {% if request.GET.search_query or request.GET.status or request.GET.date_from or request.GET.date_to %}
+                                            <div class="flex flex-col items-center justify-center">
+                                                <div class="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-4">
+                                                    <i class="fas fa-search fa-2x"></i>
+                                                </div>
+                                                <p class="text-gray-500 mb-3">No matching applications found.</p>
+                                                <a href="{% url 'applications:dashboard' %}" class="text-indigo-600 hover:text-indigo-900">
+                                                    Clear filters and try again
+                                                </a>
+                                            </div>
+                                        {% else %}
+                                            <div class="flex flex-col items-center justify-center">
+                                                <div class="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-4">
+                                                    <i class="fas fa-folder-open fa-2x"></i>
+                                                </div>
+                                                <p class="text-gray-500 mb-3">No applications found.</p>
+                                                <a href="{% url 'applications:new_application' %}" class="action-btn primary">
+                                                    <i class="fas fa-plus mr-1"></i>
+                                                    Create your first application
+                                                </a>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+                        <div class="hidden md:block text-sm text-gray-700">
+                            Showing <span class="font-medium">{{ page_obj.start_index }}</span> to 
+                            <span class="font-medium">{{ page_obj.end_index }}</span> of 
+                            <span class="font-medium">{{ page_obj.paginator.count }}</span> results
+                        </div>
+                        <div>
+                            <ul class="pagination">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" class="page-link">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% for i in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == i %}
+                                    <li class="page-item">
+                                        <span class="page-link active">{{ i }}</span>
+                                    </li>
+                                    {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ i }}" class="page-link">{{ i }}</a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" class="page-link">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Right Sidebar -->
+            <div class="lg:col-span-1">
+                <!-- Search Form Card -->
+                <div class="search-card mb-6">
+                    <div class="search-card-header">
+                        <h3 class="text-lg font-semibold">
+                            <i class="fas fa-filter mr-2"></i>
+                            Quick Filter
+                        </h3>
+                    </div>
+                    <div class="p-4">
+                        <form method="get" action="{% url 'applications:dashboard' %}" class="quick-filter-form">
+                            <div class="form-group">
+                                <label for="quick_search" class="block text-sm font-medium text-gray-700 mb-1">Quick Search</label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fas fa-search form-icon"></i>
+                                    <input type="text" name="search_query" id="quick_search" placeholder="Enter business name..." 
+                                        class="form-input" value="{{ request.GET.search_query|default:'' }}">
+                                    <input type="hidden" name="search_field" value="business_name">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="quick_status" class="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
+                                <select name="status" id="quick_status" class="form-input">
+                                    <option value="">All Statuses</option>
+                                    <option value="submitted" {% if request.GET.status == 'submitted' %}selected{% endif %}>Pending</option>
+                                    <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Approved</option>
+                                    <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="w-full search-btn mt-4">
+                                <i class="fas fa-filter mr-1"></i> Apply Filter
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Search Tips Card -->
+                <div class="search-card mt-6">
+                    <div class="p-4 border-l-4 border-indigo-500">
+                        <h3 class="text-sm font-medium text-gray-800 mb-2">Search Tips</h3>
+                        <ul class="text-xs text-gray-600 space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-info-circle mt-0.5 mr-2 text-indigo-500"></i>
+                                <span>Use <strong>Business Name</strong> search to find applications by company name</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-info-circle mt-0.5 mr-2 text-indigo-500"></i>
+                                <span>Filter by <strong>Status</strong> to view applications in a specific stage</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-info-circle mt-0.5 mr-2 text-indigo-500"></i>
+                                <span>Use <strong>Date Range</strong> to find applications from a specific period</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-info-circle mt-0.5 mr-2 text-indigo-500"></i>
+                                <span>Combine multiple filters for more precise results</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-info-circle mt-0.5 mr-2 text-indigo-500"></i>
+                                <span>Click on column headers to sort the table</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
-        {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Accordion functionality for search and filter section
+        const searchAccordionBtn = document.getElementById('searchAccordionBtn');
+        const searchAccordion = document.getElementById('searchAccordion');
+        const accordionIcon = document.getElementById('accordionIcon');
+        
+        // Check if there are any active filters and open the accordion if so
+        const hasFilters = {% if request.GET.search_query or request.GET.status or request.GET.application_type or request.GET.date_from or request.GET.date_to %}true{% else %}false{% endif %};
+        
+        if (hasFilters) {
+            searchAccordion.classList.add('show');
+            accordionIcon.classList.remove('fa-chevron-down');
+            accordionIcon.classList.add('fa-chevron-up');
+        }
+        
+        if (searchAccordionBtn && searchAccordion) {
+            searchAccordionBtn.addEventListener('click', function() {
+                searchAccordion.classList.toggle('show');
+                
+                if (searchAccordion.classList.contains('show')) {
+                    accordionIcon.classList.remove('fa-chevron-down');
+                    accordionIcon.classList.add('fa-chevron-up');
+                } else {
+                    accordionIcon.classList.remove('fa-chevron-up');
+                    accordionIcon.classList.add('fa-chevron-down');
+                }
+            });
+        }
+        
+        // Style form elements
+        const selectElements = document.querySelectorAll('select');
+        selectElements.forEach(select => {
+            select.classList.add('form-input');
+        });
+        
+        const inputElements = document.querySelectorAll('input[type="text"], input[type="date"], input[type="email"]');
+        inputElements.forEach(input => {
+            input.classList.add('form-input');
+        });
+        
+        // Make date inputs more user-friendly
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        dateInputs.forEach(input => {
+            // Set placeholder
+            input.setAttribute('placeholder', 'YYYY-MM-DD');
+            
+            // Add data validation attributes
+            input.setAttribute('min', '2020-01-01');
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            let mm = today.getMonth() + 1;
+            let dd = today.getDate();
+            
+            if (mm < 10) mm = '0' + mm;
+            if (dd < 10) dd = '0' + dd;
+            
+            const formattedToday = yyyy + '-' + mm + '-' + dd;
+            input.setAttribute('max', formattedToday);
+        });
+        
+        // Sort functionality using column headers
+        const sortableHeaders = document.querySelectorAll('.sortable-header');
+        
+        if (sortableHeaders.length > 0) {
+            sortableHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    // Add loading indicator to table
+                    const table = document.getElementById('applicationsTable');
+                    if (table) {
+                        table.classList.add('table-loading');
+                    }
+                    
+                    // Get current URL and parameters
+                    const url = new URL(window.location.href);
+                    const params = new URLSearchParams(url.search);
+                    
+                    // Get the field to sort by
+                    const field = this.getAttribute('data-sort');
+                    let sortDirection = '';
+                    
+                    // Toggle sort direction if same field is clicked again
+                    if (params.get('sort') === field) {
+                        sortDirection = '-' + field;
+                    } else if (params.get('sort') === '-' + field) {
+                        sortDirection = field;
+                    } else {
+                        sortDirection = field;
+                    }
+                    
+                    // Update or add the sort parameter
+                    params.set('sort', sortDirection);
+                    
+                    // Reset to first page when sorting changes
+                    if (params.has('page')) {
+                        params.set('page', '1');
+                    }
+                    
+                    // Redirect to the new URL with sort parameter
+                    window.location.href = `${url.pathname}?${params.toString()}`;
+                });
+            });
+        }
+        
+        // Sort dropdown functionality
+        const sortBy = document.getElementById('sort');
+        if (sortBy) {
+            sortBy.addEventListener('change', function() {
+                // Update the hidden sort input in the search form
+                document.getElementById('searchForm').submit();
+            });
+        }
+        
+        // Reset search form
+        const resetButton = document.getElementById('resetSearch');
+        const searchForm = document.getElementById('searchForm');
+        
+        if (resetButton && searchForm) {
+            resetButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Clear all form fields
+                const formInputs = searchForm.elements;
+                for (let i = 0; i < formInputs.length; i++) {
+                    const input = formInputs[i];
+                    
+                    if (input.type !== 'submit' && input.type !== 'button') {
+                        if (input.type === 'select-one') {
+                            input.selectedIndex = 0;
+                        } else {
+                            input.value = '';
+                        }
+                    }
+                }
+                
+                // Get current URL
+                const url = new URL(window.location.href);
+                
+                // Preserve only sort parameter if it exists
+                const params = new URLSearchParams();
+                if (url.searchParams.has('sort')) {
+                    params.set('sort', url.searchParams.get('sort'));
+                }
+                
+                // Redirect to the dashboard with minimal parameters
+                window.location.href = `${url.pathname}?${params.toString()}`;
+            });
+        }
+        
+        // Quick filter form auto-submit on change
+        const quickFilterForm = document.querySelector('.quick-filter-form');
+        const quickFilterSelect = document.getElementById('quick_status');
+        
+        if (quickFilterForm && quickFilterSelect) {
+            quickFilterSelect.addEventListener('change', function() {
+                // Add loading indicator
+                const table = document.getElementById('applicationsTable');
+                if (table) {
+                    table.classList.add('table-loading');
+                }
+                
+                // Submit the form
+                quickFilterForm.submit();
+            });
+        }
+        
+        // Handle the form submission with validation
+        if (searchForm) {
+            searchForm.addEventListener('submit', function(e) {
+                const searchField = document.querySelector('[name="search_field"]');
+                const searchQuery = document.querySelector('[name="search_query"]');
+                
+                // Basic validation: if search field is selected, query should be provided
+                if (searchField.value && searchQuery.value.trim() === '') {
+                    e.preventDefault();
+                    
+                    // Add error message
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'text-red-500 text-xs mt-1';
+                    errorMsg.textContent = 'Please enter a search term';
+                    
+                    // Remove any existing error message
+                    const existingError = searchQuery.parentNode.querySelector('.text-red-500');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                    
+                    // Add error message after the input
+                    searchQuery.parentNode.appendChild(errorMsg);
+                    
+                    // Focus the input
+                    searchQuery.focus();
+                    
+                    // Add error styling
+                    searchQuery.classList.add('border-red-500');
+                    
+                    return false;
+                }
+                
+                // Date range validation
+                const dateFrom = document.querySelector('[name="date_from"]');
+                const dateTo = document.querySelector('[name="date_to"]');
+                
+                if (dateFrom.value && dateTo.value) {
+                    const fromDate = new Date(dateFrom.value);
+                    const toDate = new Date(dateTo.value);
+                    
+                    if (fromDate > toDate) {
+                        e.preventDefault();
+                        
+                        // Add error message
+                        const errorMsg = document.createElement('div');
+                        errorMsg.className = 'text-red-500 text-xs mt-1';
+                        errorMsg.textContent = 'End date must be after start date';
+                        
+                        // Remove any existing error message
+                        const existingError = dateTo.parentNode.querySelector('.text-red-500');
+                        if (existingError) {
+                            existingError.remove();
+                        }
+                        
+                        // Add error message after the input
+                        dateTo.parentNode.appendChild(errorMsg);
+                        
+                        // Focus the input
+                        dateTo.focus();
+                        
+                        // Add error styling
+                        dateTo.classList.add('border-red-500');
+                        
+                        return false;
+                    }
+                }
+                
+                // Add loading indicator to the table
+                const table = document.getElementById('applicationsTable');
+                if (table) {
+                    table.classList.add('table-loading');
+                }
+            });
+        }
+        
+        // Remove error styling when input changes
+        const formInputs = document.querySelectorAll('.form-input');
+        formInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                this.classList.remove('border-red-500');
+                
+                // Remove any existing error message
+                const errorMsg = this.parentNode.querySelector('.text-red-500');
+                if (errorMsg) {
+                    errorMsg.remove();
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

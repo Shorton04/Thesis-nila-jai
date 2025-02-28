@@ -1,5 +1,10 @@
 # reviewer/views.py
+import os
 from datetime import timezone
+
+from django.views.decorators.http import require_POST
+
+from documents.models import Document, DocumentVerificationResult
 from documents.services.document_workflow import DocumentWorkflow
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -313,4 +318,125 @@ def document_analysis(request, requirement_id):
         return JsonResponse({
             'success': False,
             'error': f'Error analyzing document: {str(e)}'
+        })
+
+
+@user_passes_test(is_reviewer)
+def quarantined_documents(request):
+    """View for listing all quarantined documents"""
+    quarantined_docs = Document.objects.filter(is_quarantined=True).order_by('-quarantine_date')
+
+    # Get verification results for each document
+    documents_with_results = []
+    for doc in quarantined_docs:
+        try:
+            verification = DocumentVerificationResult.objects.get(document=doc)
+            documents_with_results.append({
+                'document': doc,
+                'verification': verification,
+                'application': doc.application
+            })
+        except DocumentVerificationResult.DoesNotExist:
+            documents_with_results.append({
+                'document': doc,
+                'verification': None,
+                'application': doc.application
+            })
+
+    context = {
+        'documents': documents_with_results,
+        'quarantined_count': quarantined_docs.count()
+    }
+
+    return render(request, 'reviewer/quarantined_documents.html', context)
+
+
+@user_passes_test(is_reviewer)
+def document_ai_analysis(request, document_id):
+    """API endpoint to get AI analysis for document by document ID"""
+    try:
+        document = get_object_or_404(Document, id=document_id)
+
+        # Get verification results
+        try:
+            verification_result = DocumentVerificationResult.objects.get(document=document)
+
+            # Prepare results for frontend
+            validation_results = {
+                'ela_score': verification_result.fraud_score * 100,  # Convert to percentage
+                'noise_score': verification_result.verification_details.get('noise_score', 5.0),
+                'text_quality': verification_result.verification_details.get('text_quality', 100.0),
+                'resolution_score': verification_result.verification_details.get('resolution_score', 100.0)
+            }
+
+            # Get suspicious regions for highlighting
+            suspicious_regions = verification_result.verification_details.get(
+                'fraud_detection_results', {}).get('suspicious_regions', [])
+
+            return JsonResponse({
+                'success': True,
+                'results': {
+                    'document_url': document.file.url,
+                    'is_quarantined': document.is_quarantined,
+                    'quarantine_reason': document.get_quarantine_reason_display() if document.is_quarantined else None,
+                    'validation_results': validation_results,
+                    'validation_message': 'Document appears to be tampered or manipulated.',
+                    'extracted_text': verification_result.extracted_text,
+                    'suspicious_regions': suspicious_regions
+                }
+            })
+
+        except DocumentVerificationResult.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'No verification results found for this document.'
+            })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error analyzing document: {str(e)}'
+        })
+
+
+@user_passes_test(is_reviewer)
+@require_POST
+def release_document(request, document_id):
+    """Release a document from quarantine"""
+    try:
+        document = get_object_or_404(Document, id=document_id)
+
+        if not document.is_quarantined:
+            return JsonResponse({
+                'success': False,
+                'error': 'Document is not in quarantine'
+            })
+
+        # Get notes from request
+        notes = request.POST.get('notes', '')
+
+        # Release document
+        document.is_quarantined = False
+        document.release_date = timezone.now()
+        document.released_by = request.user
+        document.verification_status = 'verified'
+        document.save()
+
+        # Log activity
+        from documents.models import DocumentActivity
+        DocumentActivity.objects.create(
+            document=document,
+            activity_type='release',
+            performed_by=request.user,
+            details=f'Released from quarantine: {notes}'
+        )
+
+        return JsonResponse({
+            'success': True
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
         })

@@ -28,6 +28,7 @@
                         Application Status: {{ application.get_status_display }}
                     </h3>
                     <div class="mt-2 text-sm {% if application.status == 'approved' %}text-green-700{% elif application.status == 'rejected' %}text-red-700{% else %}text-blue-700{% endif %}">
+                        <p>Application ID: {{ application.id }}</p>
                         <p>Application Number: {{ application.application_number }}</p>
                         <p>Tracking Number: {{ application.tracking_number }}</p>
                     </div>

@@ -1,6 +1,8 @@
 # applications/views.py
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
+
+from documents.models import DocumentVerificationResult, Document
 from documents.services.document_workflow import DocumentWorkflow
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -12,6 +14,8 @@ import logging
 from django.db.models import Q
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+
+from documents.utils.document_validator import DocumentValidator
 from .models import (
     BusinessApplication, ApplicationRequirement,
     ApplicationRevision, ApplicationAssessment, ApplicationActivity
@@ -932,3 +936,89 @@ def status_update(request, application_id):
         return JsonResponse({
             'error': str(e)
         }, status=500)
+
+
+def track_status(request):
+    """Allow users to track the status of their applications."""
+    application = None
+    form_submitted = False
+
+    # Get query parameters for application tracking
+    application_id = request.GET.get('application_id')
+    email = request.GET.get('email')
+
+    if application_id and email:
+        form_submitted = True
+        try:
+            # Try to find the application with matching ID and email
+            application = BusinessApplication.objects.filter(
+                id=application_id,
+                email__iexact=email
+            ).first()
+
+            if application:
+                # Get requirements with submission status
+                requirements = ApplicationRequirement.objects.filter(application=application)
+
+                # Calculate completion percentage
+                total_requirements = requirements.filter(is_required=True).count()
+                completed_requirements = requirements.filter(is_required=True, is_submitted=True).count()
+                completion_percentage = (
+                            completed_requirements / total_requirements * 100) if total_requirements > 0 else 0
+
+                # Get application timeline
+                activities = ApplicationActivity.objects.filter(
+                    application=application
+                ).select_related('performed_by').order_by('-performed_at')
+
+                context = {
+                    'application': application,
+                    'requirements': requirements,
+                    'activities': activities,
+                    'total_requirements': total_requirements,
+                    'completed_requirements': completed_requirements,
+                    'completion_percentage': completion_percentage,
+                    'form_submitted': form_submitted,
+                    'current_datetime': timezone.now(),
+                }
+                return render(request, 'applications/track_status.html', context)
+
+        except (BusinessApplication.DoesNotExist, ValueError):
+            # Application not found or invalid ID
+            pass
+
+    # If we get here, either the form wasn't submitted or no application was found
+    context = {
+        'application': None,
+        'form_submitted': form_submitted,
+        'current_datetime': timezone.now(),
+    }
+    return render(request, 'applications/track_status.html', context)
+
+
+@login_required
+def track_status_authenticated(request):
+    """Allow authenticated users to track their applications."""
+    # Get all applications for current user
+    applications = BusinessApplication.objects.filter(applicant=request.user).order_by('-created_at')
+
+    # Get application counts
+    application_counts = {
+        'total': applications.count(),
+        'draft': applications.filter(status='draft').count(),
+        'submitted': applications.filter(status='submitted').count(),
+        'approved': applications.filter(status='approved').count(),
+        'rejected': applications.filter(status='rejected').count(),
+        'requires_revision': applications.filter(status='requires_revision').count(),
+    }
+
+    # Pagination
+    paginator = Paginator(applications, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'application_counts': application_counts,
+    }
+    return render(request, 'applications/track_status_authenticated.html', context)

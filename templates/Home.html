@@ -1,0 +1,508 @@
+{% extends 'auyh_base.html' %}
+{% load static %}
+
+{% block title %}Business Permit Licensing Office - Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+    <!-- Background pattern -->
+    <div class="absolute inset-0 overflow-hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" class="absolute bottom-0 left-0 opacity-10">
+            <path fill="#ffffff" fill-opacity="1" d="M0,64L48,80C96,96,192,128,288,144C384,160,480,160,576,138.7C672,117,768,75,864,53.3C960,32,1056,32,1152,58.7C1248,85,1344,139,1392,165.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+        </svg>
+    </div>
+    
+    <div class="container mx-auto px-4 py-20 relative z-10">
+        <div class="flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-10 md:mb-0" data-animate="fadeInLeft">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Streamline Your Business Permit Application</h1>
+                <p class="text-xl opacity-90 mb-8">Our online system simplifies the process of applying for, renewing, and tracking your business permits.</p>
+                
+                <div class="flex space-x-4">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'applications:dashboard' %}" class="px-6 py-3 bg-white text-indigo-600 font-semibold rounded-lg shadow hover:bg-gray-100 transition duration-300 transform hover:scale-105">
+                        Go to Dashboard
+                    </a>
+                    {% else %}
+                    <a href="{% url 'accounts:login' %}" class="px-6 py-3 bg-white text-indigo-600 font-semibold rounded-lg shadow hover:bg-gray-100 transition duration-300 transform hover:scale-105">
+                        Get Started
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'applications:track_status' %}" class="px-6 py-3 bg-transparent border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-indigo-600 transition duration-300">
+                        Track Application
+                    </a>
+                </div>
+            </div>
+            
+            <div class="md:w-1/2 flex justify-center" data-animate="fadeInRight">
+                <img src="{% static 'images/business-illustration.svg' %}" alt="Business Illustration" class="w-full max-w-md">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16" data-animate="fadeInUp">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Simplifying The Business Permit Process</h2>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">Our modern platform leverages technology to eliminate bureaucracy and streamline your business permit application experience.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Feature 1 -->
+            <div class="bg-gray-50 rounded-xl p-6 hover-card" data-animate="fadeInUp" data-animate-delay="100">
+                <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
+                    <i class="fas fa-laptop text-indigo-600 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-3 text-gray-800">Apply Online</h3>
+                <p class="text-gray-600">Submit your application from anywhere, anytime. No need to visit government offices and wait in long lines.</p>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div class="bg-gray-50 rounded-xl p-6 hover-card" data-animate="fadeInUp" data-animate-delay="200">
+                <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
+                    <i class="fas fa-search text-indigo-600 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-3 text-gray-800">Track Status</h3>
+                <p class="text-gray-600">Monitor your application in real-time. Get immediate updates on approvals, revisions, or additional requirements.</p>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="bg-gray-50 rounded-xl p-6 hover-card" data-animate="fadeInUp" data-animate-delay="300">
+                <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
+                    <i class="fas fa-sync-alt text-indigo-600 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-3 text-gray-800">Easy Renewals</h3>
+                <p class="text-gray-600">Simplify the renewal process with pre-filled forms based on your previous applications, saving you time and effort.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About BPLO Section -->
+<section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-10 md:mb-0 pr-0 md:pr-8" data-animate="fadeInLeft">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">About The Business Permit Licensing Office</h2>
+                <p class="text-gray-600 mb-4">The Business Permit Licensing Office (BPLO) is responsible for regulating business activities within the jurisdiction. We ensure that businesses comply with local regulations and ordinances.</p>
+                <p class="text-gray-600 mb-4">Our mission is to foster a business-friendly environment while maintaining order and safety for the community. Through innovation and technology, we aim to make government services more accessible to business owners.</p>
+                <p class="text-gray-600">The BPLO processes applications for new businesses, handles renewals, amendments, and manages business closure procedures. We work closely with other government agencies to streamline the permitting process.</p>
+            </div>
+            
+            <div class="md:w-1/2 flex justify-center" data-animate="fadeInRight">
+                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                    <h3 class="text-2xl font-bold text-indigo-600 mb-4">Our Services</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <span class="text-gray-700">New Business Permit Applications</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <span class="text-gray-700">Annual Permit Renewals</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <span class="text-gray-700">Business Information Amendments</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <span class="text-gray-700">Business Closure Processing</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <span class="text-gray-700">Special Permits for Regulated Activities</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <span class="text-gray-700">Business Advisory Services</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Process Steps Section -->
+<section class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16" data-animate="fadeInUp">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">How It Works</h2>
+<p class="text-lg text-gray-600 max-w-3xl mx-auto">Our simplified process makes applying for and managing your business permits straightforward and hassle-free.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- Step 1 -->
+            <div class="text-center" data-animate="fadeInUp" data-animate-delay="100">
+                <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+                    <span class="absolute -top-2 -right-2 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold">1</span>
+                    <i class="fas fa-user-plus text-indigo-600 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-3 text-gray-800">Register</h3>
+                <p class="text-gray-600">Create an account with your email address and personal details.</p>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="text-center" data-animate="fadeInUp" data-animate-delay="200">
+                <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+                    <span class="absolute -top-2 -right-2 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold">2</span>
+                    <i class="fas fa-file-alt text-indigo-600 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-3 text-gray-800">Apply</h3>
+                <p class="text-gray-600">Fill out the application form and upload the required documents.</p>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="text-center" data-animate="fadeInUp" data-animate-delay="300">
+                <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+                    <span class="absolute -top-2 -right-2 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold">3</span>
+                    <i class="fas fa-clipboard-check text-indigo-600 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-3 text-gray-800">Track</h3>
+                <p class="text-gray-600">Monitor the progress of your application through your account dashboard.</p>
+            </div>
+            
+            <!-- Step 4 -->
+            <div class="text-center" data-animate="fadeInUp" data-animate-delay="400">
+                <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+                    <span class="absolute -top-2 -right-2 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold">4</span>
+                    <i class="fas fa-id-card text-indigo-600 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-3 text-gray-800">Receive</h3>
+                <p class="text-gray-600">Get your approved permit and start or continue running your business legally.</p>
+            </div>
+        </div>
+        
+        <!-- Process arrow connectors (visible on desktop only) -->
+        <div class="hidden md:block relative mt-8">
+            <div class="absolute top-12 left-[25%] right-[75%] border-t-2 border-dashed border-indigo-300"></div>
+            <div class="absolute top-12 left-[50%] right-[50%] border-t-2 border-dashed border-indigo-300"></div>
+            <div class="absolute top-12 left-[75%] right-[25%] border-t-2 border-dashed border-indigo-300"></div>
+        </div>
+    </div>
+</section>
+
+<!-- Documents Section -->
+<section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16" data-animate="fadeInUp">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Required Documents</h2>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">Prepare these documents before starting your application to ensure a smooth process.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Document Card 1 -->
+            <div class="bg-white rounded-lg shadow-md p-6 hover-card" data-animate="fadeInUp" data-animate-delay="100">
+                <div class="flex items-start">
+                    <div class="rounded-full bg-indigo-100 p-3 mr-4">
+                        <i class="fas fa-building text-indigo-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-2">Business Registration</h3>
+                        <p class="text-gray-600 text-sm">DTI Certificate for sole proprietorship, SEC Registration for corporations, or CDA Registration for cooperatives.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Document Card 2 -->
+            <div class="bg-white rounded-lg shadow-md p-6 hover-card" data-animate="fadeInUp" data-animate-delay="150">
+                <div class="flex items-start">
+                    <div class="rounded-full bg-indigo-100 p-3 mr-4">
+                        <i class="fas fa-map-marker-alt text-indigo-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-2">Proof of Location</h3>
+                        <p class="text-gray-600 text-sm">Contract of Lease, Title, or other proof of ownership or right to use the business location.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Document Card 3 -->
+            <div class="bg-white rounded-lg shadow-md p-6 hover-card" data-animate="fadeInUp" data-animate-delay="200">
+                <div class="flex items-start">
+                    <div class="rounded-full bg-indigo-100 p-3 mr-4">
+                        <i class="fas fa-id-card text-indigo-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-2">Valid ID</h3>
+                        <p class="text-gray-600 text-sm">Government-issued identification of the business owner or authorized representative.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Document Card 4 -->
+            <div class="bg-white rounded-lg shadow-md p-6 hover-card" data-animate="fadeInUp" data-animate-delay="250">
+                <div class="flex items-start">
+                    <div class="rounded-full bg-indigo-100 p-3 mr-4">
+                        <i class="fas fa-check-square text-indigo-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-2">Barangay Clearance</h3>
+                        <p class="text-gray-600 text-sm">Certification from the local barangay that the business can operate in the area.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Document Card 5 -->
+            <div class="bg-white rounded-lg shadow-md p-6 hover-card" data-animate="fadeInUp" data-animate-delay="300">
+                <div class="flex items-start">
+                    <div class="rounded-full bg-indigo-100 p-3 mr-4">
+                        <i class="fas fa-fire-extinguisher text-indigo-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-2">Fire Safety Inspection</h3>
+                        <p class="text-gray-600 text-sm">Certificate from the Bureau of Fire Protection ensuring the safety of the premises.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Document Card 6 -->
+            <div class="bg-white rounded-lg shadow-md p-6 hover-card" data-animate="fadeInUp" data-animate-delay="350">
+                <div class="flex items-start">
+                    <div class="rounded-full bg-indigo-100 p-3 mr-4">
+                        <i class="fas fa-camera text-indigo-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-2">Premises Photos</h3>
+                        <p class="text-gray-600 text-sm">Photos of the business premises, including the storefront with signage.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-12 text-center" data-animate="fadeInUp">
+            <p class="text-gray-600 mb-6">Note: Additional documents may be required depending on your business type and location.</p>
+            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium flex items-center justify-center">
+                <span>View complete document requirements</span>
+                <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16" data-animate="fadeInUp">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">What Business Owners Say</h2>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">Hear from entrepreneurs who have successfully used our online business permit system.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Testimonial 1 -->
+            <div class="bg-gray-50 rounded-lg p-6 shadow-sm hover-card" data-animate="fadeInUp" data-animate-delay="100">
+                <div class="flex items-center mb-4">
+                    <div class="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center mr-4">
+                        <i class="fas fa-user text-indigo-600"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Maria Santos</h4>
+                        <p class="text-sm text-gray-600">Cafe Owner</p>
+                    </div>
+                </div>
+                <p class="text-gray-700 italic">"The online system saved me so much time. What used to take weeks now takes just days, and I can track everything from my phone!"</p>
+                <div class="mt-4 text-yellow-400">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+            </div>
+            
+            <!-- Testimonial 2 -->
+            <div class="bg-gray-50 rounded-lg p-6 shadow-sm hover-card" data-animate="fadeInUp" data-animate-delay="200">
+                <div class="flex items-center mb-4">
+                    <div class="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center mr-4">
+                        <i class="fas fa-user text-indigo-600"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Juan Reyes</h4>
+                        <p class="text-sm text-gray-600">Retail Shop Owner</p>
+                    </div>
+                </div>
+                <p class="text-gray-700 italic">"The transparency of the process is what I appreciate most. I always know exactly where my application stands and what needs to be done next."</p>
+                <div class="mt-4 text-yellow-400">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                </div>
+            </div>
+            
+            <!-- Testimonial 3 -->
+            <div class="bg-gray-50 rounded-lg p-6 shadow-sm hover-card" data-animate="fadeInUp" data-animate-delay="300">
+                <div class="flex items-center mb-4">
+                    <div class="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center mr-4">
+                        <i class="fas fa-user text-indigo-600"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Ana Lim</h4>
+                        <p class="text-sm text-gray-600">Tech Startup Founder</p>
+                    </div>
+                </div>
+                <p class="text-gray-700 italic">"As a first-time entrepreneur, the guidance provided throughout the application process was invaluable. I didn't have to guess what was needed."</p>
+                <div class="mt-4 text-yellow-400">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-16 bg-indigo-600 text-white">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row items-center justify-between">
+            <div class="mb-8 md:mb-0 md:w-2/3" data-animate="fadeInLeft">
+                <h2 class="text-3xl font-bold mb-4">Ready to Get Your Business Permit?</h2>
+                <p class="text-lg opacity-90 mb-0">Start your application today and join thousands of businesses operating legally in our community.</p>
+            </div>
+            
+            <div class="md:w-1/3 text-center md:text-right" data-animate="fadeInRight">
+                {% if user.is_authenticated %}
+                <a href="{% url 'applications:dashboard' %}" class="inline-block px-8 py-4 bg-white text-indigo-600 font-bold rounded-lg shadow hover:bg-gray-100 transition duration-300 transform hover:scale-105">
+                    Go to Dashboard
+                </a>
+                {% else %}
+                <a href="{% url 'accounts:register' %}" class="inline-block px-8 py-4 bg-white text-indigo-600 font-bold rounded-lg shadow hover:bg-gray-100 transition duration-300 transform hover:scale-105">
+                    Create Account
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16" data-animate="fadeInUp">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Frequently Asked Questions</h2>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">Find answers to common questions about business permits and our online application process.</p>
+        </div>
+        
+        <div class="max-w-3xl mx-auto" data-animate="fadeInUp">
+            <!-- FAQ Item 1 -->
+            <div class="mb-6">
+                <button class="faq-toggle flex w-full justify-between items-center bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition duration-300">
+                    <span class="font-semibold text-gray-800">How long does the business permit application process take?</span>
+                    <i class="fas fa-chevron-down text-indigo-600 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-content hidden bg-white p-4 border border-gray-100 rounded-b-lg">
+                    <p class="text-gray-700">The processing time typically takes 3-5 business days for new applications that meet all requirements. Renewal applications may be processed faster, usually within 1-3 business days.</p>
+                </div>
+            </div>
+            
+            <!-- FAQ Item 2 -->
+            <div class="mb-6">
+                <button class="faq-toggle flex w-full justify-between items-center bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition duration-300">
+                    <span class="font-semibold text-gray-800">What if I need to make changes to my application?</span>
+                    <i class="fas fa-chevron-down text-indigo-600 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-content hidden bg-white p-4 border border-gray-100 rounded-b-lg">
+                    <p class="text-gray-700">You can make changes to your application before submission. After submission, if revisions are needed, you'll receive a notification with instructions on what needs to be corrected or updated.</p>
+                </div>
+            </div>
+            
+            <!-- FAQ Item 3 -->
+            <div class="mb-6">
+                <button class="faq-toggle flex w-full justify-between items-center bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition duration-300">
+                    <span class="font-semibold text-gray-800">Can I track my application status online?</span>
+                    <i class="fas fa-chevron-down text-indigo-600 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-content hidden bg-white p-4 border border-gray-100 rounded-b-lg">
+                    <p class="text-gray-700">Yes, you can track your application status in real-time through your account dashboard. You'll also receive email notifications when there's an update to your application status.</p>
+                </div>
+            </div>
+            
+            <!-- FAQ Item 4 -->
+            <div class="mb-6">
+                <button class="faq-toggle flex w-full justify-between items-center bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition duration-300">
+                    <span class="font-semibold text-gray-800">How do I renew my business permit?</span>
+                    <i class="fas fa-chevron-down text-indigo-600 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-content hidden bg-white p-4 border border-gray-100 rounded-b-lg">
+                    <p class="text-gray-700">You can renew your business permit through your account dashboard. The system will pre-fill many fields based on your previous application, making the process faster and easier.</p>
+                </div>
+            </div>
+            
+            <!-- FAQ Item 5 -->
+            <div class="mb-6">
+                <button class="faq-toggle flex w-full justify-between items-center bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition duration-300">
+                    <span class="font-semibold text-gray-800">What if I need help with my application?</span>
+                    <i class="fas fa-chevron-down text-indigo-600 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-content hidden bg-white p-4 border border-gray-100 rounded-b-lg">
+                    <p class="text-gray-700">Our support team is available to assist you. You can reach us through the contact information provided on our website, or visit our office during business hours for in-person assistance.</p>
+                </div>
+            </div>
+            
+            <!-- FAQ Item 6 -->
+            <div class="mb-6">
+                <button class="faq-toggle flex w-full justify-between items-center bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition duration-300">
+                    <span class="font-semibold text-gray-800">Is the online system secure?</span>
+                    <i class="fas fa-chevron-down text-indigo-600 transition-transform duration-300"></i>
+                </button>
+                <div class="faq-content hidden bg-white p-4 border border-gray-100 rounded-b-lg">
+                    <p class="text-gray-700">Yes, our system uses industry-standard encryption and security measures to protect your personal and business information. We comply with data privacy laws to ensure your information remains confidential.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // FAQ toggle functionality
+        const faqToggles = document.querySelectorAll('.faq-toggle');
+        
+        faqToggles.forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const content = this.nextElementSibling;
+                const icon = this.querySelector('i');
+                
+                // Toggle the content
+                content.classList.toggle('hidden');
+                
+                // Rotate the icon
+                if (content.classList.contains('hidden')) {
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    icon.style.transform = 'rotate(180deg)';
+                }
+                
+                // Close other FAQs
+                faqToggles.forEach(otherToggle => {
+                    if (otherToggle !== toggle) {
+                        const otherContent = otherToggle.nextElementSibling;
+                        const otherIcon = otherToggle.querySelector('i');
+                        
+                        otherContent.classList.add('hidden');
+                        otherIcon.style.transform = 'rotate(0deg)';
+                    }
+                });
+            });
+        });
+        
+        // Animation delays for elements
+        const animatedElements = document.querySelectorAll('[data-animate-delay]');
+        
+        animatedElements.forEach(element => {
+            const delay = element.getAttribute('data-animate-delay');
+            element.style.animationDelay = `${delay}ms`;
+        });
+    });
+</script>
+{% endblock %}

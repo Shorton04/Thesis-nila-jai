@@ -14,4 +14,7 @@ urlpatterns = [
     path('create-assessment/<uuid:application_id>/',
          views.create_assessment, name='create_assessment'),
     path('document-analysis/<uuid:requirement_id>/', views.document_analysis, name='document_analysis'),
+    path('quarantined-documents/', views.quarantined_documents, name='quarantined_documents'),
+    path('document-ai-analysis/<uuid:document_id>/', views.document_ai_analysis, name='document_ai_analysis'),
+    path('release-document/<uuid:document_id>/', views.release_document, name='release_document'),
 ]
