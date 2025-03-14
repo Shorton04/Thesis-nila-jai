@@ -51,36 +51,45 @@ class BusinessApplication(models.Model):
     payment_mode = models.CharField(max_length=20, choices=PAYMENT_MODES)
     tracking_number = models.CharField(max_length=50, unique=True)
     submission_date = models.DateTimeField(null=True, blank=True)
+    is_released = models.BooleanField(default=False)
+    release_date = models.DateTimeField(null=True, blank=True)
+    released_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='released_applications'
+    )
 
-    # Business Details
-    business_type = models.CharField(max_length=20, choices=BUSINESS_TYPES)
+    # Business Details - Make fields optional for renewal, amendment, closure
+    business_type = models.CharField(max_length=20, choices=BUSINESS_TYPES, blank=True, null=True)
     business_name = models.CharField(max_length=255)
     trade_name = models.CharField(max_length=255, blank=True)
-    registration_number = models.CharField(max_length=50)
-    registration_date = models.DateField()
-    business_address = models.TextField()
-    postal_code = models.CharField(max_length=10)
-    telephone = models.CharField(max_length=20)
-    mobile = models.CharField(max_length=20)
-    email = models.EmailField()
+    registration_number = models.CharField(max_length=50, blank=True)
+    registration_date = models.DateField(null=True, blank=True)
+    business_address = models.TextField(blank=True)
+    postal_code = models.CharField(max_length=10, blank=True)
+    telephone = models.CharField(max_length=20, blank=True)
+    mobile = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
     website = models.URLField(blank=True)
 
-    # Business Activity
-    line_of_business = models.CharField(max_length=100)
-    business_area = models.DecimalField(max_digits=10, decimal_places=2)
-    number_of_employees = models.PositiveIntegerField()
-    capitalization = models.DecimalField(max_digits=15, decimal_places=2)
+    # Business Activity - Make fields optional
+    line_of_business = models.CharField(max_length=100, blank=True)
+    business_area = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    number_of_employees = models.PositiveIntegerField(null=True, blank=True)
+    capitalization = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
 
-    # Owner Details
-    owner_name = models.CharField(max_length=255)
-    owner_address = models.TextField()
-    owner_telephone = models.CharField(max_length=20)
-    owner_email = models.EmailField()
+    # Owner Details - Make fields optional
+    owner_name = models.CharField(max_length=255, blank=True)
+    owner_address = models.TextField(blank=True)
+    owner_telephone = models.CharField(max_length=20, blank=True)
+    owner_email = models.EmailField(blank=True)
 
-    # Emergency Contact
-    emergency_contact_name = models.CharField(max_length=255)
-    emergency_contact_number = models.CharField(max_length=20)
-    emergency_contact_email = models.EmailField()
+    # Emergency Contact - Make fields optional
+    emergency_contact_name = models.CharField(max_length=255, blank=True)
+    emergency_contact_number = models.CharField(max_length=20, blank=True)
+    emergency_contact_email = models.EmailField(blank=True)
 
     # Financial Information (for renewal)
     gross_sales_receipts = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
@@ -106,6 +115,12 @@ class BusinessApplication(models.Model):
     )
     remarks = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
+
+    # Additional fields for amendment and closure
+    closure_reason = models.TextField(blank=True)  # For closure applications
+    closure_date = models.DateField(null=True, blank=True)  # For closure applications
+    amendment_reason = models.TextField(blank=True)  # For amendment applications
+    previous_permit_number = models.CharField(max_length=50, blank=True)  # For renewal/amendment
 
     class Meta:
         ordering = ['-created_at']
@@ -134,7 +149,7 @@ class BusinessApplication(models.Model):
 
         super().save(*args, **kwargs)
 
-
+# Keep the rest of the models unchanged
 class ApplicationRequirement(models.Model):
     application = models.ForeignKey(BusinessApplication, on_delete=models.CASCADE)
     requirement_name = models.CharField(max_length=255)

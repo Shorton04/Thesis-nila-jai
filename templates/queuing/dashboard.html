@@ -1,0 +1,198 @@
+<!-- queuing/templates/queuing/dashboard.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Queue Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .booking-card {
+        transition: all 0.2s ease-in-out;
+    }
+    .booking-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Queue Management</h1>
+        <a href="{% url 'applications:dashboard' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Upcoming Appointments -->
+    <div class="bg-white shadow-md rounded-lg overflow-hidden mb-8">
+        <div class="bg-indigo-600 px-6 py-4">
+            <h2 class="text-lg font-medium text-white">Upcoming Appointments</h2>
+        </div>
+        
+        {% if upcoming_appointments %}
+            <div class="divide-y divide-gray-200">
+                {% for appointment in upcoming_appointments %}
+                    <div class="px-6 py-4 hover:bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        {{ appointment.queue_number }}
+                                    </span>
+                                    <span class="ml-2 text-sm font-medium text-gray-900">{{ appointment.application.business_name }}</span>
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    {{ appointment.slot_date|date:"l, F j, Y" }} at {{ appointment.slot_time|time:"g:i A" }}
+                                </div>
+                            </div>
+                            <div class="mt-2 flex justify-between items-center">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-500">{{ appointment.get_appointment_type_display }}</span>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'queuing:appointment_detail' appointment.id %}" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none">
+                                        View Details
+                                    </a>
+                                    <a href="{% url 'queuing:reschedule_appointment' appointment.id %}" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none">
+                                        Reschedule
+                                    </a>
+                                    <form method="post" action="{% url 'queuing:cancel_appointment' appointment.id %}" onsubmit="return confirm('Are you sure you want to cancel this appointment?');" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none">
+                                            Cancel
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="px-6 py-8 text-center">
+                    <div class="inline-block p-4 rounded-full bg-blue-50 text-blue-500 mb-4">
+                        <i class="fas fa-calendar-day text-3xl"></i>
+                    </div>
+                    <h3 class="text-sm font-medium text-gray-900">No upcoming appointments</h3>
+                    <p class="mt-1 text-sm text-gray-500">You don't have any scheduled appointments at this time.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Applications Needing Action -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Pending Payment -->
+            <div class="bg-white shadow-md rounded-lg overflow-hidden">
+                <div class="bg-green-600 px-6 py-4">
+                    <h2 class="text-lg font-medium text-white">Pending Payment</h2>
+                </div>
+                
+                {% if pending_payment %}
+                    <div class="divide-y divide-gray-200">
+                        {% for application in pending_payment %}
+                            <div class="px-6 py-4 hover:bg-gray-50 booking-card">
+                                <h3 class="text-sm font-medium text-gray-900">{{ application.business_name }}</h3>
+                                <p class="text-sm text-gray-500">Application #{{ application.application_number }}</p>
+                                
+                                {% if application.assessment %}
+                                    <div class="mt-2">
+                                        <p class="text-sm font-bold text-gray-900">Total: ₱{{ application.assessment.total_amount|floatformat:2 }}</p>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="mt-4">
+                                    <a href="{% url 'queuing:book_appointment' application.id 'payment' %}" class="inline-flex items-center justify-center w-full px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none">
+                                        <i class="fas fa-calendar-plus mr-2"></i> Book Payment Appointment
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="px-6 py-8 text-center">
+                        <div class="inline-block p-4 rounded-full bg-green-50 text-green-500 mb-4">
+                            <i class="fas fa-check-circle text-3xl"></i>
+                        </div>
+                        <h3 class="text-sm font-medium text-gray-900">No pending payments</h3>
+                        <p class="mt-1 text-sm text-gray-500">You don't have any applications that need payment.</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Pending Release -->
+            <div class="bg-white shadow-md rounded-lg overflow-hidden">
+                <div class="bg-purple-600 px-6 py-4">
+                    <h2 class="text-lg font-medium text-white">Permit Ready for Release</h2>
+                </div>
+                
+                {% if pending_release %}
+                    <div class="divide-y divide-gray-200">
+                        {% for application in pending_release %}
+                            <div class="px-6 py-4 hover:bg-gray-50 booking-card">
+                                <h3 class="text-sm font-medium text-gray-900">{{ application.business_name }}</h3>
+                                <p class="text-sm text-gray-500">Application #{{ application.application_number }}</p>
+                                <p class="text-sm text-gray-600 mt-1">Approved on {{ application.updated_at|date:"F j, Y" }}</p>
+                                
+                                <div class="mt-4">
+                                    <a href="{% url 'queuing:book_appointment' application.id 'release' %}" class="inline-flex items-center justify-center w-full px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none">
+                                        <i class="fas fa-calendar-plus mr-2"></i> Book Pickup Appointment
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="px-6 py-8 text-center">
+                        <div class="inline-block p-4 rounded-full bg-purple-50 text-purple-500 mb-4">
+                            <i class="fas fa-file-alt text-3xl"></i>
+                        </div>
+                        <h3 class="text-sm font-medium text-gray-900">No permits for pickup</h3>
+                        <p class="mt-1 text-sm text-gray-500">You don't have any permits ready for release.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Past Appointments -->
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="bg-gray-700 px-6 py-4">
+                <h2 class="text-lg font-medium text-white">Past Appointments</h2>
+            </div>
+            
+            {% if past_appointments %}
+                <div class="divide-y divide-gray-200">
+                    {% for appointment in past_appointments %}
+                        <div class="px-6 py-4 hover:bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                    {% if appointment.status == 'completed' %}bg-green-100 text-green-800
+                                    {% elif appointment.status == 'cancelled' %}bg-red-100 text-red-800
+                                    {% elif appointment.status == 'no_show' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ appointment.get_status_display }}
+                                    </span>
+                                    <span class="ml-2 text-sm font-medium text-gray-900">{{ appointment.application.business_name }}</span>
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    {{ appointment.slot_date|date:"F j, Y" }} at {{ appointment.slot_time|time:"g:i A" }}
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="text-sm font-medium text-gray-500">{{ appointment.get_appointment_type_display }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="px-6 py-8 text-center">
+                    <div class="inline-block p-4 rounded-full bg-gray-100 text-gray-500 mb-4">
+                        <i class="fas fa-history text-3xl"></i>
+                    </div>
+                    <h3 class="text-sm font-medium text-gray-900">No past appointments</h3>
+                    <p class="mt-1 text-sm text-gray-500">Your appointment history will be displayed here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{# templates/applications/steps/closure_basic_info.html #}
+<div data-step="1">
+    <!-- Basic Business Information -->
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Current Business Information</h3>
+        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div class="sm:col-span-3">
+                <label for="{{ form.previous_permit_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Current Permit Number <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    {{ form.previous_permit_number }}
+                </div>
+                {% if form.previous_permit_number.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.previous_permit_number.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+            
+            <div class="sm:col-span-3">
+                <label for="{{ form.registration_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    DTI/SEC/CDA Registration Number
+                </label>
+                <div class="mt-1">
+                    {{ form.registration_number }}
+                </div>
+                {% if form.registration_number.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.registration_number.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+            
+            <div class="sm:col-span-6">
+                <label for="{{ form.business_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Business Name <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    {{ form.business_name }}
+                </div>
+                {% if form.business_name.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.business_name.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Owner Information -->
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Owner Information</h3>
+        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div class="sm:col-span-6">
+                <label for="{{ form.owner_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Owner's Name <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    {{ form.owner_name }}
+                </div>
+                {% if form.owner_name.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.owner_name.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-3">
+                <label for="{{ form.owner_email.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Owner's Email <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    {{ form.owner_email }}
+                </div>
+                {% if form.owner_email.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.owner_email.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

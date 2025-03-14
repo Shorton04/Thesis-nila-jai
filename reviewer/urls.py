@@ -17,4 +17,6 @@ urlpatterns = [
     path('quarantined-documents/', views.quarantined_documents, name='quarantined_documents'),
     path('document-ai-analysis/<uuid:document_id>/', views.document_ai_analysis, name='document_ai_analysis'),
     path('release-document/<uuid:document_id>/', views.release_document, name='release_document'),
+    path('qr-scanner/', views.qr_scanner, name='qr_scanner'),
+    path('process-qr-code/', views.process_qr_code, name='process_qr_code'),
 ]

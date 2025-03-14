@@ -18,6 +18,8 @@ from applications.models import (
     ApplicationRevision, ApplicationAssessment, ApplicationActivity
 )
 from .forms import AssessmentForm, RevisionRequestForm
+from notifications.utils import send_application_notification, create_notification
+from django.urls import reverse
 
 
 def is_reviewer(user):
@@ -99,11 +101,19 @@ def application_detail(request, application_id):
             application.reviewed_by = request.user
             application.save()
 
+
             ApplicationActivity.objects.create(
                 application=application,
                 activity_type='review',
                 performed_by=request.user,
                 description='Review started'
+            )
+
+            send_application_notification(
+                user=application.applicant,
+                application=application,
+                status='under_review',
+                message=f"Your application #{application.application_number} is now under review by our team."
             )
 
             messages.success(request, 'Review started.')
@@ -118,6 +128,14 @@ def application_detail(request, application_id):
 
                 application.status = 'requires_revision'
                 application.save()
+
+                # Send notification to applicant
+                send_application_notification(
+                    user=application.applicant,
+                    application=application,
+                    status='requires_revision',
+                    message=f"Your application #{application.application_number} requires revision: {revision.description}"
+                )
 
                 ApplicationActivity.objects.create(
                     application=application,
@@ -136,6 +154,14 @@ def application_detail(request, application_id):
             application.status = 'approved'
             application.approved_by = request.user
             application.save()
+
+            # Send notification to applicant
+            send_application_notification(
+                user=application.applicant,
+                application=application,
+                status='approved',
+                message=f"Congratulations! Your application #{application.application_number} has been approved."
+            )
 
             ApplicationActivity.objects.create(
                 application=application,
@@ -161,6 +187,14 @@ def application_detail(request, application_id):
                 activity_type='reject',
                 performed_by=request.user,
                 description=f'Application rejected. Reason: {reason}'
+            )
+
+            # Send notification to applicant
+            send_application_notification(
+                user=application.applicant,
+                application=application,
+                status='rejected',
+                message=f"Your application #{application.application_number} has been rejected. Reason: {reason}"
             )
 
             messages.success(request, 'Application rejected.')
@@ -202,6 +236,21 @@ def verify_requirement(request, requirement_id):
             description=f'Document {requirement.requirement_name} {"verified" if is_verified else "rejected"}'
         )
 
+        # Send notification to applicant
+        user = requirement.application.applicant
+        status = "verified" if is_verified else "rejected"
+        message = f"Your document '{requirement.requirement_name}' has been {status}."
+        if remarks:
+            message += f" Remarks: {remarks}"
+
+        create_notification(
+            user=user,
+            title=f"Document {status.capitalize()}",
+            message=message,
+            notification_type='document',
+            link=reverse('applications:application_detail', kwargs={'application_id': requirement.application.id})
+        )
+
         return JsonResponse({'success': True})
 
     except Exception as e:
@@ -225,6 +274,15 @@ def create_assessment(request, application_id):
                 activity_type='assessment',
                 performed_by=request.user,
                 description=f'Assessment created: ₱{assessment.total_amount}'
+            )
+
+            # Send notification to applicant
+            create_notification(
+                user=application.applicant,
+                title="Application Assessment Complete",
+                message=f"The assessment for your application #{application.application_number} has been completed. Total Amount Due: ₱{assessment.total_amount}",
+                notification_type='application',
+                link=reverse('applications:application_detail', kwargs={'application_id': application.id})
             )
 
             messages.success(request, 'Assessment created successfully.')
@@ -431,6 +489,16 @@ def release_document(request, document_id):
             details=f'Released from quarantine: {notes}'
         )
 
+        # Send notification to applicant
+        if document.application and document.application.applicant:
+            create_notification(
+                user=document.application.applicant,
+                title="Document Released from Review",
+                message=f"Your document '{document.filename}' has been reviewed and accepted. Your application processing will continue.",
+                notification_type='document',
+                link=reverse('applications:application_detail', kwargs={'application_id': document.application.id})
+            )
+
         return JsonResponse({
             'success': True
         })
@@ -440,3 +508,86 @@ def release_document(request, document_id):
             'success': False,
             'error': str(e)
         })
+
+
+@login_required
+@user_passes_test(is_reviewer)
+def qr_scanner(request):
+    """QR Code Scanner for staff to check in appointments"""
+    return render(request, 'reviewer/qr_scanner.html')
+
+
+@login_required
+@user_passes_test(is_reviewer)
+def process_qr_code(request):
+    """Process scanned QR code data"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+    qr_data = request.POST.get('qr_data')
+    if not qr_data:
+        return JsonResponse({'success': False, 'error': 'No QR data provided'})
+
+    # Expected format: appointment:UUID
+    try:
+        if qr_data.startswith('appointment:'):
+            appointment_id = qr_data.replace('appointment:', '')
+            appointment = QueueAppointment.objects.get(id=appointment_id)
+
+            # Check if appointment is for today
+            today = timezone.now().date()
+            if appointment.slot_date != today:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Appointment is scheduled for {appointment.slot_date.strftime("%A, %B %d, %Y")}, not today'
+                })
+
+            # Check if appointment is already checked in
+            if appointment.checked_in:
+                return JsonResponse({
+                    'success': True,
+                    'already_checked_in': True,
+                    'appointment': {
+                        'id': str(appointment.id),
+                        'queue_number': appointment.queue_number,
+                        'applicant_name': appointment.applicant.get_full_name(),
+                        'business_name': appointment.application.business_name,
+                        'appointment_type': appointment.get_appointment_type_display(),
+                        'slot_time': appointment.slot_time.strftime('%I:%M %p')
+                    }
+                })
+
+            # Check in the appointment
+            appointment.checked_in = True
+            appointment.check_in_time = timezone.now()
+            appointment.save()
+
+            # Create notification for the applicant
+            from notifications.utils import create_notification
+            create_notification(
+                user=appointment.applicant,
+                title="Check-in Successful",
+                message=f"You have been checked in for your {appointment.get_appointment_type_display()} appointment at Malolos City Hall.",
+                notification_type='info'
+            )
+
+            # Return success response with appointment details
+            return JsonResponse({
+                'success': True,
+                'appointment': {
+                    'id': str(appointment.id),
+                    'queue_number': appointment.queue_number,
+                    'applicant_name': appointment.applicant.get_full_name(),
+                    'business_name': appointment.application.business_name,
+                    'appointment_type': appointment.get_appointment_type_display(),
+                    'slot_time': appointment.slot_time.strftime('%I:%M %p')
+                }
+            })
+
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid QR code format'})
+
+    except QueueAppointment.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Appointment not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Error processing QR code: {str(e)}'})

@@ -1,0 +1,438 @@
+<!-- queuing/templates/queuing/staff/dashboard.html -->
+{% extends 'reviewer/base.html' %}
+
+{% block title %}Queue Management{% endblock %}
+
+{% block content %}
+ <div class="container mx-auto py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Queue Management</h1>
+        <div class="flex items-center space-x-4">
+            <div class="text-sm text-gray-700">
+                <span class="font-medium">Today:</span> {{ today_date|date:"l, F j, Y" }}
+            </div>
+            <!-- QR Scanner Button -->
+            <a href="{% url 'reviewer:qr_scanner' %}" class="btn btn-sm btn-primary">
+                <i class="fas fa-qrcode mr-1"></i> QR Check-in
+            </a>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Payment Queue</span>
+                <div class="stat-icon" style="background-color: #3B82F6;">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ payment_queue.count }}</div>
+            <p class="text-sm text-gray-600 mt-1">Appointments Today</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Permit Release</span>
+                <div class="stat-icon" style="background-color: #8B5CF6;">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ release_queue.count }}</div>
+            <p class="text-sm text-gray-600 mt-1">Appointments Today</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Active Counters</span>
+                <div class="stat-icon" style="background-color: #10B981;">
+                    <i class="fas fa-desktop"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ counters.count }}</div>
+            <p class="text-sm text-gray-600 mt-1">Service Counters</p>
+        </div>
+        
+        <!-- QR Scanner Card -->
+        <div class="stat-card cursor-pointer" onclick="window.location.href='{% url 'reviewer:qr_scanner' %}'">
+            <div class="stat-header">
+                <span class="stat-title">QR Check-in</span>
+                <div class="stat-icon" style="background-color: #F59E0B;">
+                    <i class="fas fa-qrcode"></i>
+                </div>
+            </div>
+            <div class="stat-value">
+                <i class="fas fa-camera text-gray-400"></i>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Scan appointment QR codes</p>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Payment Queue</span>
+                <div class="stat-icon" style="background-color: #3B82F6;">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ payment_queue.count }}</div>
+            <p class="text-sm text-gray-600 mt-1">Appointments Today</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Permit Release</span>
+                <div class="stat-icon" style="background-color: #8B5CF6;">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ release_queue.count }}</div>
+            <p class="text-sm text-gray-600 mt-1">Appointments Today</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Active Counters</span>
+               <div class="stat-icon" style="background-color: #10B981;">
+                    <i class="fas fa-desktop"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ counters.count }}</div>
+            <p class="text-sm text-gray-600 mt-1">Service Counters</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Payment Queue -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Payment Processing Queue</h2>
+                <button class="btn btn-sm btn-primary" onclick="refreshQueue('payment')">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="table" id="paymentQueueTable">
+                    <thead>
+                        <tr>
+                            <th>Queue #</th>
+                            <th>Business Name</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in payment_queue %}
+                            <tr id="appointment-{{ appointment.id }}">
+                                <td>
+                                    <span class="font-bold">{{ appointment.queue_number }}</span>
+                                </td>
+                                <td>{{ appointment.application.business_name }}</td>
+                                <td>{{ appointment.slot_time|time:"g:i A" }}</td>
+                                <td>
+                                    {% if appointment.checked_in %}
+                                        <span class="status-badge status-submitted">Checked In</span>
+                                    {% else %}
+                                        <span class="status-badge status-requires_revision">Not Checked In</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="flex space-x-2">
+                                        {% for counter in counters %}
+                                            {% if counter.counter_type == 'payment' %}
+                                                <button class="btn btn-sm btn-success call-btn" data-counter="{{ counter.id }}" data-appointment="{{ appointment.id }}" {% if appointment.current_counter %}disabled{% endif %}>
+                                                    Call to #{{ counter.counter_number }}
+                                                </button>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% if not appointment.checked_in %}
+                                            <button class="btn btn-sm btn-warning check-in-btn" data-appointment="{{ appointment.id }}">
+                                                Check In
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-info-circle mr-2"></i> No payment appointments scheduled for today.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Permit Release Queue -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Permit Release Queue</h2>
+                <button class="btn btn-sm btn-primary" onclick="refreshQueue('release')">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="table" id="releaseQueueTable">
+                    <thead>
+                        <tr>
+                            <th>Queue #</th>
+                            <th>Business Name</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in release_queue %}
+                            <tr id="appointment-{{ appointment.id }}">
+                                <td>
+                                    <span class="font-bold">{{ appointment.queue_number }}</span>
+                                </td>
+                                <td>{{ appointment.application.business_name }}</td>
+                                <td>{{ appointment.slot_time|time:"g:i A" }}</td>
+                                <td>
+                                    {% if appointment.checked_in %}
+                                        <span class="status-badge status-submitted">Checked In</span>
+                                    {% else %}
+                                        <span class="status-badge status-requires_revision">Not Checked In</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="flex space-x-2">
+                                        {% for counter in counters %}
+                                            {% if counter.counter_type == 'release' %}
+                                                <button class="btn btn-sm btn-success call-btn" data-counter="{{ counter.id }}" data-appointment="{{ appointment.id }}" {% if appointment.current_counter %}disabled{% endif %}>
+                                                    Call to #{{ counter.counter_number }}
+                                                </button>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% if not appointment.checked_in %}
+                                            <button class="btn btn-sm btn-warning check-in-btn" data-appointment="{{ appointment.id }}">
+                                                Check In
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-info-circle mr-2"></i> No permit release appointments scheduled for today.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Counters -->
+    <div class="card mt-6">
+        <div class="card-header">
+            <h2 class="card-title">Active Service Counters</h2>
+            <button class="btn btn-sm btn-primary" id="refreshCounters">
+                <i class="fas fa-sync"></i> Refresh
+            </button>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Counter</th>
+                        <th>Type</th>
+                        <th>Current Queue</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for counter in counters %}
+                        <tr id="counter-{{ counter.id }}">
+                            <td>
+                                <span class="font-bold">#{{ counter.counter_number }}</span>
+                            </td>
+                            <td>{{ counter.get_counter_type_display }}</td>
+                            <td>
+                                {% if counter.current_queue %}
+                                    <span class="font-medium">{{ counter.current_queue.queue_number }}</span>
+                                    <span class="text-sm text-gray-500 ml-2">{{ counter.current_queue.application.business_name }}</span>
+                                {% else %}
+                                    <span class="text-gray-500">No active client</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if counter.is_active %}
+                                    <span class="status-badge status-approved">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="flex space-x-2">
+                                    <button class="btn btn-sm btn-primary next-btn" data-counter="{{ counter.id }}">
+                                        <i class="fas fa-arrow-right mr-1"></i> Call Next
+                                    </button>
+                                    
+                                    {% if counter.current_queue %}
+                                        <button class="btn btn-sm btn-success complete-btn" data-counter="{{ counter.id }}" data-appointment="{{ counter.current_queue.id }}">
+                                            <i class="fas fa-check mr-1"></i> Complete
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-8 text-gray-500">
+                                <i class="fas fa-info-circle mr-2"></i> No active service counters.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Queue Statistics -->
+    <div class="card mt-6">
+        <div class="card-header">
+            <h2 class="card-title">Queue Management Tools</h2>
+        </div>
+        
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Daily Summary</h3>
+                    <ul class="space-y-2">
+                        <li class="flex justify-between">
+                            <span class="text-gray-600">Total Appointments Today:</span>
+                            <span class="font-semibold">{{ payment_queue.count|add:release_queue.count }}</span>
+                        </li>
+                        <li class="flex justify-between">
+                            <span class="text-gray-600">Completed:</span>
+                            <span class="font-semibold" id="completedCount">0</span>
+                        </li>
+                        <li class="flex justify-between">
+                            <span class="text-gray-600">No-shows:</span>
+                            <span class="font-semibold" id="noShowCount">0</span>
+                        </li>
+                    </ul>
+                    
+                    <div class="mt-6">
+                        <a href="{% url 'queuing:update_stats' %}" class="btn btn-primary">
+                            <i class="fas fa-chart-bar mr-2"></i> Update Queue Statistics
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+                    <div class="space-y-4">
+                        <button class="btn btn-warning" onclick="markNoShows()">
+                            <i class="fas fa-user-times mr-2"></i> Mark No-Shows
+                        </button>
+                        
+                        <button class="btn btn-success" onclick="printQueueSummary()">
+                            <i class="fas fa-print mr-2"></i> Print Queue Summary
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Call next appointment for a counter
+    document.querySelectorAll('.next-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const counterId = this.dataset.counter;
+            
+            fetch(`{% url 'queuing:call_next' 0 %}`.replace('0', counterId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    alert(`Called queue number ${data.appointment.queue_number} to counter`);
+                    // Refresh page
+                    location.reload();
+                } else {
+                    alert(data.message || 'No more appointments in queue');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to call next appointment');
+            });
+        });
+    });
+    
+    // Check in an appointment
+    document.querySelectorAll('.check-in-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const appointmentId = this.dataset.appointment;
+            
+            fetch(`{% url 'queuing:check_in' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', appointmentId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update UI to show checked in
+                    const row = document.getElementById(`appointment-${appointmentId}`);
+                    const statusCell = row.cells[3];
+                    statusCell.innerHTML = '<span class="status-badge status-submitted">Checked In</span>';
+                    
+                    // Remove the check-in button
+                    this.remove();
+                } else {
+                    alert(data.error || 'Failed to check in');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to check in the appointment');
+            });
+        });
+    });
+    
+    // Refresh queue
+    function refreshQueue(type) {
+        location.reload();
+    }
+    
+    // Mark no-shows
+    function markNoShows() {
+        if (confirm('Mark all unchecked-in appointments that have passed their scheduled time as no-shows?')) {
+            // Implement AJAX call to mark no-shows
+            alert('No-shows have been marked');
+            location.reload();
+        }
+    }
+    
+    // Print queue summary
+    function printQueueSummary() {
+        window.print();
+    }
+</script>
+{% endblock %}

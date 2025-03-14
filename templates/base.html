@@ -1,80 +1,148 @@
+{# templates/base.html #}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}BPLO{% endblock %}</title>
+    <title>{% block title %}Business Permit System{% endblock %}</title>
     
-    <!-- Modern Tailwind CSS -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Animation Library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
     <style>
-        /* Base Styles */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
+            background: linear-gradient(135deg, #f6f7ff 0%, #edf1f9 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
-
+        
         /* Navbar Styles */
-        .navbar-gradient {
-            background: linear-gradient(135deg, #d54646 0%, rgb(154, 73, 73) 100%);
+        .navbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+        
+        .navbar.scrolled {
+            background: rgba(255, 255, 255, 0.95);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
-
+        
+        .navbar-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, rgb(255, 255, 255) 100%);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
         /* Navigation Link Animations */
         .nav-link {
             position: relative;
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            color: #4F46E5;
+            font-weight: 500;
             transition: all 0.3s ease;
         }
-
-        .nav-link::after {
+        
+        .nav-link:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            background-color: #4F46E5;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .nav-link:hover:after,
+        .nav-link.active:after {
+            width: 80%;
+        }
+        
+        .nav-link:hover {
+            color: #4338CA;
+        }
+        
+        .nav-link.active {
+            color: #4338CA;
+            font-weight: 600;
+        }
+        
+        .white-nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+            color: rgb(79, 70, 229);
+        }
+        
+        .white-nav-link::after {
             content: '';
             position: absolute;
             width: 0;
             height: 2px;
             bottom: -4px;
             left: 0;
-            background-color: #fff;
+            background-color: #4f46e5;
             transition: width 0.3s ease;
         }
-
-        .nav-link:hover::after {
+        
+        .white-nav-link:hover::after {
             width: 100%;
         }
-
+        
+        .white-nav-link:hover {
+            color: #4f46e5;
+        }
+        
         /* Content Area */
         main {
             flex: 1;
         }
-
+        
+        /* Mobile menu */
+        .mobile-menu {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        
+        .mobile-menu.open {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
-
+        
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: rgb(255, 255, 255);
         }
-
+        
         ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
+            background: #ffffff;
             border-radius: 4px;
         }
-
+        
         ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+            background: #4f46e5;
         }
-
+        
         /* Dropdown Menu Animation */
         @keyframes slideDown {
             0% {
@@ -86,11 +154,12 @@
                 opacity: 1;
             }
         }
-
+        
         .dropdown-content {
             animation: slideDown 0.2s ease-out;
-        }
 
+        }
+        
         /* Notification Badge Animation */
         @keyframes pulse {
             0% {
@@ -103,11 +172,11 @@
                 transform: scale(1);
             }
         }
-
+        
         .notification-badge {
             animation: pulse 1.5s infinite;
         }
-
+        
         /* Toast Notification Animation */
         @keyframes slideIn {
             0% {
@@ -119,7 +188,7 @@
                 opacity: 1;
             }
         }
-
+        
         @keyframes slideOut {
             0% {
                 transform: translateX(0);
@@ -130,15 +199,52 @@
                 opacity: 0;
             }
         }
-
+        
         .toast-notification {
             animation: slideIn 0.3s ease forwards;
         }
-
+        
         .toast-notification.hide {
             animation: slideOut 0.3s ease forwards;
         }
-
+        
+        /* Animation classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .slide-in-right {
+            animation: slideInRight 0.5s ease-in-out;
+        }
+        
+        .slide-in-left {
+            animation: slideInLeft 0.5s ease-in-out;
+        }
+        
+        .slide-in-up {
+            animation: slideInUp 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideInLeft {
+            from { transform: translateX(-50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideInUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
         /* Notification Bell Shake Animation */
         @keyframes bellShake {
             0% { transform: rotate(0); }
@@ -151,669 +257,638 @@
             92% { transform: rotate(1deg); }
             100% { transform: rotate(0); }
         }
-
+        
         .bell-shake {
             animation: bellShake 2s ease infinite;
         }
+        
+        /* Hover effect for cards */
+        .hover-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Auth specific styles */
+        .auth-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .auth-input {
+            @apply block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm;
+            @apply focus:ring-indigo-500 focus:border-indigo-500;
+            @apply placeholder-gray-400;
+        }
+        
+        .auth-button {
+            @apply w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm;
+            @apply text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700;
+            @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+            transition: all 0.2s ease;
+        }
+        
+        .auth-link {
+            @apply font-medium text-indigo-600 hover:text-indigo-500;
+            transition: all 0.2s ease;
+        }
     </style>
+    
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation -->
-    <header class="navbar-gradient">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo -->
-                <div class="flex-shrink-0 flex items-center">
-                    <a href="{% url 'applications:dashboard' %}" class="flex items-center space-x-2">
-                        <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                        <span class="text-white font-semibold text-lg">BPLO Dashboard</span>
+    <div class="min-h-screen flex flex-col">
+        <!-- Navigation -->
+        <header class="navbar-gradient fixed w-full z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <!-- Logo -->
+                    <div class="flex-shrink-0 flex items-center">
+                    <a href="{% url 'home' %}" class="flex items-center space-x-2">
+                        <img class="h-10 w-auto" src="{% static 'images/seal.png' %}" alt="Logo">
+                        <span class="font-bold text-gray-800 text-lg">Business Permit System</span>
                     </a>
-                </div>
-                <!-- Navigation Links -->
-                <nav class="hidden md:flex space-x-6 items-center">
-                    <a href="{% url 'applications:dashboard' %}" class="nav-link text-gray-100 hover:text-white px-3 py-2 text-sm font-medium">
-                        <i class="fas fa-home mr-2"></i>Home
-                    </a>
-                    <a href="{% url 'applications:track_status' %}" class="nav-link text-gray-100 hover:text-white px-3 py-2 text-sm font-medium">
-                        <i class="fas fa-chart-line mr-2"></i>Track Status
-                    </a>
+                    </div>
                     
-                    <!-- Notification Bell -->
-                    <div class="relative group">
-                        <button class="nav-link text-gray-100 hover:text-white px-3 py-2 text-sm font-medium relative" id="notificationButton">
-                            <i class="fas fa-bell text-lg {% if has_unread_notifications %}bell-shake{% endif %}"></i>
+                    <!-- Navigation Links -->
+                    <nav class="hidden md:flex space-x-6 items-center">
+                        <a href="{% url 'home' %}" class="white-nav-link px-3 py-2 text-sm font-medium">
+                            <i class="fas fa-home mr-2"></i>Home
+                        </a>
+                        
+                        <!-- Added Dashboard Link -->
+                        <a href="{% url 'applications:dashboard' %}" class="white-nav-link px-3 py-2 text-sm font-medium">
+                            <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                        </a>
+                    
+                        <a href="{% url 'applications:track_status' %}" class="white-nav-link px-3 py-2 text-sm font-medium">
+                            <i class="fas fa-chart-line mr-2"></i>Track Status
+                        </a>
+                        
+                        {% if user.is_authenticated %}
+                        <!-- Notification Bell -->
+                        <div class="relative group">
+                            <button class="white-nav-link px-3 py-2 text-sm font-medium relative" id="notificationButton">
+                                <i class="fas fa-bell text-lg {% if has_unread_notifications %}bell-shake{% endif %}"></i>
+                                {% if has_unread_notifications %}
+                                    <span class="absolute top-0 right-0 block h-4 w-4 rounded-full bg-yellow-400 text-xs text-white text-center notification-badge" id="notificationBadge">
+                                        {{ unread_notifications_count }}
+                                    </span>
+                                {% endif %}
+                            </button>
+                            
+                            <!-- Notification Dropdown -->
+                            <div class="hidden group-hover:block absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50 dropdown-content" id="notificationDropdown">
+                                <div class="flex justify-between items-center px-4 py-2 border-b border-gray-100">
+                                    <h3 class="text-sm font-semibold text-gray-700">Notifications</h3>
+                                    {% if has_unread_notifications %}
+                                        <a href="{% url 'notifications:mark_all_read' %}" class="text-xs text-blue-600 hover:text-blue-800">Mark all as read</a>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="max-h-80 overflow-y-auto" id="notificationContainer">
+                                    {% if notifications %}
+                                        {% for notification in notifications|slice:":5" %}
+                                            <a href="{% url 'notifications:detail' notification.id %}" class="block px-4 py-3 hover:bg-gray-50 border-b border-gray-100 {% if not notification.is_read %}bg-blue-50{% endif %}">
+                                                <div class="flex justify-between">
+                                                    <p class="text-sm font-medium text-gray-800">{{ notification.title }}</p>
+                                                    <p class="text-xs text-gray-500">{{ notification.created_at|timesince }} ago</p>
+                                                </div>
+                                                <p class="text-xs text-gray-600 mt-1 truncate">{{ notification.message }}</p>
+                                            </a>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="px-4 py-6 text-center">
+                                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                            </svg>
+                                            <p class="mt-2 text-sm text-gray-500">No notifications yet</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if notifications|length > 5 %}
+                                    <a href="{% url 'notifications:list' %}" class="block text-center py-2 text-xs font-medium text-blue-600 hover:text-blue-800 border-t border-gray-100">
+                                        View all notifications
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Profile Dropdown (For Logged-in Users) -->
+                        <div class="relative group ml-2">
+                            <button class="flex items-center text-sm font-medium text-4F46E5FF-100 hover:text-black focus:outline-none">
+                                <span class="mr-2">{{ user.get_full_name|default:user.username }}</span>
+                                <svg class="ml-1 h-5 w-5 text-4F46E5FF-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            
+                            <!-- Profile Dropdown Menu -->
+                            <div class="hidden group-hover:block absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 dropdown-content">
+                                {% if user.is_staff and user.groups.all %}
+                                    {% for group in user.groups.all %}
+                                        {% if group.name == 'Reviewers' %}
+                                            <a href="{% url 'reviewer:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <i class="fas fa-user-shield mr-2"></i>Reviewer Panel
+                                            </a>
+                                            <div class="border-t border-gray-100"></div>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                <a href="{% url 'accounts:profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-user-circle mr-2"></i>My Profile
+                                </a>
+                                <a href="{% url 'applications:my_applications' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-file-alt mr-2"></i>My Applications
+                                </a>
+                                <a href="{% url 'accounts:edit_profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-cog mr-2"></i>Settings
+                                </a>
+                                <div class="border-t border-gray-100"></div>
+                                <a href="{% url 'accounts:logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- Login Link (For Non-Logged-in Users) -->
+                        <a href="{% url 'accounts:login' %}" class="white-nav-link px-3 py-2 text-sm font-medium">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login
+                        </a>
+                        {% endif %}
+                    </nav>
+
+                    <!-- Mobile Menu Button -->
+                    <div class="md:hidden flex items-center space-x-3">
+                        {% if user.is_authenticated %}
+                        <!-- Mobile Notification Button -->
+                        <button type="button" class="text-gray-800 hover:text-indigo-600 focus:outline-none relative" onclick="toggleMobileNotifications()">
+                            <i class="fas fa-bell text-xl"></i>
                             {% if has_unread_notifications %}
-                                <span class="absolute top-0 right-0 block h-4 w-4 rounded-full bg-yellow-400 text-xs text-white text-center notification-badge" id="notificationBadge">
+                                <span class="absolute -top-1 -right-1 block h-4 w-4 rounded-full bg-yellow-400 text-xs text-white text-center notification-badge">
                                     {{ unread_notifications_count }}
                                 </span>
                             {% endif %}
                         </button>
-                        
-                        <!-- Notification Dropdown -->
-                        <div class="hidden group-hover:block absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50 dropdown-content" id="notificationDropdown">
-                            <div class="flex justify-between items-center px-4 py-2 border-b border-gray-100">
-                                <h3 class="text-sm font-semibold text-gray-700">Notifications</h3>
-                                {% if has_unread_notifications %}
-                                    <a href="{% url 'notifications:mark_all_read' %}" class="text-xs text-blue-600 hover:text-blue-800">Mark all as read</a>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="max-h-80 overflow-y-auto" id="notificationContainer">
-                                {% if notifications %}
-                                    {% for notification in notifications|slice:":5" %}
-                                        <a href="{% url 'notifications:detail' notification.id %}" class="block px-4 py-3 hover:bg-gray-50 border-b border-gray-100 {% if not notification.is_read %}bg-blue-50{% endif %}">
-                                            <div class="flex justify-between">
-                                                <p class="text-sm font-medium text-gray-800">{{ notification.title }}</p>
-                                                <p class="text-xs text-gray-500">{{ notification.created_at|timesince }} ago</p>
-                                            </div>
-                                            <p class="text-xs text-gray-600 mt-1 truncate">{{ notification.message }}</p>
-                                        </a>
-                                    {% endfor %}
-                                {% else %}
-                                    <div class="px-4 py-6 text-center">
-                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                                        </svg>
-                                        <p class="mt-2 text-sm text-gray-500">No notifications yet</p>
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            {% if notifications|length > 5 %}
-                                <a href="{% url 'notifications:list' %}" class="block text-center py-2 text-xs font-medium text-blue-600 hover:text-blue-800 border-t border-gray-100">
-                                    View all notifications
-                                </a>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- Profile Dropdown -->
-                    <div class="relative group ml-2">
-                        <button class="flex items-center text-sm font-medium text-gray-100 hover:text-white focus:outline-none">
-                            <span class="mr-2">{{ user.get_full_name|default:user.username }}</span>
-                            <svg class="ml-1 h-5 w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                        
-                        <!-- Profile Dropdown Menu -->
-                        <div class="hidden group-hover:block absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 dropdown-content">
-                            {% if user.is_staff and user.groups.all %}
-                                {% for group in user.groups.all %}
-                                    {% if group.name == 'Reviewers' %}
-                                        <a href="{% url 'reviewer:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                            <i class="fas fa-user-shield mr-2"></i>Reviewer Panel
-                                        </a>
-                                        <div class="border-t border-gray-100"></div>
-                                    {% endif %}
-                                {% endfor %}
-                            {% endif %}
-                            
-                            <a href="{% url 'accounts:profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <i class="fas fa-user-circle mr-2"></i>My Profile
-                            </a>
-                            <a href="{% url 'accounts:edit_profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <i class="fas fa-cog mr-2"></i>Settings
-                            </a>
-                            <div class="border-t border-gray-100"></div>
-                            <a href="{% url 'accounts:logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                            </a>
-                        </div>
-                    </div>
-                </nav>
-
-                <!-- Mobile Menu Button -->
-                <div class="md:hidden flex items-center space-x-3">
-                    <!-- Mobile Notification Button -->
-                    <button type="button" class="text-gray-100 hover:text-white focus:outline-none relative" onclick="toggleMobileNotifications()">
-                        <i class="fas fa-bell text-xl"></i>
-                        {% if has_unread_notifications %}
-                            <span class="absolute -top-1 -right-1 block h-4 w-4 rounded-full bg-yellow-400 text-xs text-white text-center notification-badge">
-                                {{ unread_notifications_count }}
-                            </span>
                         {% endif %}
-                    </button>
 
-                    <!-- Mobile Menu Button -->
-                    <button type="button" class="text-gray-100 hover:text-white focus:outline-none" onclick="toggleMobileMenu()">
-                        <i class="fas fa-bars text-xl"></i>
-                    </button>
+                        <!-- Mobile Menu Button -->
+                        <button type="button" class="text-gray-800 hover:text-indigo-600 focus:outline-none" onclick="toggleMobileMenu()">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Mobile Menu -->
-        <div id="mobileMenu" class="hidden md:hidden bg-white shadow-lg z-20">
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                <a href="{% url 'applications:dashboard' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
-                    <i class="fas fa-home mr-2"></i>Home
-                </a>
-                <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
-                    <i class="fas fa-chart-line mr-2"></i>Track Status
-                </a>
-                <a href="{% url 'accounts:profile' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
-                    <i class="fas fa-user mr-2"></i>Profile
-                </a>
-                <a href="{% url 'accounts:edit_profile' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
-                    <i class="fas fa-cog mr-2"></i>Settings
-                </a>
-                <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
-                    <i class="fas fa-bell mr-2"></i>Notification Settings
-                </a>
-                {% if user.is_staff and user.groups.all %}
-                    {% for group in user.groups.all %}
-                        {% if group.name == 'Reviewers' %}
-                            <a href="{% url 'reviewer:dashboard' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
-                                <i class="fas fa-user-shield mr-2"></i>Reviewer Dashboard
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="hidden md:hidden bg-white shadow-lg z-20">
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <a href="{% url 'home' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
+                        <i class="fas fa-home mr-2"></i>Home
+                    </a>
+                    <a href="{% url 'applications:dashboard' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                    </a>
+                    <a href="{% url 'applications:track_status' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
+                        <i class="fas fa-chart-line mr-2"></i>Track Status
+                    </a>
+                    
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'accounts:profile' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
+                        <i class="fas fa-user mr-2"></i>Profile
+                    </a>
+                    <a href="{% url 'applications:my_applications' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
+                        <i class="fas fa-file-alt mr-2"></i>My Applications
+                    </a>
+                    <a href="{% url 'accounts:edit_profile' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
+                        <i class="fas fa-cog mr-2"></i>Settings
+                    </a>
+                    <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
+                        <i class="fas fa-bell mr-2"></i>Notification Settings
+                    </a>
+                    {% if user.is_staff and user.groups.all %}
+                        {% for group in user.groups.all %}
+                            {% if group.name == 'Reviewers' %}
+                                <a href="{% url 'reviewer:dashboard' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
+                                    <i class="fas fa-user-shield mr-2"></i>Reviewer Dashboard
+                                </a>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                    <div class="border-t border-gray-200 my-2"></div>
+                    <a href="{% url 'accounts:logout' %}" class="block px-3 py-2 text-base font-medium text-red-600 hover:bg-red-50 rounded-md">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
+                    {% else %}
+                    <a href="{% url 'accounts:login' %}" class="block px-3 py-2 text-base font-medium text-indigo-600 hover:bg-indigo-50 rounded-md">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    </a>
+                    <a href="{% url 'accounts:register' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
+                        <i class="fas fa-user-plus mr-2"></i>Register
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Mobile Notifications Panel -->
+            {% if user.is_authenticated %}
+            <div id="mobileNotifications" class="hidden md:hidden bg-white shadow-lg absolute top-16 left-0 right-0 z-30">
+                <div class="flex justify-between items-center px-4 py-2 border-b border-gray-200">
+                    <h3 class="text-base font-semibold text-gray-700">Notifications</h3>
+                    {% if has_unread_notifications %}
+                        <a href="{% url 'notifications:mark_all_read' %}" class="text-xs text-blue-600 hover:text-blue-800">Mark all as read</a>
+                    {% endif %}
+                </div>
+                
+                <div class="max-h-96 overflow-y-auto">
+                    {% if notifications %}
+                        {% for notification in notifications %}
+                            <a href="{% url 'notifications:detail' notification.id %}" class="block px-4 py-3 border-b border-gray-100 {% if not notification.is_read %}bg-blue-50{% endif %}">
+                                <div class="flex justify-between">
+                                    <p class="text-sm font-medium text-gray-800">{{ notification.title }}</p>
+                                    <p class="text-xs text-gray-500">{{ notification.created_at|timesince }} ago</p>
+                                </div>
+                                <p class="text-xs text-gray-600 mt-1">{{ notification.message }}</p>
                             </a>
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
-                <div class="border-t border-gray-200 my-2"></div>
-                <a href="{% url 'accounts:logout' %}" class="block px-3 py-2 text-base font-medium text-red-600 hover:bg-red-50 rounded-md">
-                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                </a>
-            </div>
-        </div>
-
-        <!-- Mobile Notifications Panel -->
-        <div id="mobileNotifications" class="hidden md:hidden bg-white shadow-lg absolute top-16 left-0 right-0 z-30">
-            <div class="flex justify-between items-center px-4 py-2 border-b border-gray-200">
-                <h3 class="text-base font-semibold text-gray-700">Notifications</h3>
-                {% if has_unread_notifications %}
-                    <a href="{% url 'notifications:mark_all_read' %}" class="text-xs text-blue-600 hover:text-blue-800">Mark all as read</a>
-                {% endif %}
-            </div>
-            
-            <div class="max-h-96 overflow-y-auto">
+                        {% endfor %}
+                    {% else %}
+                        <div class="px-4 py-6 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-500">No notifications yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
                 {% if notifications %}
-                    {% for notification in notifications %}
-                        <a href="{% url 'notifications:detail' notification.id %}" class="block px-4 py-3 border-b border-gray-100 {% if not notification.is_read %}bg-blue-50{% endif %}">
-                            <div class="flex justify-between">
-                                <p class="text-sm font-medium text-gray-800">{{ notification.title }}</p>
-                                <p class="text-xs text-gray-500">{{ notification.created_at|timesince }} ago</p>
-                            </div>
-                            <p class="text-xs text-gray-600 mt-1">{{ notification.message }}</p>
-                        </a>
-                    {% endfor %}
-                {% else %}
-                    <div class="px-4 py-6 text-center">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                        </svg>
-                        <p class="mt-2 text-sm text-gray-500">No notifications yet</p>
-                    </div>
+                    <a href="{% url 'notifications:list' %}" class="block text-center py-3 text-sm font-medium text-blue-600 hover:text-blue-800 border-t border-gray-200">
+                        View all notifications
+                    </a>
                 {% endif %}
             </div>
-            
-            {% if notifications %}
-                <a href="{% url 'notifications:list' %}" class="block text-center py-3 text-sm font-medium text-blue-600 hover:text-blue-800 border-t border-gray-200">
-                    View all notifications
-                </a>
             {% endif %}
-        </div>
-    </header>
+        </header>
 
-    <!-- Toast Notifications Container -->
-    <div id="toastContainer" class="fixed top-20 right-4 z-50 space-y-4 max-w-sm"></div>
+        <!-- Toast Notifications Container -->
+        <div id="toastContainer" class="fixed top-20 right-4 z-50 space-y-4 max-w-sm"></div>
 
-    <!-- Main Content -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {% if messages %}
-            <div class="mb-6">
-                {% for message in messages %}
-                    <div class="rounded-md {% if message.tags == 'error' %}bg-red-50 border border-red-200{% elif message.tags == 'success' %}bg-green-50 border border-green-200{% elif message.tags == 'warning' %}bg-yellow-50 border border-yellow-200{% elif message.tags == 'info' %}bg-blue-50 border border-blue-200{% else %}bg-gray-50 border border-gray-200{% endif %} p-4 mb-3">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                {% if message.tags == 'error' %}
-                                    <i class="fas fa-exclamation-circle text-red-500"></i>
-                                {% elif message.tags == 'success' %}
-                                    <i class="fas fa-check-circle text-green-500"></i>
-                                {% elif message.tags == 'warning' %}
-                                    <i class="fas fa-exclamation-triangle text-yellow-500"></i>
-                                {% elif message.tags == 'info' %}
-                                    <i class="fas fa-info-circle text-blue-500"></i>
-                                {% else %}
-                                    <i class="fas fa-bell text-gray-500"></i>
-                                {% endif %}
-                            </div>
-                            <div class="ml-3 flex-1">
-                                <p class="text-sm {% if message.tags == 'error' %}text-red-700{% elif message.tags == 'success' %}text-green-700{% elif message.tags == 'warning' %}text-yellow-700{% elif message.tags == 'info' %}text-blue-700{% else %}text-gray-700{% endif %}">
-                                    {{ message }}
-                                </p>
-                            </div>
-                            <div class="ml-auto pl-3">
-                                <div class="-mx-1.5 -my-1.5">
-                                    <button type="button" onclick="this.parentElement.parentElement.parentElement.parentElement.remove()" class="inline-flex rounded-md p-1.5 {% if message.tags == 'error' %}text-red-500 hover:bg-red-100{% elif message.tags == 'success' %}text-green-500 hover:bg-green-100{% elif message.tags == 'warning' %}text-yellow-500 hover:bg-yellow-100{% elif message.tags == 'info' %}text-blue-500 hover:bg-blue-100{% else %}text-gray-500 hover:bg-gray-100{% endif %} focus:outline-none">
-                                        <span class="sr-only">Dismiss</span>
-                                        <i class="fas fa-times"></i>
-                                    </button>
+        <!-- Main Content with padding for fixed navbar -->
+        <main class="flex-grow pt-16 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {% if messages %}
+                <div class="mb-6">
+                    {% for message in messages %}
+                        <div class="rounded-md {% if message.tags == 'error' %}bg-red-50 border border-red-200{% elif message.tags == 'success' %}bg-green-50 border border-green-200{% elif message.tags == 'warning' %}bg-yellow-50 border border-yellow-200{% elif message.tags == 'info' %}bg-blue-50 border border-blue-200{% else %}bg-gray-50 border border-gray-200{% endif %} p-4 mb-3">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    {% if message.tags == 'error' %}
+                                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                                    {% elif message.tags == 'success' %}
+                                        <i class="fas fa-check-circle text-green-500"></i>
+                                    {% elif message.tags == 'warning' %}
+                                        <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                                    {% elif message.tags == 'info' %}
+                                        <i class="fas fa-info-circle text-blue-500"></i>
+                                    {% else %}
+                                        <i class="fas fa-bell text-gray-500"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <p class="text-sm {% if message.tags == 'error' %}text-red-700{% elif message.tags == 'success' %}text-green-700{% elif message.tags == 'warning' %}text-yellow-700{% elif message.tags == 'info' %}text-blue-700{% else %}text-gray-700{% endif %}">
+                                        {{ message }}
+                                    </p>
+                                </div>
+                                <div class="ml-auto pl-3">
+                                    <div class="-mx-1.5 -my-1.5">
+                                        <button type="button" onclick="this.parentElement.parentElement.parentElement.parentElement.remove()" class="inline-flex rounded-md p-1.5 {% if message.tags == 'error' %}text-red-500 hover:bg-red-100{% elif message.tags == 'success' %}text-green-500 hover:bg-green-100{% elif message.tags == 'warning' %}text-yellow-500 hover:bg-yellow-100{% elif message.tags == 'info' %}text-blue-500 hover:bg-blue-100{% else %}text-gray-500 hover:bg-gray-100{% endif %} focus:outline-none">
+                                            <span class="sr-only">Dismiss</span>
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white py-8">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Business Permit System</h3>
+                        <p class="text-gray-300 text-sm">Streamlining the business permit application process through technology and innovation.</p>
                     </div>
-                {% endfor %}
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="{% url 'home' %}" class="text-gray-300 hover:text-white transition-colors">Home</a></li>
+                            <li><a href="{% url 'applications:dashboard' %}" class="text-gray-300 hover:text-white transition-colors">Dashboard</a></li>
+                            <li><a href="{% url 'applications:track_status' %}" class="text-gray-300 hover:text-white transition-colors">Track Status</a></li>
+                            {% if user.is_authenticated %}
+                                <li><a href="{% url 'applications:my_applications' %}" class="text-gray-300 hover:text-white transition-colors">My Applications</a></li>
+                            {% else %}
+                                <li><a href="{% url 'accounts:login' %}" class="text-gray-300 hover:text-white transition-colors">Login</a></li>
+                                <li><a href="{% url 'accounts:register' %}" class="text-gray-300 hover:text-white transition-colors">Register</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Contact Us</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-start">
+                                <i class="fas fa-map-marker-alt mt-1 mr-2 text-indigo-400"></i>
+                                <span class="text-gray-300">123 City Hall, Government Center, Metro City</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-phone-alt mr-2 text-indigo-400"></i>
+                                <span class="text-gray-300">(123) 456-7890</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-envelope mr-2 text-indigo-400"></i>
+                                <span class="text-gray-300">support@businesspermit.gov</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="border-t border-gray-700 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-sm text-gray-400">&copy; {% now "Y" %} Business Permit System. All rights reserved.</p>
+                    <div class="flex space-x-4 mt-4 md:mt-0">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
-        {% endif %}
-
-        {% block content %}{% endblock %}
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div class="md:flex md:items-center md:justify-between">
-                <div class="text-center md:text-left mb-4 md:mb-0">
-                    <p class="text-gray-500 text-sm">&copy; {% now "Y" %} BPLO. All rights reserved.</p>
-                </div>
-                <div class="flex justify-center md:justify-end space-x-6">
-                    <a href="#" class="text-gray-400 hover:text-gray-500 transition-colors">
-                        <span class="sr-only">Facebook</span>
-                        <i class="fab fa-facebook text-lg"></i>
-                    </a>
-                    <a href="#" class="text-gray-400 hover:text-gray-500 transition-colors">
-                        <span class="sr-only">Twitter</span>
-                        <i class="fab fa-twitter text-lg"></i>
-                    </a>
-                    <a href="#" class="text-gray-400 hover:text-gray-500 transition-colors">
-                        <span class="sr-only">Instagram</span>
-                        <i class="fab fa-instagram text-lg"></i>
-                    </a>
-                </div>
-            </div>
-            <div class="mt-4 border-t border-gray-200 pt-4 flex flex-wrap justify-center md:justify-between text-xs text-gray-500">
-                <div class="space-x-4 mb-2 md:mb-0">
-                    <a href="#" class="hover:text-gray-700 transition-colors">Terms of Service</a>
-                    <a href="#" class="hover:text-gray-700 transition-colors">Privacy Policy</a>
-                    <a href="#" class="hover:text-gray-700 transition-colors">Contact Us</a>
-                </div>
-                <div>
-                    <p>For assistance, call: <a href="tel:123-456-7890" class="text-blue-600 hover:underline">123-456-7890</a></p>
-                </div>
-            </div>
+        </footer>
+    </div>
+    
+    <!-- Flash Messages -->
+    {% if messages %}
+    <div class="fixed bottom-0 right-0 m-6 z-50">
+        {% for message in messages %}
+        <div class="{% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %} px-4 py-3 rounded-lg shadow-md mb-2 flex items-center animate__animated animate__fadeInRight">
+            <span class="mr-2">
+                {% if message.tags == 'error' %}
+                <i class="fas fa-exclamation-circle"></i>
+                {% else %}
+                <i class="fas fa-check-circle"></i>
+                {% endif %}
+            </span>
+            {{ message }}
+            <button onclick="this.parentElement.remove()" class="ml-4 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-    </footer>
-
-    <!-- JavaScript -->
+        {% endfor %}
+    </div>
+    {% endif %}
+        
     <script>
-        // Mobile menu toggle
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobileMenu');
-            const notificationsPanel = document.getElementById('mobileNotifications');
-            
-            menu.classList.toggle('hidden');
-            
-            // Hide notifications panel if it's open
-            if (!notificationsPanel.classList.contains('hidden')) {
-                notificationsPanel.classList.add('hidden');
-            }
-        }
+    // Toggle mobile menu
+    function toggleMobileMenu() {
+        const mobileMenu = document.getElementById('mobileMenu');
+        mobileMenu.classList.toggle('hidden');
+    }
+    
+    // Toggle mobile notifications
+    function toggleMobileNotifications() {
+        const mobileNotifications = document.getElementById('mobileNotifications');
+        mobileNotifications.classList.toggle('hidden');
+    }
+    
+    // Show notification toast
+    function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toastContainer');
         
-        // Mobile notifications toggle
-        function toggleMobileNotifications() {
-            const notificationsPanel = document.getElementById('mobileNotifications');
-            const menu = document.getElementById('mobileMenu');
-            
-            notificationsPanel.classList.toggle('hidden');
-            
-            // Hide menu if it's open
-            if (!menu.classList.contains('hidden')) {
-                menu.classList.add('hidden');
-            }
-            
-            // Mark notifications as read if opened
-            if (!notificationsPanel.classList.contains('hidden')) {
-                markNotificationsAsRead();
-            }
-        }
-
-        // Mark notifications as read when opened
-        function markNotificationsAsRead() {
-            const badge = document.getElementById('notificationBadge');
-            if (badge) {
-                // Send AJAX request to mark notifications as read
-                fetch('#', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken'),
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'same-origin'
-                })
-                .then(response => {
-                    if (response.ok) {
-                        // Remove the notification badge
-                        badge.style.display = 'none';
-                        
-                        // Remove bell shake animation
-                        document.querySelector('.bell-shake')?.classList.remove('bell-shake');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error marking notifications as read:', error);
-                });
-            }
-        }
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification flex items-center p-4 mb-4 rounded-lg shadow-lg max-w-md';
         
-        // Get CSRF token from cookies for AJAX requests
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
+        // Set background color based on type
+        const bgColors = {
+            'success': 'bg-green-50 border-green-200',
+            'error': 'bg-red-50 border-red-200',
+            'warning': 'bg-yellow-50 border-yellow-200',
+            'info': 'bg-blue-50 border-blue-200'
+        };
+        toast.classList.add(...(bgColors[type] || bgColors.info).split(' '));
         
-        // Close menus when clicking outside
-        document.addEventListener('click', function(event) {
-            const mobileMenu = document.getElementById('mobileMenu');
-            const mobileMenuButton = event.target.closest('button[onclick="toggleMobileMenu()"]');
-            
-            const notificationsPanel = document.getElementById('mobileNotifications');
-            const notificationsButton = event.target.closest('button[onclick="toggleMobileNotifications()"]');
-            
-            // Close mobile menu if clicked outside
-            if (!mobileMenu.classList.contains('hidden') && !mobileMenuButton && !mobileMenu.contains(event.target)) {
-                mobileMenu.classList.add('hidden');
-            }
-            
-            // Close notifications panel if clicked outside
-            if (!notificationsPanel.classList.contains('hidden') && !notificationsButton && !notificationsPanel.contains(event.target)) {
-                notificationsPanel.classList.add('hidden');
-            }
-        });
-
-        // Show toast notification
-        function showToast(message, type = 'info', duration = 5000) {
-            const toastContainer = document.getElementById('toastContainer');
-            
-            // Create toast element
-            const toast = document.createElement('div');
-            toast.className = `toast-notification rounded-md p-4 shadow-lg ${
-                type === 'success' ? 'bg-green-50 border-l-4 border-green-500' :
-                type === 'error' ? 'bg-red-50 border-l-4 border-red-500' :
-                type === 'warning' ? 'bg-yellow-50 border-l-4 border-yellow-500' :
-                'bg-blue-50 border-l-4 border-blue-500'
-            }`;
-            
-            // Set toast content with appropriate icon
-            toast.innerHTML = `
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-${
-                            type === 'success' ? 'check-circle text-green-500' :
-                            type === 'error' ? 'exclamation-circle text-red-500' :
-                            type === 'warning' ? 'exclamation-triangle text-yellow-500' :
-                            'info-circle text-blue-500'
-                        } text-lg"></i>
-                    </div>
-                    <div class="ml-3 flex-1">
-                        <p class="text-sm font-medium ${
-                            type === 'success' ? 'text-green-800' :
-                            type === 'error' ? 'text-red-800' :
-                            type === 'warning' ? 'text-yellow-800' :
-                            'text-blue-800'
-                        }">${message}</p>
-                    </div>
-                    <div class="ml-auto pl-3">
-                        <button type="button" class="inline-flex rounded-md p-1.5 ${
-                            type === 'success' ? 'text-green-500 hover:bg-green-100' :
-                            type === 'error' ? 'text-red-500 hover:bg-red-100' :
-                            type === 'warning' ? 'text-yellow-500 hover:bg-yellow-100' :
-                            'text-blue-500 hover:bg-blue-100'
-                        } focus:outline-none" onclick="closeToast(this.parentElement.parentElement.parentElement)">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            // Add to container
-            toastContainer.appendChild(toast);
-            
-            // Set timeout to remove toast after duration
+        // Set icon based on type
+        const iconClasses = {
+            'success': 'fas fa-check-circle text-green-500',
+            'error': 'fas fa-exclamation-circle text-red-500',
+            'warning': 'fas fa-exclamation-triangle text-yellow-500',
+            'info': 'fas fa-info-circle text-blue-500'
+        };
+        
+        toast.innerHTML = `
+            <div class="flex-shrink-0 mr-3">
+                <i class="${iconClasses[type] || iconClasses.info}"></i>
+            </div>
+            <div class="flex-1 text-sm text-gray-800">
+                ${message}
+            </div>
+            <button type="button" class="ml-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        // Add to container
+        toastContainer.appendChild(toast);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            toast.classList.add('hide');
             setTimeout(() => {
-                if (toast.parentNode) {
-                    // Add hide animation class
-                    toast.classList.add('hide');
-                    
-                    // Remove after animation completes
-                    setTimeout(() => {
-                        if (toast.parentNode) {
-                            toast.remove();
+                toast.remove();
+            }, 300);
+        }, 5000);
+    }
+    
+    // Fetch unread notification count
+    function fetchNotificationCount() {
+        fetch('{% url "notifications:api_count" %}')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('notificationBadge');
+                const count = data.count;
+                
+                if (count > 0) {
+                    if (badge) {
+                        badge.textContent = count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        const bell = document.getElementById('notificationButton');
+                        if (bell) {
+                            bell.innerHTML += `
+                                <span class="absolute top-0 right-0 block h-4 w-4 rounded-full bg-yellow-400 text-xs text-white text-center notification-badge" id="notificationBadge">
+                                    ${count}
+                                </span>
+                            `;
                         }
-                    }, 300); // Match animation duration
-                }
-            }, duration);
-        }
-        
-        // Close toast function
-        function closeToast(toast) {
-            if (toast && toast.parentNode) {
-                // Add hide animation class
-                toast.classList.add('hide');
-                
-                // Remove after animation completes
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.remove();
                     }
-                }, 300); // Match animation duration
-            }
+                } else if (badge) {
+                    badge.classList.add('hidden');
+                }
+            })
+            .catch(error => console.error('Error fetching notification count:', error));
+    }
+    
+    // Fetch recent notifications for dropdown
+    function fetchRecentNotifications() {
+        fetch('{% url "notifications:api_recent" %}')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('notificationContainer');
+                if (!container) return;
+                
+                const notifications = data.notifications;
+                const count = data.unread_count;
+                
+                // Update badge
+                const badge = document.getElementById('notificationBadge');
+                if (count > 0) {
+                    if (badge) {
+                        badge.textContent = count;
+                        badge.classList.remove('hidden');
+                    }
+                } else if (badge) {
+                    badge.classList.add('hidden');
+                }
+                
+                // Update container
+                if (notifications.length === 0) {
+                    container.innerHTML = `
+                        <div class="px-4 py-6 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-500">No notifications yet</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = notifications.map(notification => `
+                        <a href="${notification.link}" class="block px-4 py-3 hover:bg-gray-50 border-b border-gray-100 ${notification.is_read ? '' : 'bg-blue-50'}">
+                            <div class="flex justify-between">
+                                <p class="text-sm font-medium text-gray-800">${notification.title}</p>
+                                <p class="text-xs text-gray-500">${timeAgo(new Date(notification.created_at))}</p>
+                            </div>
+                            <p class="text-xs text-gray-600 mt-1 truncate">${notification.message}</p>
+                        </a>
+                    `).join('');
+                }
+            })
+            .catch(error => console.error('Error fetching recent notifications:', error));
+    }
+    
+    // Calculate time ago
+    function timeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        
+        let interval = seconds / 31536000;
+        if (interval > 1) {
+            return Math.floor(interval) + ' years ago';
         }
         
-        // Handle notification click events
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add click event for desktop notification button
-            const notificationButton = document.getElementById('notificationButton');
-            if (notificationButton) {
-                notificationButton.addEventListener('click', function() {
-                    markNotificationsAsRead();
-                });
-            }
+        interval = seconds / 2592000;
+        if (interval > 1) {
+            return Math.floor(interval) + ' months ago';
+        }
+        
+        interval = seconds / 86400;
+        if (interval > 1) {
+            return Math.floor(interval) + ' days ago';
+        }
+        
+        interval = seconds / 3600;
+        if (interval > 1) {
+            return Math.floor(interval) + ' hours ago';
+        }
+        
+        interval = seconds / 60;
+        if (interval > 1) {
+            return Math.floor(interval) + ' minutes ago';
+        }
+        
+        return Math.floor(seconds) + ' seconds ago';
+    }
+    
+    // Poll for notifications
+    function startNotificationPolling() {
+        if (document.body.dataset.userAuthenticated === "true") {
+            // Initial fetch
+            fetchNotificationCount();
             
-            // Setup WebSocket connection for real-time notifications if user is authenticated
-            {% if user.is_authenticated %}
-                setupWebSocket();
-            {% endif %}
+            // Poll every 30 seconds
+            setInterval(fetchNotificationCount, 30000);
+        }
+    }
+    
+    // Document ready event
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set user authentication status
+        document.body.dataset.userAuthenticated = "{% if user.is_authenticated %}true{% else %}false{% endif %}";
+        
+        // Start notification polling if user is authenticated
+        startNotificationPolling();
+        
+        // Set up notification dropdown
+        const notificationButton = document.getElementById('notificationButton');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        
+        if (notificationButton && notificationDropdown) {
+            notificationButton.addEventListener('click', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // Toggle dropdown
+                notificationDropdown.classList.toggle('hidden');
+                
+                // Fetch notifications when dropdown opens
+                if (!notificationDropdown.classList.contains('hidden')) {
+                    fetchRecentNotifications();
+                }
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!notificationDropdown.contains(event.target) && !notificationButton.contains(event.target)) {
+                    notificationDropdown.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Add scroll event listener for navbar
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('header');
+            if (navbar) {
+                if (window.scrollY > 10) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            }
         });
-        
-        // Setup WebSocket connection for real-time notifications
-        function setupWebSocket() {
-            // Check if browser supports WebSocket
-            if ('WebSocket' in window) {
-                // Create WebSocket connection
-                const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-                const socket = new WebSocket(protocol + window.location.host + '/ws/notifications/');
-                
-                // Connection opened
-                socket.addEventListener('open', function(event) {
-                    console.log('WebSocket connection established');
-                });
-                
-                // Listen for messages
-                socket.addEventListener('message', function(event) {
-                    try {
-                        const data = JSON.parse(event.data);
-                        
-                        // Handle notification message
-                        if (data.type === 'notification') {
-                            // Show toast notification
-                            showToast(data.message, data.notification_type || 'info');
-                            
-                            // Update notification badge count
-                            updateNotificationBadge(data.unread_count);
-                            
-                            // Update notification list if opened
-                            updateNotificationList(data);
-                        }
-                    } catch (error) {
-                        console.error('Error processing WebSocket message:', error);
-                    }
-                });
-                
-                // Connection closed
-                socket.addEventListener('close', function(event) {
-                    console.log('WebSocket connection closed');
-                    
-                    // Try to reconnect after a delay
-                    setTimeout(setupWebSocket, 5000);
-                });
-                
-                // Connection error
-                socket.addEventListener('error', function(event) {
-                    console.error('WebSocket error:', event);
-                });
-                
-                // Store socket reference
-                window.notificationSocket = socket;
-            }
-        }
-        
-        // Update notification badge count
-        function updateNotificationBadge(count) {
-            const badge = document.getElementById('notificationBadge');
-            
-            if (count > 0) {
-                // If badge doesn't exist, create it
-                if (!badge) {
-                    const bellIcon = document.querySelector('#notificationButton i');
-                    if (bellIcon) {
-                        const newBadge = document.createElement('span');
-                        newBadge.id = 'notificationBadge';
-                        newBadge.className = 'absolute top-0 right-0 block h-4 w-4 rounded-full bg-yellow-400 text-xs text-white text-center notification-badge';
-                        newBadge.textContent = count;
-                        
-                        // Add bell shake animation
-                        bellIcon.classList.add('bell-shake');
-                        
-                        // Insert badge after bell icon
-                        bellIcon.parentNode.appendChild(newBadge);
-                    }
-                } else {
-                    // Update existing badge
-                    badge.textContent = count;
-                    badge.style.display = 'block';
-                    
-                    // Add bell shake animation if not already present
-                    const bellIcon = document.querySelector('#notificationButton i');
-                    if (bellIcon && !bellIcon.classList.contains('bell-shake')) {
-                        bellIcon.classList.add('bell-shake');
-                    }
-                }
-            } else if (badge) {
-                // Hide badge if count is 0
-                badge.style.display = 'none';
-                
-                // Remove bell shake animation
-                const bellIcon = document.querySelector('#notificationButton i');
-                if (bellIcon) {
-                    bellIcon.classList.remove('bell-shake');
-                }
-            }
-        }
-        
-        // Update notification list with new notification
-        function updateNotificationList(data) {
-            const container = document.getElementById('notificationContainer');
-            if (container) {
-                // Check if there's a "no notifications" message
-                const emptyState = container.querySelector('div.px-4.py-6.text-center');
-                if (emptyState) {
-                    // Remove empty state
-                    emptyState.remove();
-                }
-                
-                // Create new notification element
-                const notification = document.createElement('a');
-                notification.href = `/notifications/detail/${data.notification_id}/`;
-                notification.className = 'block px-4 py-3 hover:bg-gray-50 border-b border-gray-100 bg-blue-50';
-                
-                // Set notification content
-                notification.innerHTML = `
-                    <div class="flex justify-between">
-                        <p class="text-sm font-medium text-gray-800">${data.title}</p>
-                        <p class="text-xs text-gray-500">just now</p>
-                    </div>
-                    <p class="text-xs text-gray-600 mt-1 truncate">${data.message}</p>
-                `;
-                
-                // Insert at the top of the list
-                if (container.firstChild) {
-                    container.insertBefore(notification, container.firstChild);
-                } else {
-                    container.appendChild(notification);
-                }
-                
-                // Show "View all" link if it should be visible
-                const viewAllLink = document.querySelector('a[href="#"]');
-                if (viewAllLink && viewAllLink.classList.contains('hidden')) {
-                    viewAllLink.classList.remove('hidden');
-                }
-            }
-            
-            // Also update mobile notification panel
-            const mobileContainer = document.querySelector('#mobileNotifications .max-h-96.overflow-y-auto');
-            if (mobileContainer) {
-                // Check if there's a "no notifications" message
-                const emptyState = mobileContainer.querySelector('div.px-4.py-6.text-center');
-                if (emptyState) {
-                    // Remove empty state
-                    emptyState.remove();
-                }
-                
-                // Create new notification element
-                const notification = document.createElement('a');
-                notification.href = `/notifications/detail/${data.notification_id}/`;
-                notification.className = 'block px-4 py-3 border-b border-gray-100 bg-blue-50';
-                
-                // Set notification content
-                notification.innerHTML = `
-                    <div class="flex justify-between">
-                        <p class="text-sm font-medium text-gray-800">${data.title}</p>
-                        <p class="text-xs text-gray-500">just now</p>
-                    </div>
-                    <p class="text-xs text-gray-600 mt-1">${data.message}</p>
-                `;
-                
-                // Insert at the top of the list
-                if (mobileContainer.firstChild) {
-                    mobileContainer.insertBefore(notification, mobileContainer.firstChild);
-                } else {
-                    mobileContainer.appendChild(notification);
-                }
-                
-                // Show "View all" link if it should be visible
-                const viewAllLink = document.querySelector('#mobileNotifications a[href="#"]');
-                if (viewAllLink && viewAllLink.classList.contains('hidden')) {
-                    viewAllLink.classList.remove('hidden');
-                }
-            }
-        }
-        
-        // Check if there are any Django messages and convert them to toast notifications
-        document.addEventListener('DOMContentLoaded', function() {
-            {% if messages %}
-                {% for message in messages %}
-                    // Show toast notification after a delay to ensure DOM is ready
-                    setTimeout(() => {
-                        showToast("{{ message }}", "{{ message.tags }}");
-                    }, 300);
-                {% endfor %}
-            {% endif %}
-        });
-    </script>
-
+    });
+</script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>

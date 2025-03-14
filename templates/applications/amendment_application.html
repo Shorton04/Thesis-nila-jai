@@ -1,271 +1,144 @@
-{# templates/applications/amendment_application.html #}
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Amendment Application{% endblock %}
+
 {% block content %}
-<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <!-- Progress Steps -->
-    <div class="mb-8">
-        <div class="relative">
-            <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                <div class="w-full border-t border-gray-300"></div>
-            </div>
-            <div class="relative flex justify-between">
-                <span class="bg-white px-4 text-sm font-medium text-indigo-600">Current Permit</span>
-                <span class="bg-white px-4 text-sm font-medium text-gray-500">Amendment Details</span>
-                <span class="bg-white px-4 text-sm font-medium text-gray-500">Documents</span>
-                <span class="bg-white px-4 text-sm font-medium text-gray-500">Review</span>
-            </div>
-        </div>
+<div class="container mx-auto px-4 py-6">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Business Permit Amendment</h1>
+        <p class="text-gray-600">Please fill out the form below to amend your business permit details.</p>
     </div>
 
-    <!-- Form Section -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                Business Permit Amendment Application
-            </h3>
-            <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                Please specify the changes you would like to make to your existing business permit.
-            </p>
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="p-4 {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %} rounded-md">
+            {{ message }}
         </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
-        <form method="POST" class="space-y-8 divide-y divide-gray-200">
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
             {% csrf_token %}
 
-            {% if form.non_field_errors %}
-            <div class="rounded-md bg-red-50 p-4 mx-6">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">
-                            There were errors with your submission
-                        </h3>
-                        <div class="mt-2 text-sm text-red-700">
-                            <ul role="list" class="list-disc pl-5 space-y-1">
-                                {% for error in form.non_field_errors %}
-                                <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Basic Information Section -->
+                <div class="col-span-2">
+                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Amendment Information</h2>
                 </div>
-            </div>
-            {% endif %}
 
-            <!-- Current Permit Information -->
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Current Permit Information</h3>
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.current_permit_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Current Permit Number
-                        </label>
-                        <div class="mt-1">
-                            {{ form.current_permit_number }}
-                        </div>
-                        {% if form.current_permit_number.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.current_permit_number.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
+                <div class="form-group">
+                    <label for="{{ form.previous_permit_number.id_for_label }}" class="block text-gray-700">Current Permit Number <span class="text-red-500">*</span></label>
+                    {{ form.previous_permit_number }}
+                    {% if form.previous_permit_number.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.previous_permit_number.errors.0 }}</p>
+                    {% endif %}
                 </div>
-            </div>
 
-            <!-- Amendment Type -->
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Amendment Type</h3>
-                <div class="space-y-6">
-                    <div>
-                        <label class="text-base font-medium text-gray-900">Type of Change</label>
-                        <div class="mt-4 space-y-4">
-                            <div class="flex items-center">
-                                <input type="radio" name="amendment_type" value="business_name" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                                <label class="ml-3 block text-sm font-medium text-gray-700">
-                                    Business Name Change
-                                </label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="radio" name="amendment_type" value="address" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                                <label class="ml-3 block text-sm font-medium text-gray-700">
-                                    Business Address Change
-                                </label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="radio" name="amendment_type" value="ownership" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                                <label class="ml-3 block text-sm font-medium text-gray-700">
-                                    Change of Ownership
-                                </label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="radio" name="amendment_type" value="line_business" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                                <label class="ml-3 block text-sm font-medium text-gray-700">
-                                    Line of Business Change
-                                </label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="radio" name="amendment_type" value="other" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                                <label class="ml-3 block text-sm font-medium text-gray-700">
-                                    Other Changes
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+                <div class="form-group">
+                    <label for="{{ form.business_name.id_for_label }}" class="block text-gray-700">Business Name <span class="text-red-500">*</span></label>
+                    {{ form.business_name }}
+                    {% if form.business_name.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.business_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.business_type.id_for_label }}" class="block text-gray-700">Business Type</label>
+                    {{ form.business_type }}
+                    {% if form.business_type.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.business_type.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Business Details Section -->
+                <div class="col-span-2">
+                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Updated Business Details</h2>
+                </div>
+
+                <div class="form-group col-span-2">
+                    <label for="{{ form.business_address.id_for_label }}" class="block text-gray-700">Business Address</label>
+                    {{ form.business_address }}
+                    {% if form.business_address.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.business_address.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.postal_code.id_for_label }}" class="block text-gray-700">Postal Code</label>
+                    {{ form.postal_code }}
+                    {% if form.postal_code.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.postal_code.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.telephone.id_for_label }}" class="block text-gray-700">Telephone Number</label>
+                    {{ form.telephone }}
+                    {% if form.telephone.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.telephone.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}" class="block text-gray-700">Email Address</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Amendment Reason Section -->
+                <div class="col-span-2">
+                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Amendment Reason</h2>
+                </div>
+
+                <div class="form-group col-span-2">
+                    <label for="{{ form.amendment_reason.id_for_label }}" class="block text-gray-700">Reason for Amendment <span class="text-red-500">*</span></label>
+                    {{ form.amendment_reason }}
+                    {% if form.amendment_reason.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.amendment_reason.errors.0 }}</p>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Amendment Details -->
-            <div class="px-4 py-5 sm:p-6" id="amendmentDetails">
-                <!-- Dynamic form fields will be loaded here based on amendment type -->
-                <div id="businessNameChange" class="hidden">
-                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                        <div class="sm:col-span-6">
-                            <label for="{{ form.updated_business_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                New Business Name
-                            </label>
-                            <div class="mt-1">
-                                {{ form.updated_business_name }}
-                            </div>
-                            {% if form.updated_business_name.errors %}
-                            <p class="mt-2 text-sm text-red-600">
-                                {{ form.updated_business_name.errors.0 }}
-                            </p>
-                            {% endif %}
-                        </div>
+            <!-- Document Upload Section -->
+            <div class="mt-8">
+                <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Required Documents</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="form-group">
+                        <label class="block text-gray-700">Board Resolution (if applicable)</label>
+                        <input type="file" name="board_resolution" class="mt-1 block w-full" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="text-gray-500 text-sm mt-1">For Corporations or Cooperatives.</p>
                     </div>
-                </div>
-
-                <div id="addressChange" class="hidden">
-                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                        <div class="sm:col-span-6">
-                            <label for="{{ form.updated_address.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                New Business Address
-                            </label>
-                            <div class="mt-1">
-                                {{ form.updated_address }}
-                            </div>
-                            {% if form.updated_address.errors %}
-                            <p class="mt-2 text-sm text-red-600">
-                                {{ form.updated_address.errors.0 }}
-                            </p>
-                            {% endif %}
-                        </div>
-
-                        <div class="sm:col-span-3">
-                            <label for="{{ form.postal_code.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                New Postal Code
-                            </label>
-                            <div class="mt-1">
-                                {{ form.postal_code }}
-                            </div>
-                            {% if form.postal_code.errors %}
-                            <p class="mt-2 text-sm text-red-600">
-                                {{ form.postal_code.errors.0 }}
-                            </p>
-                            {% endif %}
-                        </div>
+                    
+                    <div class="form-group">
+                        <label class="block text-gray-700">Updated DTI/SEC/CDA Registration</label>
+                        <input type="file" name="updated_registration" class="mt-1 block w-full" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="text-gray-500 text-sm mt-1">Upload your updated business registration.</p>
                     </div>
-                </div>
-
-                <div id="ownershipChange" class="hidden">
-                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                        <div class="sm:col-span-6">
-                            <label for="{{ form.previous_owner.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                Previous Owner Name
-                            </label>
-                            <div class="mt-1">
-                                {{ form.previous_owner }}
-                            </div>
-                            {% if form.previous_owner.errors %}
-                            <p class="mt-2 text-sm text-red-600">
-                                {{ form.previous_owner.errors.0 }}
-                            </p>
-                            {% endif %}
-                        </div>
-
-                        <div class="sm:col-span-6">
-                            <label for="{{ form.new_owner.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                New Owner Name
-                            </label>
-                            <div class="mt-1">
-                                {{ form.new_owner }}
-                            </div>
-                            {% if form.new_owner.errors %}
-                            <p class="mt-2 text-sm text-red-600">
-                                {{ form.new_owner.errors.0 }}
-                            </p>
-                            {% endif %}
-                        </div>
+                    
+                    <div class="form-group">
+                        <label class="block text-gray-700">Deed of Sale/Transfer (if ownership changed)</label>
+                        <input type="file" name="deed_of_sale" class="mt-1 block w-full" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="text-gray-500 text-sm mt-1">Required if ownership has changed.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Amendment Reason -->
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Amendment Reason</h3>
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-6">
-                        <label for="{{ form.amendment_reason.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Please explain the reason for this amendment
-                        </label>
-                        <div class="mt-1">
-                            {{ form.amendment_reason }}
-                        </div>
-                        {% if form.amendment_reason.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.amendment_reason.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Form Actions -->
-            <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                <button type="button" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <div class="mt-8 flex justify-end space-x-4">
+                <button type="submit" name="action" value="save_draft" class="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition">
                     Save as Draft
                 </button>
-                <button type="submit" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Continue to Documents
+                <button type="submit" name="action" value="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                    Submit Application
                 </button>
             </div>
         </form>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const amendmentTypeRadios = document.querySelectorAll('input[name="amendment_type"]');
-        const detailsSections = {
-            business_name: document.getElementById('businessNameChange'),
-            address: document.getElementById('addressChange'),
-            ownership: document.getElementById('ownershipChange')
-        };
-
-        function showRelevantSection(type) {
-            // Hide all sections first
-            Object.values(detailsSections).forEach(section => {
-                if (section) section.classList.add('hidden');
-            });
-
-            // Show the relevant section
-            if (detailsSections[type]) {
-                detailsSections[type].classList.remove('hidden');
-            }
-        }
-
-        amendmentTypeRadios.forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                showRelevantSection(e.target.value);
-            });
-        });
-    });
-</script>
 {% endblock %}

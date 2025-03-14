@@ -26,6 +26,8 @@ from .forms import (
     ApplicationSearchForm, RequirementSubmissionForm
 )
 import uuid
+from notifications.utils import send_application_notification
+
 
 @login_required
 def dashboard(request):
@@ -151,6 +153,14 @@ def new_application(request):
                                 requirement.is_submitted = True
                                 requirement.save()
 
+                                # Send notification
+                                send_application_notification(
+                                    user=request.user,
+                                    application=application,
+                                    status='submitted',
+                                    message=f"Your business permit application #{application.application_number} has been submitted successfully and is awaiting review."
+                                )
+
                         # Clear session
                         request.session.pop('application_step', None)
                         request.session.pop('draft_application_id', None)
@@ -179,15 +189,25 @@ def new_application(request):
     return render(request, 'applications/new_application.html', context)
 
 
+# applications/views.py (Updated Renewal, Amendment, and Closure views)
+
 @login_required
 def renewal_application(request):
+    """Handle renewal business permit application."""
     if request.method == 'POST':
-        form = RenewalApplicationForm(request.POST, request.FILES)
-
-        try:
+        form = RenewalApplicationForm(request.POST)
+        if form.is_valid():
+            # Create application instance but don't save to DB yet
             application = form.save(commit=False)
             application.applicant = request.user
             application.application_type = 'renewal'
+
+            # Calculate total gross sales receipts if not provided
+            if not application.gross_sales_receipts and (
+                    application.gross_essential or application.gross_non_essential):
+                essential = application.gross_essential or 0
+                non_essential = application.gross_non_essential or 0
+                application.gross_sales_receipts = essential + non_essential
 
             # Set status based on action
             action = request.POST.get('action', '')
@@ -196,23 +216,28 @@ def renewal_application(request):
             if application.status == 'submitted':
                 application.submission_date = timezone.now()
 
+            # Save the application
             application.save()
 
-            # Handle required documents
-            required_docs = {
-                'business_permit': 'Previous Business Permit',
-                'sales_declaration': 'Gross Sales Declaration',
-                'tax_returns': 'Tax Returns'
-            }
+            # Handle document uploads
+            for doc_field in ['business_permit', 'sales_declaration', 'tax_returns']:
+                if doc_field in request.FILES:
+                    doc_name = {
+                        'business_permit': 'Previous Business Permit',
+                        'sales_declaration': 'Gross Sales Declaration',
+                        'tax_returns': 'Tax Returns'
+                    }.get(doc_field)
 
-            for key, name in required_docs.items():
-                if key in request.FILES:
                     requirement = ApplicationRequirement.objects.create(
                         application=application,
-                        requirement_name=name,
-                        document=request.FILES[key],
+                        requirement_name=doc_name,
+                        document=request.FILES[doc_field],
                         is_submitted=True
                     )
+
+            # Create default requirements if none were created
+            if not ApplicationRequirement.objects.filter(application=application).exists():
+                create_renewal_requirements(application)
 
             # Create activity log
             ApplicationActivity.objects.create(
@@ -222,18 +247,177 @@ def renewal_application(request):
                 description=f'Renewal application {application.status}'
             )
 
+            # Set success message and redirect
             success_msg = 'Application saved as draft.' if action == 'save_draft' else 'Renewal application submitted successfully.'
             messages.success(request, success_msg)
 
-            return redirect('applications:application_detail', application.id)
+            if application.status == 'submitted':
+                # Send notification
+                send_application_notification(
+                    user=request.user,
+                    application=application,
+                    status='submitted',
+                    message=f"Your renewal application #{application.application_number} has been submitted successfully and is awaiting review."
+                )
 
-        except Exception as e:
-            print(f"Error in renewal application: {str(e)}")  # For debugging
-            messages.error(request, f'Error processing application: {str(e)}')
+            return redirect('applications:application_detail', application.id)
+        else:
+            # Form is invalid
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = RenewalApplicationForm()
 
     return render(request, 'applications/renewal_application.html', {'form': form})
+
+
+@login_required
+def amendment_application(request):
+    """Handle business permit amendment application."""
+    if request.method == 'POST':
+        form = AmendmentApplicationForm(request.POST)
+        if form.is_valid():
+            # Create application instance but don't save to DB yet
+            application = form.save(commit=False)
+            application.applicant = request.user
+            application.application_type = 'amendment'
+
+            # Set status based on action
+            action = request.POST.get('action', '')
+            application.status = 'draft' if action == 'save_draft' else 'submitted'
+
+            if application.status == 'submitted':
+                application.submission_date = timezone.now()
+
+            # Save the application
+            application.save()
+
+            # Handle document uploads
+            for doc_field in ['board_resolution', 'updated_registration', 'deed_of_sale']:
+                if doc_field in request.FILES:
+                    doc_name = {
+                        'board_resolution': 'Board Resolution',
+                        'updated_registration': 'Updated DTI/SEC/CDA Registration',
+                        'deed_of_sale': 'Deed of Sale/Transfer'
+                    }.get(doc_field)
+
+                    requirement = ApplicationRequirement.objects.create(
+                        application=application,
+                        requirement_name=doc_name,
+                        document=request.FILES[doc_field],
+                        is_submitted=True
+                    )
+
+            # Create default requirements if none were created
+            if not ApplicationRequirement.objects.filter(application=application).exists():
+                create_amendment_requirements(application)
+
+            # Create activity log
+            ApplicationActivity.objects.create(
+                application=application,
+                activity_type='create',
+                performed_by=request.user,
+                description=f'Amendment application {application.status}'
+            )
+
+            # Set success message and redirect
+            success_msg = 'Application saved as draft.' if action == 'save_draft' else 'Amendment application submitted successfully.'
+            messages.success(request, success_msg)
+
+            if application.status == 'submitted':
+                # Send notification
+                send_application_notification(
+                    user=request.user,
+                    application=application,
+                    status='submitted',
+                    message=f"Your amendment application #{application.application_number} has been submitted successfully and is awaiting review."
+                )
+
+            return redirect('applications:application_detail', application.id)
+        else:
+            # Form is invalid
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    else:
+        form = AmendmentApplicationForm()
+
+    return render(request, 'applications/amendment_application.html', {'form': form})
+
+
+@login_required
+def closure_application(request):
+    """Handle business closure application."""
+    if request.method == 'POST':
+        form = ClosureApplicationForm(request.POST)
+        if form.is_valid():
+            # Create application instance but don't save to DB yet
+            application = form.save(commit=False)
+            application.applicant = request.user
+            application.application_type = 'closure'
+
+            # Set status based on action
+            action = request.POST.get('action', '')
+            application.status = 'draft' if action == 'save_draft' else 'submitted'
+
+            if application.status == 'submitted':
+                application.submission_date = timezone.now()
+
+            # Save the application
+            application.save()
+
+            # Handle document uploads
+            for doc_field in ['original_permit', 'affidavit_closure', 'tax_clearance']:
+                if doc_field in request.FILES:
+                    doc_name = {
+                        'original_permit': 'Original Business Permit',
+                        'affidavit_closure': 'Affidavit of Closure',
+                        'tax_clearance': 'Tax Clearance'
+                    }.get(doc_field)
+
+                    requirement = ApplicationRequirement.objects.create(
+                        application=application,
+                        requirement_name=doc_name,
+                        document=request.FILES[doc_field],
+                        is_submitted=True
+                    )
+
+            # Create default requirements if none were created
+            if not ApplicationRequirement.objects.filter(application=application).exists():
+                create_closure_requirements(application)
+
+            # Create activity log
+            ApplicationActivity.objects.create(
+                application=application,
+                activity_type='create',
+                performed_by=request.user,
+                description=f'Closure application {application.status}'
+            )
+
+            # Set success message and redirect
+            success_msg = 'Application saved as draft.' if action == 'save_draft' else 'Closure application submitted successfully.'
+            messages.success(request, success_msg)
+
+            if application.status == 'submitted':
+                # Send notification
+                send_application_notification(
+                    user=request.user,
+                    application=application,
+                    status='submitted',
+                    message=f"Your closure application #{application.application_number} has been submitted successfully and is awaiting review."
+                )
+
+            return redirect('applications:application_detail', application.id)
+        else:
+            # Form is invalid
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    else:
+        form = ClosureApplicationForm()
+
+    return render(request, 'applications/closure_application.html', {'form': form})
 
 
 @login_required
@@ -345,6 +529,13 @@ def application_detail(request, application_id):
                 description='Application submitted for review'
             )
 
+            # Send notification
+            send_application_notification(
+                user=request.user,
+                application=application,
+                status='submitted'
+            )
+
             messages.success(request, 'Application submitted successfully.')
             return redirect('applications:application_detail', application.id)
 
@@ -453,6 +644,24 @@ def requirement_upload(request, application_id, requirement_id):
             document.quarantine_date = timezone.now()
             document.is_quarantined = True
             document.save()
+
+        # After successful upload and document validation
+        if document.verification_status == 'quarantined':
+            create_notification(
+                user=request.user,
+                title="Document Requires Review",
+                message=f"Your document '{document_file.name}' for requirement '{requirement.requirement_name}' has been flagged for review. This may delay your application processing.",
+                notification_type='warning',
+                link=reverse('applications:application_detail', kwargs={'application_id': application.id})
+            )
+        else:
+            create_notification(
+                user=request.user,
+                title="Document Uploaded",
+                message=f"Your document '{document_file.name}' for requirement '{requirement.requirement_name}' has been uploaded successfully.",
+                notification_type='success',
+                link=reverse('applications:application_detail', kwargs={'application_id': application.id})
+            )
 
         return JsonResponse({
             'success': True,

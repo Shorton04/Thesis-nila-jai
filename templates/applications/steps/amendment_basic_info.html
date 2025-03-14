@@ -1,0 +1,112 @@
+{# templates/applications/steps/amendment_basic_info.html #}
+<div data-step="1">
+    <!-- Basic Information -->
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Current Permit Information</h3>
+        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div class="sm:col-span-3">
+                <label for="{{ form.previous_permit_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Current Permit Number <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    {{ form.previous_permit_number }}
+                </div>
+                {% if form.previous_permit_number.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.previous_permit_number.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+            
+            <div class="sm:col-span-3">
+                <label for="{{ form.business_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Current Business Name <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    {{ form.business_name }}
+                </div>
+                {% if form.business_name.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.business_name.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Amendment Types -->
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Type of Amendment</h3>
+        <p class="mb-4 text-sm text-gray-500">Select all that apply:</p>
+        
+        <div class="mt-4 space-y-4">
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input id="amendment_type_business_name" name="amendment_type" value="business_name" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="amendment_type_business_name" class="font-medium text-gray-700">Business Name Change</label>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input id="amendment_type_ownership" name="amendment_type" value="ownership" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="amendment_type_ownership" class="font-medium text-gray-700">Transfer of Ownership</label>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input id="amendment_type_address" name="amendment_type" value="address" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="amendment_type_address" class="font-medium text-gray-700">Change of Address</label>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input id="amendment_type_business_type" name="amendment_type" value="business_type" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="amendment_type_business_type" class="font-medium text-gray-700">Change of Business Type</label>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input id="amendment_type_line_of_business" name="amendment_type" value="line_of_business" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="amendment_type_line_of_business" class="font-medium text-gray-700">Add/Remove Line of Business</label>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input id="amendment_type_other" name="amendment_type" value="other" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="amendment_type_other" class="font-medium text-gray-700">Other Changes</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-6">
+            <label for="{{ form.amendment_reason.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                Reason for Amendment <span class="text-red-500">*</span>
+            </label>
+            <div class="mt-1">
+                {{ form.amendment_reason }}
+            </div>
+            {% if form.amendment_reason.errors %}
+            <p class="mt-2 text-sm text-red-600">
+                {{ form.amendment_reason.errors.0 }}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>

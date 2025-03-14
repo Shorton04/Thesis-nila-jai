@@ -1,258 +1,145 @@
-{# templates/applications/closure_application.html #}
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Business Closure Application{% endblock %}
+
 {% block content %}
-<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <!-- Progress Steps -->
-    <div class="mb-8">
-        <div class="relative">
-            <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                <div class="w-full border-t border-gray-300"></div>
-            </div>
-            <div class="relative flex justify-between">
-                <span class="bg-white px-4 text-sm font-medium text-indigo-600">Current Permit</span>
-                <span class="bg-white px-4 text-sm font-medium text-gray-500">Closure Details</span>
-                <span class="bg-white px-4 text-sm font-medium text-gray-500">Documents</span>
-                <span class="bg-white px-4 text-sm font-medium text-gray-500">Review</span>
-            </div>
-        </div>
+<div class="container mx-auto px-4 py-6">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Business Closure Application</h1>
+        <p class="text-gray-600">Please fill out the form below to close your business permit.</p>
     </div>
 
-    <!-- Important Notice -->
-    <div class="rounded-md bg-yellow-50 p-4 mb-6">
-        <div class="flex">
-            <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                </svg>
-            </div>
-            <div class="ml-3">
-                <h3 class="text-sm font-medium text-yellow-800">Important Notice</h3>
-                <div class="mt-2 text-sm text-yellow-700">
-                    <p>Please note that submitting a business closure application:</p>
-                    <ul class="list-disc pl-5 mt-1">
-                        <li>Requires clearance from various government agencies</li>
-                        <li>May involve settlement of outstanding obligations</li>
-                        <li>Is irreversible once approved</li>
-                    </ul>
-                </div>
-            </div>
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="p-4 {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %} rounded-md">
+            {{ message }}
         </div>
+        {% endfor %}
     </div>
+    {% endif %}
 
-    <!-- Form Section -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                Business Closure Application
-            </h3>
-            <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                Please provide the details for closing your business permit.
-            </p>
-        </div>
-
-        <form method="POST" class="space-y-8 divide-y divide-gray-200">
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
             {% csrf_token %}
 
-            {% if form.non_field_errors %}
-            <div class="rounded-md bg-red-50 p-4 mx-6">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">
-                            There were errors with your submission
-                        </h3>
-                        <div class="mt-2 text-sm text-red-700">
-                            <ul role="list" class="list-disc pl-5 space-y-1">
-                                {% for error in form.non_field_errors %}
-                                <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Basic Information Section -->
+                <div class="col-span-2">
+                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Business Information</h2>
                 </div>
-            </div>
-            {% endif %}
 
-            <!-- Business Information -->
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Current Business Information</h3>
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-6">
-                        <label for="{{ form.business_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Business Name
-                        </label>
-                        <div class="mt-1">
-                            {{ form.business_name }}
-                        </div>
-                        {% if form.business_name.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.business_name.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.registration_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Business Permit Number
-                        </label>
-                        <div class="mt-1">
-                            {{ form.registration_number }}
-                        </div>
-                        {% if form.registration_number.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.registration_number.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
+                <div class="form-group">
+                    <label for="{{ form.business_name.id_for_label }}" class="block text-gray-700">Business Name <span class="text-red-500">*</span></label>
+                    {{ form.business_name }}
+                    {% if form.business_name.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.business_name.errors.0 }}</p>
+                    {% endif %}
                 </div>
-            </div>
 
-            <!-- Closure Details -->
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Closure Details</h3>
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.closure_date.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Intended Closure Date
-                        </label>
-                        <div class="mt-1">
-                            {{ form.closure_date }}
-                        </div>
-                        {% if form.closure_date.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.closure_date.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
+                <div class="form-group">
+                    <label for="{{ form.previous_permit_number.id_for_label }}" class="block text-gray-700">Current Permit Number <span class="text-red-500">*</span></label>
+                    {{ form.previous_permit_number }}
+                    {% if form.previous_permit_number.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.previous_permit_number.errors.0 }}</p>
+                    {% endif %}
+                </div>
 
-                    <div class="sm:col-span-6">
-                        <label for="{{ form.closure_reason.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Reason for Closure
-                        </label>
-                        <div class="mt-1">
-                            {{ form.closure_reason }}
-                        </div>
-                        <p class="mt-2 text-sm text-gray-500">
-                            Please provide a detailed explanation for closing the business.
-                        </p>
-                        {% if form.closure_reason.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.closure_reason.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
+                <div class="form-group">
+                    <label for="{{ form.registration_number.id_for_label }}" class="block text-gray-700">Registration Number</label>
+                    {{ form.registration_number }}
+                    {% if form.registration_number.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.registration_number.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Contact Information Section -->
+                <div class="col-span-2">
+                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Contact Information</h2>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.owner_name.id_for_label }}" class="block text-gray-700">Owner Name</label>
+                    {{ form.owner_name }}
+                    {% if form.owner_name.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.owner_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.owner_email.id_for_label }}" class="block text-gray-700">Owner Email</label>
+                    {{ form.owner_email }}
+                    {% if form.owner_email.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.owner_email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Closure Details Section -->
+                <div class="col-span-2">
+                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Closure Details</h2>
+                </div>
+
+                <div class="form-group col-span-2">
+                    <label for="{{ form.closure_reason.id_for_label }}" class="block text-gray-700">Reason for Closure <span class="text-red-500">*</span></label>
+                    {{ form.closure_reason }}
+                    {% if form.closure_reason.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.closure_reason.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.closure_date.id_for_label }}" class="block text-gray-700">Closure Date <span class="text-red-500">*</span></label>
+                    {{ form.closure_date }}
+                    {% if form.closure_date.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.closure_date.errors.0 }}</p>
+                    {% endif %}
+                    <p class="text-gray-500 text-sm mt-1">The date when business operations will cease.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.remarks.id_for_label }}" class="block text-gray-700">Additional Remarks</label>
+                    {{ form.remarks }}
+                    {% if form.remarks.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.remarks.errors.0 }}</p>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Contact Information -->
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Contact Information After Closure</h3>
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-6">
-                        <label for="{{ form.owner_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Contact Person Name
-                        </label>
-                        <div class="mt-1">
-                            {{ form.owner_name }}
-                        </div>
-                        {% if form.owner_name.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.owner_name.errors.0 }}
-                        </p>
-                        {% endif %}
+            <!-- Document Upload Section -->
+            <div class="mt-8">
+                <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Required Documents</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="form-group">
+                        <label class="block text-gray-700">Original Business Permit</label>
+                        <input type="file" name="original_permit" class="mt-1 block w-full" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="text-gray-500 text-sm mt-1">Upload your latest original business permit.</p>
                     </div>
-
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.owner_email.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Contact Email
-                        </label>
-                        <div class="mt-1">
-                            {{ form.owner_email }}
-                        </div>
-                        {% if form.owner_email.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.owner_email.errors.0 }}
-                        </p>
-                        {% endif %}
+                    
+                    <div class="form-group">
+                        <label class="block text-gray-700">Affidavit of Closure</label>
+                        <input type="file" name="affidavit_closure" class="mt-1 block w-full" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="text-gray-500 text-sm mt-1">For Sole Proprietors, or Board Resolution for Corporations.</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="block text-gray-700">Tax Clearance</label>
+                        <input type="file" name="tax_clearance" class="mt-1 block w-full" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="text-gray-500 text-sm mt-1">Proof of payment of all taxes and fees.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Additional Remarks -->
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Additional Remarks</h3>
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-6">
-                        <label for="{{ form.remarks.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Remarks (Optional)
-                        </label>
-                        <div class="mt-1">
-                            {{ form.remarks }}
-                        </div>
-                        <p class="mt-2 text-sm text-gray-500">
-                            Any additional information you would like to provide.
-                        </p>
-                        {% if form.remarks.errors %}
-                        <p class="mt-2 text-sm text-red-600">
-                            {{ form.remarks.errors.0 }}
-                        </p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Acknowledgment -->
-            <div class="px-4 py-5 sm:p-6">
-                <div class="relative flex items-start">
-                    <div class="flex items-center h-5">
-                        <input id="acknowledgment" name="acknowledgment" type="checkbox" required
-                               class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                    </div>
-                    <div class="ml-3 text-sm">
-                        <label for="acknowledgment" class="font-medium text-gray-700">Acknowledgment</label>
-                        <p class="text-gray-500">I understand that submitting this closure application is a formal request to permanently close my business permit, and I confirm that all information provided is true and accurate.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Form Actions -->
-            <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                <button type="button" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <div class="mt-8 flex justify-end space-x-4">
+                <button type="submit" name="action" value="save_draft" class="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition">
                     Save as Draft
                 </button>
-                <button type="submit" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                    Continue to Documents
+                <button type="submit" name="action" value="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                    Submit Application
                 </button>
             </div>
         </form>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Date validation
-        const closureDateInput = document.getElementById('{{ form.closure_date.id_for_label }}');
-        const today = new Date();
-        const minDate = new Date(today);
-        minDate.setDate(today.getDate() + 14); // Minimum 14 days from today
-        
-        closureDateInput.min = minDate.toISOString().split('T')[0];
-        
-        closureDateInput.addEventListener('change', function() {
-            const selectedDate = new Date(this.value);
-            if (selectedDate < minDate) {
-                alert('Closure date must be at least 14 days from today.');
-                this.value = minDate.toISOString().split('T')[0];
-            }
-        });
-    });
-</script>
 {% endblock %}

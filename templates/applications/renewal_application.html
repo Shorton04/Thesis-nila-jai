@@ -1,193 +1,173 @@
-{# templates/applications/renewal_application.html #}
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Renewal Application{% endblock %}
+
 {% block content %}
-<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <!-- Page Header -->
-    <div class="bg-white shadow sm:rounded-lg mb-6">
-        <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                Business Permit Renewal Application
-            </h3>
-            <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                Please fill out all required information for your permit renewal.
-            </p>
-        </div>
+<div class="container mx-auto px-4 py-6">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Business Permit Renewal</h1>
+        <p class="text-gray-600">Please fill out the form below to renew your business permit.</p>
     </div>
 
-    <!-- Form Section -->
-    <div class="bg-white shadow sm:rounded-lg">
-        <form method="POST" enctype="multipart/form-data" id="renewalForm" class="space-y-8 divide-y divide-gray-200">
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="p-4 {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %} rounded-md">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
             {% csrf_token %}
 
-            {% if form.non_field_errors %}
-            <div class="rounded-md bg-red-50 p-4 mb-6">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">Error</h3>
-                        <div class="mt-2 text-sm text-red-700">
-                            {{ form.non_field_errors }}
-                        </div>
-                    </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Basic Information Section -->
+                <div class="col-span-2">
+                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Basic Information</h2>
                 </div>
-            </div>
-            {% endif %}
 
-            <!-- Basic Information -->
-            <div class="px-4 py-5 sm:p-6">
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.payment_mode.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Payment Mode *
-                        </label>
-                        <div class="mt-1">
-                            {{ form.payment_mode }}
-                        </div>
-                        {% if form.payment_mode.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.payment_mode.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.registration_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Previous Permit Number *
-                        </label>
-                        <div class="mt-1">
-                            {{ form.registration_number }}
-                        </div>
-                        {% if form.registration_number.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.registration_number.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.business_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Business Name *
-                        </label>
-                        <div class="mt-1">
-                            {{ form.business_name }}
-                        </div>
-                        {% if form.business_name.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.business_name.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.registration_date.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Original Registration Date *
-                        </label>
-                        <div class="mt-1">
-                            {{ form.registration_date }}
-                        </div>
-                        {% if form.registration_date.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.registration_date.errors.0 }}</p>
-                        {% endif %}
-                    </div>
+                <div class="form-group">
+                    <label for="{{ form.payment_mode.id_for_label }}" class="block text-gray-700">Payment Mode <span class="text-red-500">*</span></label>
+                    {{ form.payment_mode }}
+                    {% if form.payment_mode.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.payment_mode.errors.0 }}</p>
+                    {% endif %}
                 </div>
-            </div>
 
-            <!-- Business Address -->
-            <div class="px-4 py-5 sm:p-6">
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-6">
-                        <label for="{{ form.business_address.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Business Address *
-                        </label>
-                        <div class="mt-1">
-                            {{ form.business_address }}
-                        </div>
-                        {% if form.business_address.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.business_address.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-
-                    <div class="sm:col-span-2">
-                        <label for="{{ form.postal_code.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Postal Code *
-                        </label>
-                        <div class="mt-1">
-                            {{ form.postal_code }}
-                        </div>
-                        {% if form.postal_code.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.postal_code.errors.0 }}</p>
-                        {% endif %}
-                    </div>
+                <div class="form-group">
+                    <label for="{{ form.previous_permit_number.id_for_label }}" class="block text-gray-700">Current Permit Number <span class="text-red-500">*</span></label>
+                    {{ form.previous_permit_number }}
+                    {% if form.previous_permit_number.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.previous_permit_number.errors.0 }}</p>
+                    {% endif %}
                 </div>
-            </div>
 
-            <!-- Contact Information -->
-            <div class="px-4 py-5 sm:p-6">
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.telephone.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Telephone *
-                        </label>
-                        <div class="mt-1">
-                            {{ form.telephone }}
-                        </div>
-                        {% if form.telephone.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.telephone.errors.0 }}</p>
-                        {% endif %}
-                    </div>
+                <div class="form-group">
+                    <label for="{{ form.business_name.id_for_label }}" class="block text-gray-700">Business Name <span class="text-red-500">*</span></label>
+                    {{ form.business_name }}
+                    {% if form.business_name.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.business_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
 
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Email *
-                        </label>
-                        <div class="mt-1">
-                            {{ form.email }}
-                        </div>
-                        {% if form.email.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.email.errors.0 }}</p>
-                        {% endif %}
-                    </div>
+                <div class="form-group">
+                    <label for="{{ form.registration_number.id_for_label }}" class="block text-gray-700">Registration Number</label>
+                    {{ form.registration_number }}
+                    {% if form.registration_number.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.registration_number.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Business Details Section -->
+                <div class="col-span-2">
+                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Business Details</h2>
+                </div>
+
+                <div class="form-group col-span-2">
+                    <label for="{{ form.business_address.id_for_label }}" class="block text-gray-700">Business Address</label>
+                    {{ form.business_address }}
+                    {% if form.business_address.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.business_address.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.postal_code.id_for_label }}" class="block text-gray-700">Postal Code</label>
+                    {{ form.postal_code }}
+                    {% if form.postal_code.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.postal_code.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.telephone.id_for_label }}" class="block text-gray-700">Telephone Number</label>
+                    {{ form.telephone }}
+                    {% if form.telephone.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.telephone.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}" class="block text-gray-700">Email Address</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.registration_date.id_for_label }}" class="block text-gray-700">Registration Date</label>
+                    {{ form.registration_date }}
+                    {% if form.registration_date.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.registration_date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Financial Information Section -->
+                <div class="col-span-2">
+                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Financial Information</h2>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.gross_essential.id_for_label }}" class="block text-gray-700">Essential Goods (₱)</label>
+                    {{ form.gross_essential }}
+                    {% if form.gross_essential.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.gross_essential.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.gross_non_essential.id_for_label }}" class="block text-gray-700">Non-Essential Goods (₱)</label>
+                    {{ form.gross_non_essential }}
+                    {% if form.gross_non_essential.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.gross_non_essential.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.gross_sales_receipts.id_for_label }}" class="block text-gray-700">Total Gross Sales (₱)</label>
+                    {{ form.gross_sales_receipts }}
+                    <p class="text-gray-500 text-sm mt-1">Calculated automatically from Essential and Non-Essential values</p>
+                    {% if form.gross_sales_receipts.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.gross_sales_receipts.errors.0 }}</p>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Financial Information -->
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Gross Sales Information</h3>
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.gross_essential.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Essential Goods Sales *
-                        </label>
-                        <div class="mt-1">
-                            {{ form.gross_essential }}
-                        </div>
-                        {% if form.gross_essential.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.gross_essential.errors.0 }}</p>
-                        {% endif %}
+            <!-- Document Upload Section -->
+            <div class="mt-8">
+                <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Required Documents</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="form-group">
+                        <label class="block text-gray-700">Previous Business Permit</label>
+                        <input type="file" name="business_permit" class="mt-1 block w-full" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="text-gray-500 text-sm mt-1">Upload your current business permit.</p>
                     </div>
-
-                    <div class="sm:col-span-3">
-                        <label for="{{ form.gross_non_essential.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            Non-Essential Goods Sales *
-                        </label>
-                        <div class="mt-1">
-                            {{ form.gross_non_essential }}
-                        </div>
-                        {% if form.gross_non_essential.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.gross_non_essential.errors.0 }}</p>
-                        {% endif %}
+                    
+                    <div class="form-group">
+                        <label class="block text-gray-700">Gross Sales Declaration</label>
+                        <input type="file" name="sales_declaration" class="mt-1 block w-full" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="text-gray-500 text-sm mt-1">Upload your sworn declaration of gross sales.</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="block text-gray-700">Tax Returns</label>
+                        <input type="file" name="tax_returns" class="mt-1 block w-full" accept=".pdf,.jpg,.jpeg,.png">
+                        <p class="text-gray-500 text-sm mt-1">Upload your BIR tax returns (2550M, 2550Q, 2551Q).</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Form Actions -->
-            <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                <button type="button" onclick="saveDraft()" 
-                        class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Save Draft
+            <div class="mt-8 flex justify-end space-x-4">
+                <button type="submit" name="action" value="save_draft" class="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition">
+                    Save as Draft
                 </button>
-                <button type="submit" 
-                        class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <button type="submit" name="action" value="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
                     Submit Application
                 </button>
             </div>
@@ -195,77 +175,24 @@
     </div>
 </div>
 
-{% endblock %}
-
-{% block extra_js %}
 <script>
-// Calculate total gross sales
-function calculateTotalGross() {
-    const essential = parseFloat(document.getElementById('id_gross_essential').value) || 0;
-    const nonEssential = parseFloat(document.getElementById('id_gross_non_essential').value) || 0;
-    const total = essential + nonEssential;
-    document.getElementById('total_gross').textContent = total.toLocaleString('en-PH', {
-        style: 'currency',
-        currency: 'PHP'
-    });
-}
-
-// Add event listeners to gross sales inputs
-document.getElementById('id_gross_essential').addEventListener('input', calculateTotalGross);
-document.getElementById('id_gross_non_essential').addEventListener('input', calculateTotalGross);
-
-// Save draft function
-function saveDraft() {
-    const form = document.getElementById('renewalForm');
-    const actionInput = document.createElement('input');
-    actionInput.type = 'hidden';
-    actionInput.name = 'action';
-    actionInput.value = 'save_draft';
-    form.appendChild(actionInput);
-    form.submit();
-}
-
-// Form validation
-document.getElementById('renewalForm').addEventListener('submit', function(e) {
-    if (e.submitter && e.submitter.value === 'save_draft') {
-        return true;
-    }
-
-    const requiredFields = document.querySelectorAll('[required]');
-    let isValid = true;
-
-    requiredFields.forEach(field => {
-        if (!field.value.trim()) {
-            isValid = false;
-            field.classList.add('border-red-500');
-            const errorMsg = field.parentNode.querySelector('.error-message') || 
-                           document.createElement('p');
-            errorMsg.className = 'mt-2 text-sm text-red-600 error-message';
-            errorMsg.textContent = 'This field is required';
-            if (!field.parentNode.querySelector('.error-message')) {
-                field.parentNode.appendChild(errorMsg);
-            }
+    // Auto-calculate the total gross sales
+    document.addEventListener('DOMContentLoaded', function() {
+        const essentialInput = document.getElementById('{{ form.gross_essential.id_for_label }}');
+        const nonEssentialInput = document.getElementById('{{ form.gross_non_essential.id_for_label }}');
+        const totalInput = document.getElementById('{{ form.gross_sales_receipts.id_for_label }}');
+        
+        function calculateTotal() {
+            const essential = parseFloat(essentialInput.value) || 0;
+            const nonEssential = parseFloat(nonEssentialInput.value) || 0;
+            totalInput.value = (essential + nonEssential).toFixed(2);
         }
+        
+        essentialInput.addEventListener('input', calculateTotal);
+        nonEssentialInput.addEventListener('input', calculateTotal);
+        
+        // Initial calculation
+        calculateTotal();
     });
-
-    if (!isValid) {
-        e.preventDefault();
-        document.querySelector('.border-red-500').scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-        });
-    }
-});
-
-// Clear validation errors on input
-document.querySelectorAll('input, select, textarea').forEach(element => {
-    element.addEventListener('input', function() {
-        this.classList.remove('border-red-500');
-        const errorMsg = this.parentNode.querySelector('.error-message');
-        if (errorMsg) {
-            errorMsg.remove();
-        }
-    });
-});
 </script>
 {% endblock %}

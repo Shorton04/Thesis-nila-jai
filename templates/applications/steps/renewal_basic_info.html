@@ -1,0 +1,174 @@
+{# templates/applications/steps/renewal_basic_info.html #}
+<div data-step="1">
+    <!-- Current Permit Information -->
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Current Permit Information</h3>
+        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div class="sm:col-span-3">
+                <label for="id_previous_permit_number" class="block text-sm font-medium text-gray-700">
+                    Current Permit Number <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <input type="text" name="previous_permit_number" id="id_previous_permit_number" 
+                           class="focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                           value="{{ form.previous_permit_number.value|default:'' }}" required>
+                </div>
+                {% if form.previous_permit_number.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.previous_permit_number.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-3">
+                <label for="id_payment_mode" class="block text-sm font-medium text-gray-700">
+                    Payment Mode <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <select name="payment_mode" id="id_payment_mode" 
+                            class="focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                            required>
+                        <option value="">---------</option>
+                        <option value="annually" {% if form.payment_mode.value == 'annually' %}selected{% endif %}>Annually</option>
+                        <option value="semi_annually" {% if form.payment_mode.value == 'semi_annually' %}selected{% endif %}>Semi-Annually</option>
+                        <option value="quarterly" {% if form.payment_mode.value == 'quarterly' %}selected{% endif %}>Quarterly</option>
+                    </select>
+                </div>
+                {% if form.payment_mode.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.payment_mode.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Business Information -->
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Business Information</h3>
+        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div class="sm:col-span-6">
+                <label for="id_business_name" class="block text-sm font-medium text-gray-700">
+                    Business Name <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <input type="text" name="business_name" id="id_business_name" 
+                           class="focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                           value="{{ form.business_name.value|default:'' }}" required>
+                </div>
+                {% if form.business_name.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.business_name.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Information -->
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Registration Information</h3>
+        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div class="sm:col-span-3">
+                <label for="id_registration_number" class="block text-sm font-medium text-gray-700">
+                    Registration Number
+                </label>
+                <div class="mt-1">
+                    <input type="text" name="registration_number" id="id_registration_number" 
+                           class="focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                           value="{{ form.registration_number.value|default:'' }}">
+                </div>
+                {% if form.registration_number.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.registration_number.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-3">
+                <label for="id_registration_date" class="block text-sm font-medium text-gray-700">
+                    Registration Date
+                </label>
+                <div class="mt-1">
+                    <input type="date" name="registration_date" id="id_registration_date" 
+                           class="focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                           value="{{ form.registration_date.value|date:"Y-m-d"|default:'' }}">
+                </div>
+                {% if form.registration_date.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.registration_date.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Contact Information</h3>
+        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div class="sm:col-span-6">
+                <label for="id_business_address" class="block text-sm font-medium text-gray-700">
+                    Business Address
+                </label>
+                <div class="mt-1">
+                    <textarea name="business_address" id="id_business_address" rows="3" 
+                              class="focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">{{ form.business_address.value|default:'' }}</textarea>
+                </div>
+                {% if form.business_address.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.business_address.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-2">
+                <label for="id_postal_code" class="block text-sm font-medium text-gray-700">
+                    Postal Code
+                </label>
+                <div class="mt-1">
+                    <input type="text" name="postal_code" id="id_postal_code" 
+                           class="focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                           value="{{ form.postal_code.value|default:'' }}">
+                </div>
+                {% if form.postal_code.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.postal_code.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-2">
+                <label for="id_telephone" class="block text-sm font-medium text-gray-700">
+                    Telephone
+                </label>
+                <div class="mt-1">
+                    <input type="text" name="telephone" id="id_telephone" 
+                           class="focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                           value="{{ form.telephone.value|default:'' }}">
+                </div>
+                {% if form.telephone.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.telephone.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-2">
+                <label for="id_email" class="block text-sm font-medium text-gray-700">
+                    Email
+                </label>
+                <div class="mt-1">
+                    <input type="email" name="email" id="id_email" 
+                           class="focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                           value="{{ form.email.value|default:'' }}">
+                </div>
+                {% if form.email.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.email.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,99 @@
+{# templates/applications/steps/renewal_review.html #}
+<div data-step="3">
+    <!-- Review Information -->
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Review Renewal Application</h3>
+        <p class="mb-4 text-sm text-gray-500">Please review all information before submitting your renewal application.</p>
+
+        <!-- Add a hidden field to enable form submission without validation errors -->
+        <input type="hidden" name="review_step_confirmed" value="true">
+
+        <!-- Current Permit -->
+        <div class="mb-8">
+            <h4 class="text-md font-medium text-gray-900 mb-4">Current Permit Information</h4>
+            <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">Current Permit Number</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ form.previous_permit_number.value|default:"-" }}</dd>
+                </div>
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">Payment Mode</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ form.payment_mode.value|default:"-" }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Business Information -->
+        <div class="mb-8">
+            <h4 class="text-md font-medium text-gray-900 mb-4">Business Information</h4>
+            <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                    <dt class="text-sm font-medium text-gray-500">Business Name</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ form.business_name.value|default:"-" }}</dd>
+                </div>
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">Registration Number</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ form.registration_number.value|default:"-" }}</dd>
+                </div>
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">Registration Date</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ form.registration_date.value|default:"-" }}</dd>
+                </div>
+                <div class="sm:col-span-2">
+                    <dt class="text-sm font-medium text-gray-500">Business Address</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ form.business_address.value|default:"-" }}</dd>
+                </div>
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">Contact Number</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ form.telephone.value|default:"-" }}</dd>
+                </div>
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">Email</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ form.email.value|default:"-" }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Financial Information -->
+        <div class="mb-8">
+            <h4 class="text-md font-medium text-gray-900 mb-4">Financial Information</h4>
+            <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">Essential Goods/Services</dt>
+                    <dd class="mt-1 text-sm text-gray-900">₱ {{ form.gross_essential.value|floatformat:2|default:"0.00" }}</dd>
+                </div>
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">Non-Essential Goods/Services</dt>
+                    <dd class="mt-1 text-sm text-gray-900">₱ {{ form.gross_non_essential.value|floatformat:2|default:"0.00" }}</dd>
+                </div>
+                <div class="sm:col-span-2">
+                    <dt class="text-sm font-medium text-gray-500">Total Gross Sales Receipts</dt>
+                    <dd class="mt-1 text-sm font-medium text-gray-900">₱ {{ form.gross_sales_receipts.value|floatformat:2|default:"0.00" }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Declaration -->
+        <div class="rounded-md bg-yellow-50 p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Declaration</h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <p>By submitting this renewal application, I declare that:</p>
+                        <ul class="list-disc pl-5 mt-1 space-y-1">
+                            <li>All information provided is true and correct</li>
+                            <li>I understand that false declarations may result in the revocation of the permit</li>
+                            <li>I agree to comply with all applicable laws and regulations</li>
+                            <li>All financial information provided accurately reflects the business's operations for the previous year</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

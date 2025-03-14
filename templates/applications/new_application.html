@@ -5,30 +5,30 @@
 {% block content %}
 <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <!-- Progress Steps -->
-<div class="mb-8">
-   <div class="relative">
-       <div class="absolute inset-0 flex items-center" aria-hidden="true">
-           <div class="w-full border-t border-gray-300"></div>
-       </div>
-       <div class="relative flex justify-between">
-           <span class="bg-white px-4 text-sm font-medium {% if current_step >= 1 %}text-indigo-600{% else %}text-gray-500{% endif %}">
-               Basic Information
-           </span>
-           <span class="bg-white px-4 text-sm font-medium {% if current_step >= 2 %}text-indigo-600{% else %}text-gray-500{% endif %}">
-               Business Details
-           </span>
-           <span class="bg-white px-4 text-sm font-medium {% if current_step >= 3 %}text-indigo-600{% else %}text-gray-500{% endif %}">
-               Owner Details
-           </span>
-           <span class="bg-white px-4 text-sm font-medium {% if current_step >= 4 %}text-indigo-600{% else %}text-gray-500{% endif %}">
-               Review
-           </span>
-           <span class="bg-white px-4 text-sm font-medium {% if current_step >= 5 %}text-indigo-600{% else %}text-gray-500{% endif %}">
-               Documents
-           </span>
-       </div>
-   </div>
-</div>
+    <div class="mb-8">
+        <div class="relative">
+            <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-between">
+                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 1 %}text-indigo-600{% else %}text-gray-500{% endif %}">
+                    Basic Information
+                </span>
+                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 2 %}text-indigo-600{% else %}text-gray-500{% endif %}">
+                    Business Details
+                </span>
+                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 3 %}text-indigo-600{% else %}text-gray-500{% endif %}">
+                    Owner Details
+                </span>
+                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 4 %}text-indigo-600{% else %}text-gray-500{% endif %}">
+                    Review
+                </span>
+                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 5 %}text-indigo-600{% else %}text-gray-500{% endif %}">
+                    Documents
+                </span>
+            </div>
+        </div>
+    </div>
 
     <!-- Form Section -->
     <div class="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -72,24 +72,24 @@
             {% include step_template %}
 
             <!-- Form Actions -->
-<div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
-    {% if current_step > 1 %}
-    <button type="submit" name="submit_type" value="previous" 
-            class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-        Previous
-    </button>
-    {% endif %}
-    
-    <button type="submit" name="submit_type" value="save_draft" 
-            class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-        Save Draft
-    </button>
-    
-    <button type="submit" name="submit_type" value="continue" 
-            class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-        {% if current_step == total_steps %}Submit Application{% else %}Continue{% endif %}
-    </button>
-</div>
+            <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                {% if current_step > 1 %}
+                <button type="submit" name="submit_type" value="previous" 
+                        class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Previous
+                </button>
+                {% endif %}
+                
+                <button type="submit" name="submit_type" value="save_draft" 
+                        class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Save Draft
+                </button>
+                
+                <button type="submit" name="submit_type" value="continue" 
+                        class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    {% if current_step == total_steps %}Submit Application{% else %}Continue{% endif %}
+                </button>
+            </div>
         </form>
     </div>
 </div>
@@ -100,13 +100,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('applicationForm');
     
-    // Original form validation code
+    // Form validation code
     form.addEventListener('submit', function(e) {
-        // Don't prevent default form submission
+        // Get the submit button that was clicked
         const submitButton = e.submitter;
-        const action = submitButton.value;
+        const action = submitButton ? submitButton.value : null;
         
-        console.log('Button clicked:', submitButton.name, action);
+        console.log('Button clicked:', submitButton ? submitButton.name : 'unknown', action);
 
         // For continue action, validate required fields
         if (action === 'continue') {
@@ -143,24 +143,29 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Camera and document handling code
-    // Store for camera file name being captured
     let currentCameraField = null;
     let mediaStream = null;
     
-    // Camera handling
-    const cameraModal = document.getElementById('cameraModal');
-    const cameraStream = document.getElementById('camera-stream');
-    const cameraCanvas = document.getElementById('camera-canvas');
-    const captureButton = document.getElementById('capture-button');
-    const retakeButton = document.getElementById('retake-button');
-    const usePhotoButton = document.getElementById('use-photo-button');
-    const closeCameraButton = document.getElementById('close-camera-button');
-    const captureUI = document.getElementById('capture-ui');
-    const retakeUI = document.getElementById('retake-ui');
-    
-    // Open camera modal
+    // Camera handling functions
     window.openCamera = function(fieldName) {
         currentCameraField = fieldName;
+        const cameraModal = document.getElementById('cameraModal');
+        
+        if (!cameraModal) {
+            console.error("Camera modal not found in the DOM");
+            return;
+        }
+        
+        const cameraStream = document.getElementById('camera-stream');
+        const cameraCanvas = document.getElementById('camera-canvas');
+        const captureUI = document.getElementById('capture-ui');
+        const retakeUI = document.getElementById('retake-ui');
+        
+        if (!cameraStream || !cameraCanvas || !captureUI || !retakeUI) {
+            console.error("Camera elements not found");
+            return;
+        }
+        
         cameraModal.classList.remove('hidden');
         captureUI.classList.remove('hidden');
         retakeUI.classList.add('hidden');
@@ -169,11 +174,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Request camera access
         navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-            .then(stream => {
+            .then(function(stream) {
                 mediaStream = stream;
                 cameraStream.srcObject = stream;
             })
-            .catch(err => {
+            .catch(function(err) {
                 console.error('Camera error:', err);
                 alert('Unable to access camera. Please use the upload option instead.');
                 closeCameraModal();
@@ -182,80 +187,132 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Close camera modal and clean up
     function closeCameraModal() {
-        cameraModal.classList.add('hidden');
+        const cameraModal = document.getElementById('cameraModal');
+        
+        if (cameraModal) {
+            cameraModal.classList.add('hidden');
+        }
+        
         if (mediaStream) {
             mediaStream.getTracks().forEach(track => track.stop());
             mediaStream = null;
         }
     }
     
-    // Capture photo
-    captureButton.addEventListener('click', function() {
-        const context = cameraCanvas.getContext('2d');
-        cameraCanvas.width = cameraStream.videoWidth;
-        cameraCanvas.height = cameraStream.videoHeight;
-        
-        context.drawImage(cameraStream, 0, 0, cameraCanvas.width, cameraCanvas.height);
-        
-        captureUI.classList.add('hidden');
-        retakeUI.classList.remove('hidden');
-        cameraStream.classList.add('hidden');
-        cameraCanvas.classList.remove('hidden');
-    });
+    // Setup camera button handlers
+    const captureButton = document.getElementById('capture-button');
+    const retakeButton = document.getElementById('retake-button');
+    const usePhotoButton = document.getElementById('use-photo-button');
+    const closeCameraButton = document.getElementById('close-camera-button');
     
-    // Retake photo
-    retakeButton.addEventListener('click', function() {
-        captureUI.classList.remove('hidden');
-        retakeUI.classList.add('hidden');
-        cameraStream.classList.remove('hidden');
-        cameraCanvas.classList.add('hidden');
-    });
+    // Check if buttons exist before adding event listeners
+    if (captureButton) {
+        captureButton.addEventListener('click', function() {
+            const cameraStream = document.getElementById('camera-stream');
+            const cameraCanvas = document.getElementById('camera-canvas');
+            const captureUI = document.getElementById('capture-ui');
+            const retakeUI = document.getElementById('retake-ui');
+            
+            if (!cameraStream || !cameraCanvas || !captureUI || !retakeUI) {
+                console.error("Camera elements not found for capture");
+                return;
+            }
+            
+            const context = cameraCanvas.getContext('2d');
+            cameraCanvas.width = cameraStream.videoWidth;
+            cameraCanvas.height = cameraStream.videoHeight;
+            
+            context.drawImage(cameraStream, 0, 0, cameraCanvas.width, cameraCanvas.height);
+            
+            captureUI.classList.add('hidden');
+            retakeUI.classList.remove('hidden');
+            cameraStream.classList.add('hidden');
+            cameraCanvas.classList.remove('hidden');
+        });
+    }
     
-    // Use captured photo
-    usePhotoButton.addEventListener('click', function() {
-        if (currentCameraField) {
-            cameraCanvas.toBlob(blob => {
-                const fileName = `camera_capture_${Date.now()}.jpg`;
-                const file = new File([blob], fileName, { type: 'image/jpeg' });
-                
-                // Create a FileList-like object (browser doesn't allow creating real FileList)
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                
-                // Set file input value
-                const fileInput = document.getElementById(currentCameraField);
-                fileInput.files = dataTransfer.files;
-                
-                // Trigger change event to update UI
-                const event = new Event('change', { bubbles: true });
-                fileInput.dispatchEvent(event);
-                
-                // Close modal
-                closeCameraModal();
-            }, 'image/jpeg', 0.95);
-        }
-    });
+    if (retakeButton) {
+        retakeButton.addEventListener('click', function() {
+            const captureUI = document.getElementById('capture-ui');
+            const retakeUI = document.getElementById('retake-ui');
+            const cameraStream = document.getElementById('camera-stream');
+            const cameraCanvas = document.getElementById('camera-canvas');
+            
+            if (captureUI && retakeUI && cameraStream && cameraCanvas) {
+                captureUI.classList.remove('hidden');
+                retakeUI.classList.add('hidden');
+                cameraStream.classList.remove('hidden');
+                cameraCanvas.classList.add('hidden');
+            }
+        });
+    }
     
-    // Close camera modal with close button
-    closeCameraButton.addEventListener('click', closeCameraModal);
+    if (usePhotoButton) {
+        usePhotoButton.addEventListener('click', function() {
+            if (currentCameraField) {
+                const cameraCanvas = document.getElementById('camera-canvas');
+                
+                if (!cameraCanvas) {
+                    console.error("Camera canvas not found");
+                    return;
+                }
+                
+                cameraCanvas.toBlob(function(blob) {
+                    const fileName = `camera_capture_${Date.now()}.jpg`;
+                    const file = new File([blob], fileName, { type: 'image/jpeg' });
+                    
+                    // Create a DataTransfer object (browser's way to handle files)
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    
+                    // Set file input value
+                    const fileInput = document.getElementById(currentCameraField);
+                    
+                    if (fileInput) {
+                        fileInput.files = dataTransfer.files;
+                        
+                        // Trigger change event to update UI
+                        const event = new Event('change', { bubbles: true });
+                        fileInput.dispatchEvent(event);
+                    } else {
+                        console.error("File input not found:", currentCameraField);
+                    }
+                    
+                    // Close modal
+                    closeCameraModal();
+                }, 'image/jpeg', 0.95);
+            }
+        });
+    }
+    
+    if (closeCameraButton) {
+        closeCameraButton.addEventListener('click', closeCameraModal);
+    }
     
     // Handle file selection
     window.handleFileSelect = function(input) {
-        if (input.files && input.files[0]) {
+        if (input && input.files && input.files[0]) {
             const file = input.files[0];
             const fieldName = input.id;
             const previewDiv = document.getElementById(`${fieldName}_preview`);
+            
+            if (!previewDiv) {
+                console.error(`Preview div not found for ${fieldName}`);
+                return;
+            }
+            
             const nameSpan = previewDiv.querySelector('.document-name');
             
-            // Update preview with file name
-            nameSpan.textContent = file.name;
-            previewDiv.classList.remove('hidden');
-            
-            // AI validation indication could be added here
-            // For example, show a loading indicator while checking document
-            
-            // Call AI validation service (simulated)
-            validateDocument(file, fieldName);
+            if (nameSpan) {
+                // Update preview with file name
+                nameSpan.textContent = file.name;
+                previewDiv.classList.remove('hidden');
+                
+                // Call AI validation service (simulated)
+                validateDocument(file, fieldName);
+            } else {
+                console.error(`Name span not found in preview div for ${fieldName}`);
+            }
         }
     };
     
@@ -264,11 +321,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const input = document.getElementById(fieldName);
         const previewDiv = document.getElementById(`${fieldName}_preview`);
         
-        // Clear file input
-        input.value = '';
-        
-        // Hide preview
-        previewDiv.classList.add('hidden');
+        if (input && previewDiv) {
+            // Clear file input
+            input.value = '';
+            
+            // Hide preview
+            previewDiv.classList.add('hidden');
+            
+            // Remove any validation indicators
+            const indicator = previewDiv.querySelector('.validation-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
     };
     
     // Simulate AI document validation
@@ -277,12 +342,30 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(`Validating ${file.name} for ${fieldName}...`);
         
         // Simulate server processing time
-        setTimeout(() => {
+        setTimeout(function() {
             const previewDiv = document.getElementById(`${fieldName}_preview`);
+            
+            if (!previewDiv) {
+                console.error(`Preview div not found for ${fieldName} during validation`);
+                return;
+            }
+            
+            const documentNameElement = previewDiv.querySelector('.document-name');
+            
+            if (!documentNameElement) {
+                console.error(`Document name element not found in preview for ${fieldName}`);
+                return;
+            }
+            
+            // Remove any existing validation indicator
+            const existingIndicator = documentNameElement.querySelector('.validation-indicator');
+            if (existingIndicator) {
+                existingIndicator.remove();
+            }
             
             // Add validation indicator (green checkmark)
             const validationSpan = document.createElement('span');
-            validationSpan.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-2';
+            validationSpan.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-2 validation-indicator';
             validationSpan.innerHTML = `
                 <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -290,12 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 Validated
             `;
             
-            // Add to preview if not already there
-            if (!previewDiv.querySelector('.validation-indicator')) {
-                validationSpan.classList.add('validation-indicator');
-                previewDiv.querySelector('.document-name').appendChild(validationSpan);
-            }
-            
+            documentNameElement.appendChild(validationSpan);
             console.log(`Document ${file.name} validated successfully`);
         }, 1500);
     }

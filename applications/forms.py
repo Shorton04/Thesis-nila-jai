@@ -12,8 +12,9 @@ class BusinessApplicationForm(forms.ModelForm):
     class Meta:
         model = BusinessApplication
         exclude = ['applicant', 'application_number', 'tracking_number',
-                  'reviewed_by', 'approved_by', 'status', 'created_at',
-                  'updated_at', 'is_active']
+                   'reviewed_by', 'approved_by', 'status', 'created_at',
+                   'updated_at', 'is_active', 'closure_reason', 'closure_date',
+                   'amendment_reason', 'previous_permit_number']
         widgets = {
             'registration_date': forms.DateInput(attrs={'type': 'date'}),
             'business_area': forms.NumberInput(attrs={'step': '0.01'}),
@@ -118,17 +119,13 @@ class BusinessApplicationForm(forms.ModelForm):
 
 
 class RenewalApplicationForm(forms.ModelForm):
-    registration_date = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
-    )
-
     class Meta:
         model = BusinessApplication
         fields = [
             'payment_mode', 'business_name', 'business_address',
             'postal_code', 'telephone', 'email', 'registration_date',
             'registration_number', 'gross_sales_receipts',
-            'gross_essential', 'gross_non_essential'
+            'gross_essential', 'gross_non_essential', 'previous_permit_number'
         ]
         widgets = {
             'payment_mode': forms.Select(attrs={'class': 'form-control'}),
@@ -137,20 +134,61 @@ class RenewalApplicationForm(forms.ModelForm):
             'postal_code': forms.TextInput(attrs={'class': 'form-control'}),
             'telephone': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'previous_permit_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Current permit number'}),
             'registration_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'gross_sales_receipts': forms.NumberInput(attrs={'class': 'form-control', 'readonly': True}),
+            'registration_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'gross_sales_receipts': forms.NumberInput(attrs={'class': 'form-control'}),
             'gross_essential': forms.NumberInput(attrs={'class': 'form-control'}),
             'gross_non_essential': forms.NumberInput(attrs={'class': 'form-control'})
         }
 
-class AmendmentApplicationForm(BusinessApplicationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Set only these fields as required
+        required_fields = ['payment_mode', 'business_name', 'previous_permit_number']
+
+        for field in self.fields:
+            if field in required_fields:
+                self.fields[field].required = True
+            else:
+                self.fields[field].required = False
+
+
+class AmendmentApplicationForm(forms.ModelForm):
     """Specific form for amendment applications."""
 
-    amendment_reason = forms.CharField(widget=forms.Textarea)
-    current_permit_number = forms.CharField(max_length=20)
+    class Meta:
+        model = BusinessApplication
+        fields = [
+            'business_name', 'business_type', 'business_address',
+            'postal_code', 'telephone', 'email', 'previous_permit_number',
+            'amendment_reason'
+        ]
+        widgets = {
+            'business_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'business_type': forms.Select(attrs={'class': 'form-control'}),
+            'business_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'postal_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'telephone': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'previous_permit_number': forms.TextInput(
+                attrs={'class': 'form-control', 'placeholder': 'Current permit number'}),
+            'amendment_reason': forms.Textarea(
+                attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Reason for amendment'})
+        }
 
-    class Meta(BusinessApplicationForm.Meta):
-        fields = BusinessApplicationForm.Meta.exclude + ['amendment_reason', 'current_permit_number']
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Set only these fields as required
+        required_fields = ['business_name', 'previous_permit_number', 'amendment_reason']
+
+        for field in self.fields:
+            if field in required_fields:
+                self.fields[field].required = True
+            else:
+                self.fields[field].required = False
 
 
 class ClosureApplicationForm(forms.ModelForm):
@@ -158,19 +196,44 @@ class ClosureApplicationForm(forms.ModelForm):
 
     class Meta:
         model = BusinessApplication
-        fields = ['business_name', 'registration_number', 'owner_name',
-                  'owner_email', 'remarks']
+        fields = [
+            'business_name', 'registration_number', 'owner_name',
+            'owner_email', 'remarks', 'closure_reason', 'closure_date',
+            'previous_permit_number'
+        ]
+        widgets = {
+            'business_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'registration_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'owner_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'owner_email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'closure_reason': forms.Textarea(
+                attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Reason for closure'}),
+            'closure_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'previous_permit_number': forms.TextInput(
+                attrs={'class': 'form-control', 'placeholder': 'Current permit number'})
+        }
 
-    closure_reason = forms.CharField(widget=forms.Textarea)
-    closure_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Set only these fields as required
+        required_fields = ['business_name', 'previous_permit_number', 'closure_reason', 'closure_date']
+
+        for field in self.fields:
+            if field in required_fields:
+                self.fields[field].required = True
+            else:
+                self.fields[field].required = False
 
     def clean_closure_date(self):
         date = self.cleaned_data['closure_date']
-        if date < timezone.now().date():
+        if date and date < timezone.now().date():
             raise ValidationError("Closure date cannot be in the past.")
         return date
 
 
+# Keep the rest of the forms unchanged
 class ApplicationRequirementForm(forms.ModelForm):
     """Form for managing application requirements."""
 

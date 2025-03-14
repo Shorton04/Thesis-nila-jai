@@ -1,3 +1,4 @@
+{# templates/reviewer/base.html #}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -365,6 +366,10 @@
             <nav>
                 <div class="nav-section">
                     <div class="nav-section-title">Main</div>
+                    <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.view_name == 'home' %}active{% endif %}">
+                        <i class="fas fa-home"></i>
+                        Home
+                    </a>
                     <a href="{% url 'reviewer:dashboard' %}" class="nav-link {% if request.resolver_match.view_name == 'reviewer:dashboard' %}active{% endif %}">
                         <i class="fas fa-chart-line"></i>
                         Dashboard
@@ -372,6 +377,19 @@
                     <a href="{% url 'reviewer:application_list' %}" class="nav-link {% if request.resolver_match.view_name == 'reviewer:application_list' %}active{% endif %}">
                         <i class="fas fa-file-alt"></i>
                         Applications
+                    </a>
+                </div>
+
+                <!-- Queue Management Section -->
+                <div class="nav-section">
+                    <div class="nav-section-title">Queue Management</div>
+                    <a href="{% url 'queuing:staff_dashboard' %}" class="nav-link {% if request.resolver_match.view_name == 'queuing:staff_dashboard' %}active{% endif %}">
+                        <i class="fas fa-users"></i>
+                        Queue Dashboard
+                    </a>
+                    <a href="{% url 'queuing:update_stats' %}" class="nav-link {% if request.resolver_match.view_name == 'queuing:update_stats' %}active{% endif %}">
+                        <i class="fas fa-chart-bar"></i>
+                        Queue Statistics
                     </a>
                 </div>
 
