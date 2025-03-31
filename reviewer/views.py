@@ -1,9 +1,7 @@
 # reviewer/views.py
 import os
 from datetime import timezone
-
 from django.views.decorators.http import require_POST
-
 from documents.models import Document, DocumentVerificationResult
 from documents.services.document_workflow import DocumentWorkflow
 from django.http import JsonResponse
@@ -17,6 +15,7 @@ from applications.models import (
     BusinessApplication, ApplicationRequirement,
     ApplicationRevision, ApplicationAssessment, ApplicationActivity
 )
+from queuing.models import QueueAppointment
 from .forms import AssessmentForm, RevisionRequestForm
 from notifications.utils import send_application_notification, create_notification
 from django.urls import reverse
@@ -53,6 +52,7 @@ def dashboard(request):
 
 @user_passes_test(is_reviewer)
 def application_list(request):
+    # Start with all applications
     applications = BusinessApplication.objects.all()
 
     # Filter by status
@@ -65,7 +65,7 @@ def application_list(request):
     if app_type:
         applications = applications.filter(application_type=app_type)
 
-    # Search
+    # Search by business name or application number
     search = request.GET.get('search')
     if search:
         applications = applications.filter(
@@ -73,15 +73,31 @@ def application_list(request):
             Q(application_number__icontains=search)
         )
 
-    paginator = Paginator(applications.order_by('-submission_date'), 20)
-    page = request.GET.get('page')
-    applications = paginator.get_page(page)
+    # Handle sorting
+    order_by = request.GET.get('order_by', '-submission_date')
+
+    # Apply sorting
+    try:
+        applications = applications.order_by(order_by)
+    except:
+        applications = applications.order_by('-submission_date')  # Default ordering
+        order_by = '-submission_date'
+
+    # Paginate results
+    paginator = Paginator(applications, 20)  # 20 items per page
+    page = request.GET.get('page', 1)
+
+    try:
+        applications = paginator.get_page(page)
+    except:
+        applications = paginator.get_page(1)
 
     context = {
         'applications': applications,
         'current_status': status,
         'current_type': app_type,
-        'search': search
+        'search': search,
+        'order_by': order_by
     }
     return render(request, 'reviewer/application_list.html', context)
 

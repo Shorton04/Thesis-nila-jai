@@ -12,7 +12,7 @@
                 <span class="font-medium">Today:</span> {{ today_date|date:"l, F j, Y" }}
             </div>
             <!-- QR Scanner Button -->
-            <a href="{% url 'reviewer:qr_scanner' %}" class="btn btn-sm btn-primary">
+            <a href="{% url 'queuing:qr_scanner' %}" class="btn btn-sm btn-primary">
                 <i class="fas fa-qrcode mr-1"></i> QR Check-in
             </a>
         </div>
@@ -53,7 +53,7 @@
         </div>
         
         <!-- QR Scanner Card -->
-        <div class="stat-card cursor-pointer" onclick="window.location.href='{% url 'reviewer:qr_scanner' %}'">
+        <div class="stat-card cursor-pointer" onclick="window.location.href='{% url 'queuing:qr_scanner' %}'">
             <div class="stat-header">
                 <span class="stat-title">QR Check-in</span>
                 <div class="stat-icon" style="background-color: #F59E0B;">

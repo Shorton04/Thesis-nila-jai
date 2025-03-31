@@ -1,0 +1,110 @@
+/* Queue Management Styles */
+
+/* Card Styles */
+.card {
+    @apply bg-white shadow-md rounded-lg overflow-hidden mb-6;
+}
+
+.card-header {
+    @apply flex justify-between items-center px-6 py-4 bg-gray-50 border-b border-gray-200;
+}
+
+.card-title {
+    @apply text-lg font-medium text-gray-900;
+}
+
+/* Button Styles */
+.btn {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent font-medium rounded-md focus:outline-none transition-colors duration-150;
+}
+
+.btn-sm {
+    @apply px-3 py-1 text-sm;
+}
+
+.btn-primary {
+    @apply text-white bg-indigo-600 hover:bg-indigo-700;
+}
+
+.btn-secondary {
+    @apply text-gray-700 bg-gray-100 hover:bg-gray-200 border-gray-300;
+}
+
+.btn-success {
+    @apply text-white bg-green-600 hover:bg-green-700;
+}
+
+.btn-warning {
+    @apply text-yellow-800 bg-yellow-100 hover:bg-yellow-200;
+}
+
+.btn-danger {
+    @apply text-white bg-red-600 hover:bg-red-700;
+}
+
+/* Status Badge Styles */
+.status-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.status-pending {
+    @apply bg-yellow-100 text-yellow-800;
+}
+
+.status-submitted {
+    @apply bg-blue-100 text-blue-800;
+}
+
+.status-approved {
+    @apply bg-green-100 text-green-800;
+}
+
+.status-rejected {
+    @apply bg-red-100 text-red-800;
+}
+
+.status-requires_revision {
+    @apply bg-orange-100 text-orange-800;
+}
+
+/* Table Styles */
+.table {
+    @apply min-w-full divide-y divide-gray-200;
+}
+
+.table th {
+    @apply px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+}
+
+.table td {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-500;
+}
+
+.table tr {
+    @apply hover:bg-gray-50;
+}
+
+/* Stats Grid */
+.stats-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6;
+}
+
+.stat-card {
+    @apply bg-white p-4 rounded-lg shadow;
+}
+
+.stat-header {
+    @apply flex justify-between items-center mb-2;
+}
+
+.stat-title {
+    @apply text-sm font-medium text-gray-500;
+}
+
+.stat-icon {
+    @apply w-10 h-10 rounded-full text-white flex items-center justify-center;
+}
+
+.stat-value {
+    @apply text-2xl font-bold text-gray-800;
+}

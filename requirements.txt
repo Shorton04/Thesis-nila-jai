@@ -1,0 +1,14 @@
+django
+django-pwa
+django-widget-tweaks
+fpdf2
+pytesseract
+pillow
+scikit-learn
+numpy
+pandas
+opencv-python
+python-docx
+python-decouple
+pytest
+pytest-django

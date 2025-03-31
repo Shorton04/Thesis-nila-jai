@@ -1,4 +1,6 @@
 # applications/views.py
+from datetime import datetime
+
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
 
@@ -31,19 +33,58 @@ from notifications.utils import send_application_notification
 
 @login_required
 def dashboard(request):
+    """Display dashboard with search and filter capabilities."""
+    # Get all applications for current user
     applications = BusinessApplication.objects.filter(applicant=request.user)
+
+    # Handle search filters
+    search_field = request.GET.get('search_field')
+    search_query = request.GET.get('search_query')
+    status = request.GET.get('status')
+    application_type = request.GET.get('application_type')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    sort = request.GET.get('sort', '-created_at')  # Default sort by most recent
+
+    # Apply search query if provided
+    if search_query and search_field:
+        if search_field == 'business_name':
+            applications = applications.filter(business_name__icontains=search_query)
+        elif search_field == 'email':
+            applications = applications.filter(email__icontains=search_query)
+        elif search_field == 'permit_no':
+            applications = applications.filter(application_number__icontains=search_query)
+
+    # Apply status filter
+    if status:
+        applications = applications.filter(status=status)
+
+    # Apply application type filter
+    if application_type:
+        applications = applications.filter(application_type=application_type)
+
+    # Apply date filters
+    if date_from:
+        applications = applications.filter(created_at__gte=date_from)
+    if date_to:
+        # Add 1 day to include the end date
+        date_to_inclusive = datetime.datetime.strptime(date_to, '%Y-%m-%d') + datetime.timedelta(days=1)
+        applications = applications.filter(created_at__lt=date_to_inclusive)
+
+    # Apply sorting
+    applications = applications.order_by(sort)
 
     # Get application counts
     application_counts = {
-        'total': applications.count(),
-        'draft': applications.filter(status='draft').count(),
-        'submitted': applications.filter(status='submitted').count(),
-        'approved': applications.filter(status='approved').count(),
-        'rejected': applications.filter(status='rejected').count(),
+        'total': BusinessApplication.objects.filter(applicant=request.user).count(),
+        'draft': BusinessApplication.objects.filter(applicant=request.user, status='draft').count(),
+        'submitted': BusinessApplication.objects.filter(applicant=request.user, status='submitted').count(),
+        'approved': BusinessApplication.objects.filter(applicant=request.user, status='approved').count(),
+        'rejected': BusinessApplication.objects.filter(applicant=request.user, status='rejected').count(),
     }
 
     # Pagination
-    paginator = Paginator(applications.order_by('-created_at'), 10)
+    paginator = Paginator(applications, 10)  # 10 items per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 

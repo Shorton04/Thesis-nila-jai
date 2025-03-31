@@ -1,51 +1,104 @@
-{# templates/applications/new_application.html #}
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}New Business Permit Application{% endblock %}
+
 {% block content %}
-<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+<div class="container mx-auto px-4 py-6">
+    <!-- Header Section -->
+    <div class="bg-gradient-to-r from-green-600 to-green-800 text-white rounded-lg p-6 mb-6 shadow-md">
+        <h1 class="text-3xl font-bold">New Business Permit Application</h1>
+        <p class="mt-2">Complete this multi-step form to apply for a new business permit</p>
+        {% if application_id %}
+        <div class="mt-4 flex items-center">
+            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 text-green-600">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <span class="text-sm opacity-75">Application ID:</span>
+                <span class="text-base font-semibold">{{ application_id }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Messages/Alerts -->
+    {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="p-4 mb-2 rounded-md flex items-center {% if message.tags == 'success' %}bg-green-100 text-green-800 border-l-4 border-green-600{% elif message.tags == 'error' %}bg-red-100 text-red-800 border-l-4 border-red-600{% else %}bg-blue-100 text-blue-800 border-l-4 border-blue-600{% endif %}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {% if message.tags == 'success' %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                {% elif message.tags == 'error' %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {% else %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {% endif %}
+            </svg>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- Progress Steps -->
     <div class="mb-8">
-        <div class="relative">
-            <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                <div class="w-full border-t border-gray-300"></div>
-            </div>
-            <div class="relative flex justify-between">
-                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 1 %}text-indigo-600{% else %}text-gray-500{% endif %}">
-                    Basic Information
-                </span>
-                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 2 %}text-indigo-600{% else %}text-gray-500{% endif %}">
-                    Business Details
-                </span>
-                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 3 %}text-indigo-600{% else %}text-gray-500{% endif %}">
-                    Owner Details
-                </span>
-                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 4 %}text-indigo-600{% else %}text-gray-500{% endif %}">
-                    Review
-                </span>
-                <span class="bg-white px-4 text-sm font-medium {% if current_step >= 5 %}text-indigo-600{% else %}text-gray-500{% endif %}">
-                    Documents
-                </span>
-            </div>
+        <div class="flex items-center justify-between">
+            {% for step_num in steps_range %}
+                <div class="flex items-center">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full {% if current_step >= step_num %}bg-green-600 text-white{% else %}bg-gray-200 text-gray-600{% endif %} font-bold">
+                        {{ step_num }}
+                    </div>
+                    <div class="ml-2 {% if current_step >= step_num %}text-green-600{% else %}text-gray-500{% endif %} font-medium">
+                        {% if step_num == 1 %}
+                            Basic Info
+                        {% elif step_num == 2 %}
+                            Business Details
+                        {% elif step_num == 3 %}
+                            Owner Details
+                        {% elif step_num == 4 %}
+                            Review
+                        {% elif step_num == 5 %}
+                            Documents
+                        {% endif %}
+                    </div>
+                </div>
+                {% if not forloop.last %}
+                <div class="flex-1 mx-4 h-1 bg-gray-200">
+                    <div class="h-full bg-green-600" style="width: {% if current_step > step_num %}100%{% elif current_step == step_num %}50%{% else %}0%{% endif %};"></div>
+                </div>
+                {% endif %}
+            {% endfor %}
         </div>
     </div>
 
-    <!-- Form Section -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                New Business Permit Application
-            </h3>
-            <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                Please fill out all required information accurately.
-            </p>
+    <!-- Main Form Container -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="p-6 bg-gray-50 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-800">
+                {% if current_step == 1 %}
+                    Basic Information
+                {% elif current_step == 2 %}
+                    Business Details
+                {% elif current_step == 3 %}
+                    Owner Details
+                {% elif current_step == 4 %}
+                    Review Application
+                {% elif current_step == 5 %}
+                    Required Documents
+                {% endif %}
+            </h2>
+            <p class="text-gray-600">Fields marked with <span class="text-red-500">*</span> are required</p>
         </div>
 
-        <form method="POST" class="space-y-8 divide-y divide-gray-200" id="applicationForm" enctype="multipart/form-data">
+        <form method="POST" enctype="multipart/form-data" id="applicationForm" class="p-6">
             {% csrf_token %}
 
             {% if form.non_field_errors %}
-            <div class="rounded-md bg-red-50 p-4 mb-6">
+            <div class="mb-6 rounded-md bg-red-50 p-4">
                 <div class="flex">
                     <div class="flex-shrink-0">
                         <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -68,31 +121,133 @@
             </div>
             {% endif %}
 
-            <!-- Step Content -->
+            <!-- Dynamic Step Content -->
             {% include step_template %}
 
             <!-- Form Actions -->
-            <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                {% if current_step > 1 %}
-                <button type="submit" name="submit_type" value="previous" 
-                        class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Previous
-                </button>
-                {% endif %}
-                
-                <button type="submit" name="submit_type" value="save_draft" 
-                        class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Save Draft
-                </button>
-                
-                <button type="submit" name="submit_type" value="continue" 
-                        class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    {% if current_step == total_steps %}Submit Application{% else %}Continue{% endif %}
-                </button>
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-6 border-t border-gray-200">
+                <div>
+                    {% if current_step > 1 %}
+                    <button type="submit" name="submit_type" value="previous" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Previous
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
+                    <button type="submit" name="submit_type" value="save_draft" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                        </svg>
+                        Save as Draft
+                    </button>
+                    
+                    <button type="submit" name="submit_type" value="continue" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            {% if current_step == total_steps %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            {% else %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            {% endif %}
+                        </svg>
+                        {% if current_step == total_steps %}Submit Application{% else %}Continue{% endif %}
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 </div>
+
+<style>
+    /* Form control styling */
+    input[type="text"], 
+    input[type="number"], 
+    input[type="email"], 
+    input[type="date"], 
+    input[type="tel"], 
+    input[type="url"],
+    select, 
+    textarea {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #D1D5DB;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        color: #1F2937;
+        background-color: #F9FAFB;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    input[type="text"]:focus, 
+    input[type="number"]:focus, 
+    input[type="email"]:focus, 
+    input[type="date"]:focus, 
+    input[type="tel"]:focus, 
+    input[type="url"]:focus,
+    select:focus, 
+    textarea:focus {
+        outline: none;
+        ring: 2px;
+        ring-color: #10B981;
+        border-color: #10B981;
+    }
+
+    /* File upload area hover effects */
+    .drag-active {
+        border-color: #10B981;
+        background-color: #ECFDF5;
+    }
+</style>
+
+<!-- Camera Modal -->
+<div id="cameraModal" class="fixed inset-0 z-10 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="w-full">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            Take a Photo
+                        </h3>
+                        <div class="mt-4">
+                            <div id="camera-container" class="w-full h-64 bg-gray-200 rounded-md overflow-hidden">
+                                <video id="camera-stream" class="w-full h-full object-cover" autoplay></video>
+                                <canvas id="camera-canvas" class="hidden w-full h-full"></canvas>
+                            </div>
+                            <div id="capture-ui" class="flex justify-center mt-4">
+                                <button type="button" id="capture-button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    <svg class="mr-1 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                    </svg>
+                                    Take Photo
+                                </button>
+                            </div>
+                            <div id="retake-ui" class="hidden flex justify-center space-x-4 mt-4">
+                                <button type="button" id="retake-button" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    Retake
+                                </button>
+                                <button type="button" id="use-photo-button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    Use Photo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" id="close-camera-button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}

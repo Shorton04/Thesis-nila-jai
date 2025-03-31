@@ -14,6 +14,7 @@ class CustomUser(AbstractUser):
     is_email_verified = models.BooleanField(default=False)
     verification_token = models.UUIDField(default=uuid.uuid4, editable=False)
     verification_token_created = models.DateTimeField(auto_now_add=True)
+    password_changed_at = models.DateTimeField(null=True, blank=True)
 
     # Additional fields for business owners
     company_name = models.CharField(max_length=255, blank=True)

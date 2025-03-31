@@ -13,7 +13,7 @@
             <div class="w-24 h-24 mb-4 mx-auto">
                 <img src="{% static 'images/seal.png' %}" alt="Logo" class="w-full h-full object-contain animate-pulse">
             </div>
-            
+
             <!-- Loading spinner and text -->
             <div class="text-center">
                 <div class="loading-spinner mb-4">
@@ -45,7 +45,7 @@
             {% endfor %}
         </div>
         {% endif %}
-        
+
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden hover-card">
             <!-- Header with gradient -->
             <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-8 py-6">
@@ -106,7 +106,7 @@
                                 <input type="password" name="password1" id="password1" required
                                        class="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all duration-200"
                                        placeholder="••••••••">
-                                <button type="button" onclick="togglePassword('password1')" 
+                                <button type="button" onclick="togglePassword('password1')"
                                         class="absolute inset-y-0 right-0 pr-3 flex items-center">
                                     <svg id="showPasswordIcon1" class="h-5 w-5 text-gray-400 cursor-pointer hover:text-gray-600 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -146,7 +146,7 @@
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div class="mt-6">
                             <button type="button" class="next-tab w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
                                 <span class="flex items-center">
@@ -181,7 +181,7 @@
                                 {% endif %}
                             </div>
                         </div>
-                        
+
                         <!-- Business Type -->
                         <div class="form-group mb-4" data-animate="fadeInUp" data-animate-delay="200">
                             <label for="business_type" class="block text-sm font-medium text-gray-700 mb-1">
@@ -209,7 +209,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Phone Number -->
                         <div class="form-group mb-4" data-animate="fadeInUp" data-animate-delay="300">
                             <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-1">
@@ -227,7 +227,7 @@
                                        placeholder="Enter phone number">
                             </div>
                         </div>
-                        
+
                         <!-- Terms and Privacy -->
                         <div class="form-group my-4">
                             <div class="flex items-start">
@@ -237,10 +237,10 @@
                                 </div>
                                 <div class="ml-3 text-xs">
                                     <label for="terms" class="font-medium text-gray-700 cursor-pointer">
-                                        I agree to the 
-                                        <a href="#" class="text-indigo-600 hover:text-indigo-500 transition-colors duration-200">Terms and Conditions</a>
-                                        and 
-                                        <a href="#" class="text-indigo-600 hover:text-indigo-500 transition-colors duration-200">Privacy Policy</a>
+                                        I agree to the
+                                        <a href="{% url 'accounts:terms_and_conditions' %}" class="text-indigo-600 hover:text-indigo-500 transition-colors duration-200">Terms and Conditions</a>
+                                        and
+                                        <a href="{% url 'accounts:privacy_policy' %}" class="text-indigo-600 hover:text-indigo-500 transition-colors duration-200">Privacy Policy</a>
                                     </label>
                                 </div>
                             </div>
@@ -286,7 +286,7 @@ function togglePassword(fieldId) {
     const passwordInput = document.querySelector(`input[name="${fieldId}"]`);
     const showIcon = document.getElementById(`showPasswordIcon${fieldId.slice(-1)}`);
     const hideIcon = document.getElementById(`hidePasswordIcon${fieldId.slice(-1)}`);
-    
+
     if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
         showIcon.classList.add('hidden');
@@ -301,22 +301,22 @@ function togglePassword(fieldId) {
 document.addEventListener('DOMContentLoaded', function() {
     // Animation for form elements with delay
     const animatedElements = document.querySelectorAll('[data-animate-delay]');
-    
+
     animatedElements.forEach(element => {
         const animation = element.getAttribute('data-animate');
         const delay = element.getAttribute('data-animate-delay');
-        
+
         setTimeout(() => {
             element.classList.add('animate__animated', `animate__${animation}`);
         }, delay);
     });
-    
+
     // Tab functionality
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
     const nextButton = document.querySelector('.next-tab');
     const prevButton = document.querySelector('.prev-tab');
-    
+
     // Function to switch tabs with animation
     function switchTab(targetId) {
         // Hide all tabs
@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 content.classList.add('hidden');
             }
         });
-        
+
         // Update active tab button
         tabButtons.forEach(button => {
             if (button.dataset.target === targetId) {
@@ -343,28 +343,28 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Set up tab button clicks
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
             switchTab(this.dataset.target);
         });
     });
-    
+
     // Next button
     if (nextButton) {
         nextButton.addEventListener('click', function() {
             switchTab('business-info');
         });
     }
-    
+
     // Previous button
     if (prevButton) {
         prevButton.addEventListener('click', function() {
             switchTab('account-info');
         });
     }
-    
+
     // Add password strength indicator
     const password1Input = document.getElementById('password1');
     if (password1Input) {
@@ -372,7 +372,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const strengthIndicator = document.createElement('div');
         strengthIndicator.className = 'password-strength';
         password1Input.parentNode.appendChild(strengthIndicator);
-        
+
         // Add the strength text
         const strengthText = document.createElement('div');
         strengthText.className = 'text-xs text-gray-500 mt-1';
@@ -381,12 +381,12 @@ document.addEventListener('DOMContentLoaded', function() {
         strengthValue.textContent = 'Type to check';
         strengthText.appendChild(strengthValue);
         password1Input.parentNode.appendChild(strengthText);
-        
+
         // Check password strength
         password1Input.addEventListener('input', function() {
             const password = this.value;
             let strength = 0;
-            
+
             // Basic checks for password strength
             if (password.length >= 8) strength += 1;
             if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength += 1;
@@ -412,11 +412,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Form validation with loading overlay
     const registerForm = document.getElementById('register-form');
     const loadingOverlay = document.getElementById('loading-overlay');
-    
+
     if (registerForm) {
         registerForm.addEventListener('submit', function(e) {
             // Check if we're on the account tab first, if so, switch to business tab
@@ -426,43 +426,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 switchTab('business-info');
                 return false;
             }
-            
+
             // Validate form
             const password1 = document.getElementById('password1').value;
             const password2 = document.getElementById('password2').value;
-            
+
             if (password1 !== password2) {
                 e.preventDefault();
-                
+
                 // Create error message
                 const errorElement = document.createElement('div');
                 errorElement.className = 'text-red-500 text-xs mt-1 animate__animated animate__fadeIn';
                 errorElement.textContent = 'Passwords do not match!';
-                
+
                 // Find password2 field and append error if not already present
                 const password2Field = document.getElementById('password2').parentNode;
                 const existingError = password2Field.parentNode.querySelector('.text-red-500');
-                
+
                 if (!existingError) {
                     password2Field.parentNode.appendChild(errorElement);
                 }
-                
+
                 // Switch to account tab
                 switchTab('account-info');
-                
+
                 // Shake the password fields
                 document.getElementById('password1').classList.add('animate__animated', 'animate__shakeX');
                 document.getElementById('password2').classList.add('animate__animated', 'animate__shakeX');
-                
+
                 // Remove animation class after 1s
                 setTimeout(() => {
                     document.getElementById('password1').classList.remove('animate__animated', 'animate__shakeX');
                     document.getElementById('password2').classList.remove('animate__animated', 'animate__shakeX');
                 }, 1000);
-                
+
                 return false;
             }
-            
+
             // If we passed validation, show loading overlay
             if (loadingOverlay) {
                 loadingOverlay.classList.remove('opacity-0');
@@ -470,27 +470,27 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Page transitions for login/register links
     const pageTransitionLinks = document.querySelectorAll('.page-transition');
-    
+
     pageTransitionLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            
+
             // Get the target URL
             const targetUrl = this.getAttribute('href');
-            
+
             // Fade out the current page
             document.body.classList.add('animate__animated', 'animate__fadeOut');
-            
+
             // Navigate to the new page after animation completes
             setTimeout(() => {
                 window.location.href = targetUrl;
             }, 300);
         });
     });
-    
+
     // On page load, add fade-in animation
     document.body.classList.add('animate__animated', 'animate__fadeIn');
 });

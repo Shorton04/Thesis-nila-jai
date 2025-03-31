@@ -5,141 +5,920 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-6">
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Business Closure Application</h1>
-        <p class="text-gray-600">Please fill out the form below to close your business permit.</p>
+    <!-- Header Section -->
+    <div class="bg-gradient-to-r from-red-600 to-red-800 text-white rounded-lg p-6 mb-6 shadow-md">
+        <h1 class="text-3xl font-bold">Business Closure Application</h1>
+        <p class="mt-2">Complete the form below to terminate your existing business permit</p>
+        {% if application_id %}
+        <div class="mt-4 flex items-center">
+            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 text-red-600">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <span class="text-sm opacity-75">Application ID:</span>
+                <span class="text-base font-semibold">{{ application_id }}</span>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
+    <!-- Messages/Alerts -->
     {% if messages %}
-    <div class="mb-4">
+    <div class="mb-6">
         {% for message in messages %}
-        <div class="p-4 {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %} rounded-md">
+        <div class="p-4 mb-2 rounded-md flex items-center {% if message.tags == 'success' %}bg-green-100 text-green-800 border-l-4 border-green-600{% elif message.tags == 'error' %}bg-red-100 text-red-800 border-l-4 border-red-600{% else %}bg-blue-100 text-blue-800 border-l-4 border-blue-600{% endif %}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {% if message.tags == 'success' %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                {% elif message.tags == 'error' %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {% else %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {% endif %}
+            </svg>
             {{ message }}
         </div>
         {% endfor %}
     </div>
     {% endif %}
 
-    <div class="bg-white shadow-md rounded-lg p-6">
-        <form method="post" enctype="multipart/form-data" class="space-y-6">
+    <!-- No steps indicator, single form approach -->
+
+    <!-- Main Form -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="p-6 bg-gray-50 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-800">Business Closure Form</h2>
+            <p class="text-gray-600">Fields marked with <span class="text-red-500">*</span> are required</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="p-6" id="closureForm">
             {% csrf_token %}
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Basic Information Section -->
-                <div class="col-span-2">
-                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Business Information</h2>
+            <!-- Business Information Section -->
+            <div class="mb-8">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800">Business Information</h3>
                 </div>
-
-                <div class="form-group">
-                    <label for="{{ form.business_name.id_for_label }}" class="block text-gray-700">Business Name <span class="text-red-500">*</span></label>
-                    {{ form.business_name }}
-                    {% if form.business_name.errors %}
-                    <p class="text-red-500 text-sm mt-1">{{ form.business_name.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.previous_permit_number.id_for_label }}" class="block text-gray-700">Current Permit Number <span class="text-red-500">*</span></label>
-                    {{ form.previous_permit_number }}
-                    {% if form.previous_permit_number.errors %}
-                    <p class="text-red-500 text-sm mt-1">{{ form.previous_permit_number.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.registration_number.id_for_label }}" class="block text-gray-700">Registration Number</label>
-                    {{ form.registration_number }}
-                    {% if form.registration_number.errors %}
-                    <p class="text-red-500 text-sm mt-1">{{ form.registration_number.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <!-- Contact Information Section -->
-                <div class="col-span-2">
-                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Contact Information</h2>
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.owner_name.id_for_label }}" class="block text-gray-700">Owner Name</label>
-                    {{ form.owner_name }}
-                    {% if form.owner_name.errors %}
-                    <p class="text-red-500 text-sm mt-1">{{ form.owner_name.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.owner_email.id_for_label }}" class="block text-gray-700">Owner Email</label>
-                    {{ form.owner_email }}
-                    {% if form.owner_email.errors %}
-                    <p class="text-red-500 text-sm mt-1">{{ form.owner_email.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <!-- Closure Details Section -->
-                <div class="col-span-2">
-                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Closure Details</h2>
-                </div>
-
-                <div class="form-group col-span-2">
-                    <label for="{{ form.closure_reason.id_for_label }}" class="block text-gray-700">Reason for Closure <span class="text-red-500">*</span></label>
-                    {{ form.closure_reason }}
-                    {% if form.closure_reason.errors %}
-                    <p class="text-red-500 text-sm mt-1">{{ form.closure_reason.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.closure_date.id_for_label }}" class="block text-gray-700">Closure Date <span class="text-red-500">*</span></label>
-                    {{ form.closure_date }}
-                    {% if form.closure_date.errors %}
-                    <p class="text-red-500 text-sm mt-1">{{ form.closure_date.errors.0 }}</p>
-                    {% endif %}
-                    <p class="text-gray-500 text-sm mt-1">The date when business operations will cease.</p>
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.remarks.id_for_label }}" class="block text-gray-700">Additional Remarks</label>
-                    {{ form.remarks }}
-                    {% if form.remarks.errors %}
-                    <p class="text-red-500 text-sm mt-1">{{ form.remarks.errors.0 }}</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Document Upload Section -->
-            <div class="mt-8">
-                <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Required Documents</h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="form-group">
-                        <label class="block text-gray-700">Original Business Permit</label>
-                        <input type="file" name="original_permit" class="mt-1 block w-full" accept=".pdf,.jpg,.jpeg,.png">
-                        <p class="text-gray-500 text-sm mt-1">Upload your latest original business permit.</p>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="block text-gray-700">Affidavit of Closure</label>
-                        <input type="file" name="affidavit_closure" class="mt-1 block w-full" accept=".pdf,.jpg,.jpeg,.png">
-                        <p class="text-gray-500 text-sm mt-1">For Sole Proprietors, or Board Resolution for Corporations.</p>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="block text-gray-700">Tax Clearance</label>
-                        <input type="file" name="tax_clearance" class="mt-1 block w-full" accept=".pdf,.jpg,.jpeg,.png">
-                        <p class="text-gray-500 text-sm mt-1">Proof of payment of all taxes and fees.</p>
+                <div class="bg-white p-4 rounded-md border border-gray-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label for="{{ form.business_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Business Name <span class="text-red-500">*</span></label>
+                            {{ form.business_name }}
+                            {% if form.business_name.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.business_name.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.previous_permit_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Current Permit Number <span class="text-red-500">*</span></label>
+                            {{ form.previous_permit_number }}
+                            {% if form.previous_permit_number.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.previous_permit_number.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.registration_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Registration Number</label>
+                            {{ form.registration_number }}
+                            {% if form.registration_number.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.registration_number.errors.0 }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-8 flex justify-end space-x-4">
-                <button type="submit" name="action" value="save_draft" class="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition">
-                    Save as Draft
+            <!-- Contact Information Section -->
+            <div class="mb-8">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800">Contact Information</h3>
+                </div>
+                
+                <div class="bg-white p-4 rounded-md border border-gray-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label for="{{ form.owner_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Owner Name</label>
+                            {{ form.owner_name }}
+                            {% if form.owner_name.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.owner_name.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.owner_email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Owner Email</label>
+                            {{ form.owner_email }}
+                            {% if form.owner_email.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.owner_email.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Closure Details Section -->
+            <div class="mb-8">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800">Closure Details</h3>
+                </div>
+                
+                <div class="bg-white p-4 rounded-md border border-gray-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group col-span-1 md:col-span-2">
+                            <label for="{{ form.closure_reason.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Reason for Closure <span class="text-red-500">*</span></label>
+                            {{ form.closure_reason }}
+                            {% if form.closure_reason.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.closure_reason.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.closure_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Closure Date <span class="text-red-500">*</span></label>
+                            {{ form.closure_date }}
+                            {% if form.closure_date.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.closure_date.errors.0 }}</p>
+                            {% endif %}
+                            <p class="text-gray-500 text-xs mt-1">The date when business operations will cease</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.remarks.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Additional Remarks</label>
+                            {{ form.remarks }}
+                            {% if form.remarks.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.remarks.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+<!-- Document Upload Section -->
+<div class="mb-8">
+    <div class="flex items-center mb-4">
+        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mr-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800">Required Documents</h3>
+    </div>
+    
+    <div class="bg-white p-4 rounded-md border border-gray-200">
+        <div class="mb-6">
+            <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                <ul role="list" class="divide-y divide-gray-200">
+                    <!-- Latest Original Business Permit -->
+                    <li>
+                        <div class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">Latest Original Business Permit <span class="text-red-500">*</span></p>
+                                        <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                                    </div>
+                                </div>
+                                <div class="flex">
+                                    <button type="button" onclick="openCamera('original_permit')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Camera
+                                    </button>
+                                    <div class="relative">
+                                        <input type="file" id="original_permit" name="original_permit" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                                        <label for="original_permit" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                            <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                            </svg>
+                                            Upload
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="original_permit_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-medium text-gray-900 document-name"></span>
+                                    <button type="button" onclick="removeFile('original_permit')" class="text-red-600 hover:text-red-800">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Proof of Annual Gross Receipts -->
+                    <li>
+                        <div class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">Proof of Annual Gross Receipts <span class="text-red-500">*</span></p>
+                                        <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                                    </div>
+                                </div>
+                                <div class="flex">
+                                    <button type="button" onclick="openCamera('gross_receipts')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Camera
+                                    </button>
+                                    <div class="relative">
+                                        <input type="file" id="gross_receipts" name="gross_receipts" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                                        <label for="gross_receipts" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                            <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                            </svg>
+                                            Upload
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="gross_receipts_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-medium text-gray-900 document-name"></span>
+                                    <button type="button" onclick="removeFile('gross_receipts')" class="text-red-600 hover:text-red-800">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Business Registration Plate -->
+                    <li>
+                        <div class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">Business Registration Plate <span class="text-red-500">*</span></p>
+                                        <p class="text-xs text-gray-500">Photo of physical plate (JPG or PNG, Max 10MB)</p>
+                                    </div>
+                                </div>
+                                <div class="flex">
+                                    <button type="button" onclick="openCamera('registration_plate')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Camera
+                                    </button>
+                                    <div class="relative">
+                                        <input type="file" id="registration_plate" name="registration_plate" accept=".jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                                        <label for="registration_plate" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                            <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                            </svg>
+                                            Upload
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="registration_plate_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-medium text-gray-900 document-name"></span>
+                                    <button type="button" onclick="removeFile('registration_plate')" class="text-red-600 hover:text-red-800">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Barangay Business Closure Certificate -->
+                    <li>
+                        <div class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">Barangay Business Closure Certificate <span class="text-red-500">*</span></p>
+                                        <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                                    </div>
+                                </div>
+                                <div class="flex">
+                                    <button type="button" onclick="openCamera('barangay_certificate')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Camera
+                                    </button>
+                                    <div class="relative">
+                                        <input type="file" id="barangay_certificate" name="barangay_certificate" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                                        <label for="barangay_certificate" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                            <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                            </svg>
+                                            Upload
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="barangay_certificate_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-medium text-gray-900 document-name"></span>
+                                    <button type="button" onclick="removeFile('barangay_certificate')" class="text-red-600 hover:text-red-800">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Affidavit of Closure (for Sole Proprietors) -->
+                    <li>
+                        <div class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">Affidavit of Closure (for Sole Proprietors)</p>
+                                        <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                                    </div>
+                                </div>
+                                <div class="flex">
+                                    <button type="button" onclick="openCamera('affidavit_closure')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Camera
+                                    </button>
+                                    <div class="relative">
+                                        <input type="file" id="affidavit_closure" name="affidavit_closure" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                                        <label for="affidavit_closure" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                            <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                            </svg>
+                                            Upload
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="affidavit_closure_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-medium text-gray-900 document-name"></span>
+                                    <button type="button" onclick="removeFile('affidavit_closure')" class="text-red-600 hover:text-red-800">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+      <!-- Board Resolution of Closure (for Corporations or Cooperatives) -->
+<li>
+    <div class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">Board Resolution of Closure (for Corporations/Cooperatives)</p>
+                    <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                </div>
+            </div>
+            <div class="flex">
+                <button type="button" onclick="openCamera('board_resolution')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Camera
                 </button>
-                <button type="submit" name="action" value="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
-                    Submit Application
+                <div class="relative">
+                    <input type="file" id="board_resolution" name="board_resolution" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                    <label for="board_resolution" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        Upload
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="board_resolution_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-gray-900 document-name"></span>
+                <button type="button" onclick="removeFile('board_resolution')" class="text-red-600 hover:text-red-800">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                 </button>
+            </div>
+        </div>
+    </div>
+</li>
+
+<!-- Written Authority of Representative with Government Issued IDs -->
+<li>
+    <div class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">Written Authority of Representative with IDs</p>
+                    <p class="text-xs text-gray-500">If applicable (PDF, JPG or PNG, Max 10MB)</p>
+                </div>
+            </div>
+            <div class="flex">
+                <button type="button" onclick="openCamera('representative_authority')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Camera
+                </button>
+                <div class="relative">
+                    <input type="file" id="representative_authority" name="representative_authority" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                    <label for="representative_authority" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        Upload
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="representative_authority_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-gray-900 document-name"></span>
+                <button type="button" onclick="removeFile('representative_authority')" class="text-red-600 hover:text-red-800">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Document Requirements Information Box -->
+        <div class="mt-4 mb-6 rounded-md bg-gray-50 p-4 border border-gray-200">
+            <h4 class="text-sm font-medium text-gray-900 mb-2">Required Documents Checklist:</h4>
+            <ul class="list-disc list-inside space-y-1 text-xs text-gray-700">
+                <li>Latest Original Business Permit</li>
+                <li>Proof of Annual Gross Receipts (same as renewal requirements)</li>
+                <li>Business Registration Plate (physical plate)</li>
+                <li>Barangay Business Closure Certificate</li>
+                <li>Affidavit of Closure (for Sole Proprietors)</li>
+                <li>Board Resolution of Closure (for Corporations or Cooperatives)</li>
+                <li>Written Authority of Representative with Government Issued IDs (if applicable)</li>
+            </ul>
+            <p class="text-xs text-gray-500 mt-2">All documents must be clear, complete, and in PDF, JPG, or PNG format. Physical items like the Business Registration Plate should be photographed.</p>
+        </div>
+
+            <!-- Terms and Declaration -->
+            <div class="mb-8">
+                <div class="bg-yellow-50 p-4 rounded-md border border-yellow-200">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-yellow-800">Declaration</h3>
+                            <div class="mt-2 text-sm text-yellow-700">
+                                <p>I declare under penalty of perjury that the information provided in this form is true and accurate. I understand that the business closure process is final and cannot be reversed once approved.</p>
+                            </div>
+                            <div class="mt-4">
+                                <div class="flex items-center">
+                                    <input id="declaration_agree" name="declaration_agree" type="checkbox" class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                                    <label for="declaration_agree" class="ml-2 block text-sm text-yellow-800">I agree to the declaration statement</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row justify-end items-center gap-4 mt-8 pt-6 border-t border-gray-200">
+                <div class="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
+                    <button type="submit" name="action" value="save_draft" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                        </svg>
+                        Save as Draft
+                    </button>
+                    
+                    <button type="submit" name="action" value="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Submit Application
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 </div>
+
+<style>
+    /* Form control styling */
+    input[type="text"], 
+    input[type="number"], 
+    input[type="email"], 
+    input[type="date"], 
+    input[type="tel"], 
+    select, 
+    textarea {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #D1D5DB;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        color: #1F2937;
+        background-color: #F9FAFB;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    input[type="text"]:focus, 
+    input[type="number"]:focus, 
+    input[type="email"]:focus, 
+    input[type="date"]:focus, 
+    input[type="tel"]:focus, 
+    select:focus, 
+    textarea:focus {
+        outline: none;
+        ring: 2px;
+        ring-color: #EF4444;
+        border-color: #EF4444;
+    }
+
+    /* File upload area hover effects */
+    .drag-active {
+        border-color: #EF4444;
+        background-color: #FEF2F2;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-calculate the total gross sales
+        const essentialInput = document.getElementById('{{ form.gross_essential.id_for_label }}');
+        const nonEssentialInput = document.getElementById('{{ form.gross_non_essential.id_for_label }}');
+        const totalInput = document.getElementById('{{ form.gross_sales_receipts.id_for_label }}');
+        
+        // Function to calculate total gross sales
+        function calculateTotal() {
+            const essential = parseFloat(essentialInput.value) || 0;
+            const nonEssential = parseFloat(nonEssentialInput.value) || 0;
+            totalInput.value = (essential + nonEssential).toFixed(2);
+        }
+        
+        // Add event listeners for input changes
+        essentialInput.addEventListener('input', calculateTotal);
+        nonEssentialInput.addEventListener('input', calculateTotal);
+        
+        // Initial calculation
+        calculateTotal();
+        
+        // Set read-only attribute for total field
+        totalInput.setAttribute('readonly', true);
+        
+        // Form validation before submission
+        const renewalForm = document.getElementById('renewalForm');
+        const declarationCheckbox = document.getElementById('declaration_agree');
+        const submitButton = document.querySelector('button[value="submit"]');
+        
+        renewalForm.addEventListener('submit', function(e) {
+            if (e.submitter && e.submitter.value === 'submit') {
+                if (!declarationCheckbox.checked) {
+                    e.preventDefault();
+                    alert('Please agree to the declaration statement before submitting.');
+                    return false;
+                }
+                
+                // Check for required fields
+                const requiredFields = [
+                    '{{ form.payment_mode.id_for_label }}',
+                    '{{ form.previous_permit_number.id_for_label }}',
+                    '{{ form.business_name.id_for_label }}'
+                ];
+                
+                for (const fieldId of requiredFields) {
+                    const field = document.getElementById(fieldId);
+                    if (!field.value.trim()) {
+                        e.preventDefault();
+                        field.classList.add('border-red-500');
+                        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        alert('Please fill in all required fields before submitting.');
+                        return false;
+                    }
+                }
+            }
+        });
+        
+        // Remove red border when user starts typing in a field marked as error
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('input', function() {
+                this.classList.remove('border-red-500');
+            });
+        });
+        
+        // Camera and document handling code
+        let currentCameraField = null;
+        let mediaStream = null;
+        
+        // Camera handling functions
+        window.openCamera = function(fieldName) {
+            currentCameraField = fieldName;
+            const cameraModal = document.getElementById('cameraModal');
+            
+            if (!cameraModal) {
+                console.error("Camera modal not found in the DOM");
+                return;
+            }
+            
+            const cameraStream = document.getElementById('camera-stream');
+            const cameraCanvas = document.getElementById('camera-canvas');
+            const captureUI = document.getElementById('capture-ui');
+            const retakeUI = document.getElementById('retake-ui');
+            
+            if (!cameraStream || !cameraCanvas || !captureUI || !retakeUI) {
+                console.error("Camera elements not found");
+                return;
+            }
+            
+            cameraModal.classList.remove('hidden');
+            captureUI.classList.remove('hidden');
+            retakeUI.classList.add('hidden');
+            cameraStream.classList.remove('hidden');
+            cameraCanvas.classList.add('hidden');
+            
+            // Request camera access
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(function(stream) {
+                    mediaStream = stream;
+                    cameraStream.srcObject = stream;
+                })
+                .catch(function(err) {
+                    console.error('Camera error:', err);
+                    alert('Unable to access camera. Please use the upload option instead.');
+                    closeCameraModal();
+                });
+        };
+        
+        // Close camera modal and clean up
+        function closeCameraModal() {
+            const cameraModal = document.getElementById('cameraModal');
+            
+            if (cameraModal) {
+                cameraModal.classList.add('hidden');
+            }
+            
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+        }
+        
+        // Setup camera button handlers
+        const captureButton = document.getElementById('capture-button');
+        const retakeButton = document.getElementById('retake-button');
+        const usePhotoButton = document.getElementById('use-photo-button');
+        const closeCameraButton = document.getElementById('close-camera-button');
+        
+        // Check if buttons exist before adding event listeners
+        if (captureButton) {
+            captureButton.addEventListener('click', function() {
+                const cameraStream = document.getElementById('camera-stream');
+                const cameraCanvas = document.getElementById('camera-canvas');
+                const captureUI = document.getElementById('capture-ui');
+                const retakeUI = document.getElementById('retake-ui');
+                
+                if (!cameraStream || !cameraCanvas || !captureUI || !retakeUI) {
+                    console.error("Camera elements not found for capture");
+                    return;
+                }
+                
+                const context = cameraCanvas.getContext('2d');
+                cameraCanvas.width = cameraStream.videoWidth;
+                cameraCanvas.height = cameraStream.videoHeight;
+                
+                context.drawImage(cameraStream, 0, 0, cameraCanvas.width, cameraCanvas.height);
+                
+                captureUI.classList.add('hidden');
+                retakeUI.classList.remove('hidden');
+                cameraStream.classList.add('hidden');
+                cameraCanvas.classList.remove('hidden');
+            });
+        }
+        
+        if (retakeButton) {
+            retakeButton.addEventListener('click', function() {
+                const captureUI = document.getElementById('capture-ui');
+                const retakeUI = document.getElementById('retake-ui');
+                const cameraStream = document.getElementById('camera-stream');
+                const cameraCanvas = document.getElementById('camera-canvas');
+                
+                if (captureUI && retakeUI && cameraStream && cameraCanvas) {
+                    captureUI.classList.remove('hidden');
+                    retakeUI.classList.add('hidden');
+                    cameraStream.classList.remove('hidden');
+                    cameraCanvas.classList.add('hidden');
+                }
+            });
+        }
+        
+        if (usePhotoButton) {
+            usePhotoButton.addEventListener('click', function() {
+                if (currentCameraField) {
+                    const cameraCanvas = document.getElementById('camera-canvas');
+                    
+                    if (!cameraCanvas) {
+                        console.error("Camera canvas not found");
+                        return;
+                    }
+                    
+                    cameraCanvas.toBlob(function(blob) {
+                        const fileName = `camera_capture_${Date.now()}.jpg`;
+                        const file = new File([blob], fileName, { type: 'image/jpeg' });
+                        
+                        // Create a DataTransfer object (browser's way to handle files)
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        
+                        // Set file input value
+                        const fileInput = document.getElementById(currentCameraField);
+                        
+                        if (fileInput) {
+                            fileInput.files = dataTransfer.files;
+                            
+                            // Trigger change event to update UI
+                            const event = new Event('change', { bubbles: true });
+                            fileInput.dispatchEvent(event);
+                        } else {
+                            console.error("File input not found:", currentCameraField);
+                        }
+                        
+                        // Close modal
+                        closeCameraModal();
+                    }, 'image/jpeg', 0.95);
+                }
+            });
+        }
+        
+        if (closeCameraButton) {
+            closeCameraButton.addEventListener('click', closeCameraModal);
+        }
+        
+        // Handle file selection
+        window.handleFileSelect = function(input) {
+            if (input && input.files && input.files[0]) {
+                const file = input.files[0];
+                const fieldName = input.id;
+                const previewDiv = document.getElementById(`${fieldName}_preview`);
+                
+                if (!previewDiv) {
+                    console.error(`Preview div not found for ${fieldName}`);
+                    return;
+                }
+                
+                const nameSpan = previewDiv.querySelector('.document-name');
+                
+                if (nameSpan) {
+                    // Update preview with file name
+                    nameSpan.textContent = file.name;
+                    previewDiv.classList.remove('hidden');
+                    
+                    // Call AI validation service (simulated)
+                    validateDocument(file, fieldName);
+                } else {
+                    console.error(`Name span not found in preview div for ${fieldName}`);
+                }
+            }
+        };
+        
+        // Remove file
+        window.removeFile = function(fieldName) {
+            const input = document.getElementById(fieldName);
+            const previewDiv = document.getElementById(`${fieldName}_preview`);
+            
+            if (input && previewDiv) {
+                // Clear file input
+                input.value = '';
+                
+                // Hide preview
+                previewDiv.classList.add('hidden');
+                
+                // Remove any validation indicators
+                const indicator = previewDiv.querySelector('.validation-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
+        };
+        
+        // Simulate AI document validation
+        function validateDocument(file, fieldName) {
+            // In a real implementation, you would send the file to the server for AI validation
+            console.log(`Validating ${file.name} for ${fieldName}...`);
+            
+            // Simulate server processing time
+            setTimeout(function() {
+                const previewDiv = document.getElementById(`${fieldName}_preview`);
+                
+                if (!previewDiv) {
+                    console.error(`Preview div not found for ${fieldName} during validation`);
+                    return;
+                }
+                
+                const documentNameElement = previewDiv.querySelector('.document-name');
+                
+                if (!documentNameElement) {
+                    console.error(`Document name element not found in preview for ${fieldName}`);
+                    return;
+                }
+                
+                // Remove any existing validation indicator
+                const existingIndicator = documentNameElement.querySelector('.validation-indicator');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+                
+                // Add validation indicator (green checkmark)
+                const validationSpan = document.createElement('span');
+                validationSpan.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-2 validation-indicator';
+                validationSpan.innerHTML = `
+                    <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Validated
+                `;
+                
+                documentNameElement.appendChild(validationSpan);
+                console.log(`Document ${file.name} validated successfully`);
+            }, 1500);
+        }
+    });
+</script>
 {% endblock %}

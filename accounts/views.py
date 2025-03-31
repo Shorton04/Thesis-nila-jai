@@ -15,6 +15,7 @@ from .forms import (
 )
 from .models import CustomUser, UserProfile, LoginHistory, PasswordReset
 import uuid
+from django.contrib.auth import update_session_auth_hash
 
 
 def register(request):
@@ -284,19 +285,52 @@ def password_reset_confirm(request, token):
 @login_required
 def change_password(request):
     if request.method == 'POST':
-        form = SetPasswordForm(request.POST)
-        if form.is_valid():
-            request.user.set_password(form.cleaned_data['password1'])
+        current_password = request.POST.get('current_password')
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+
+        # Validate inputs
+        form_errors = {}
+        if not current_password:
+            form_errors['current_password'] = 'Current password is required'
+        if not password1:
+            form_errors['password1'] = 'New password is required'
+        if not password2:
+            form_errors['password2'] = 'Password confirmation is required'
+        if password1 != password2:
+            form_errors['password2'] = 'New passwords do not match'
+        if len(password1) < 8:
+            form_errors['password1'] = 'Password must be at least 8 characters long'
+
+        # Check current password
+        if not form_errors and not request.user.check_password(current_password):
+            form_errors['current_password'] = 'Current password is incorrect'
+
+        if form_errors:
+            for field, error in form_errors.items():
+                messages.error(request, error)
+            return render(request, 'accounts/change_password.html', {
+                'form_errors': form_errors,
+            })
+
+        try:
+            # Change password
+            request.user.set_password(password1)
+            # Update password change timestamp if you have this field
+            if hasattr(request.user, 'password_changed_at'):
+                request.user.password_changed_at = timezone.now()
             request.user.save()
 
-            # Log the user out so they can log in with new password
-            logout(request)
-            messages.success(request, 'Password changed successfully. Please log in with your new password.')
-            return redirect('accounts:login')
-    else:
-        form = SetPasswordForm()
+            # Update session so user doesn't get logged out
+            update_session_auth_hash(request, request.user)
 
-    return render(request, 'accounts/change_password.html', {'form': form})
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('accounts:profile')
+        except Exception as e:
+            messages.error(request, f'An error occurred: {str(e)}')
+
+    # First time viewing or form submission failed
+    return render(request, 'accounts/change_password.html', {'active_tab': 'password'})
 
 
 @login_required
@@ -353,3 +387,15 @@ def resend_verification(request):
             messages.error(request, 'No unverified user found with this email address.')
 
     return redirect('accounts:login')
+
+def terms_and_conditions(request):
+    """
+    Render the Terms and Conditions page
+    """
+    return render(request, 'accounts/terms_and_conditions.html')
+
+def privacy_policy(request):
+    """
+    Render the Privacy Policy page
+    """
+    return render(request, 'accounts/privacy_policy.html')

@@ -19,14 +19,14 @@
                     <input type="text" 
                            name="search" 
                            id="search-input"
-                           value="{{ search }}" 
+                           value="{{ search|default:'' }}" 
                            placeholder="Search by business name or application #" 
                            class="form-control"
                            style="padding-left: 2.5rem;">
                     <i class="fas fa-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--secondary);"></i>
                 </div>
                 
-                <select name="status" class="form-control" onchange="this.form.submit()">
+                <select name="status" class="form-control">
                     <option value="">All Status</option>
                     <option value="submitted" {% if current_status == 'submitted' %}selected{% endif %}>Submitted</option>
                     <option value="under_review" {% if current_status == 'under_review' %}selected{% endif %}>Under Review</option>
@@ -35,7 +35,7 @@
                     <option value="rejected" {% if current_status == 'rejected' %}selected{% endif %}>Rejected</option>
                 </select>
                 
-                <select name="type" class="form-control" onchange="this.form.submit()">
+                <select name="type" class="form-control">
                     <option value="">All Types</option>
                     <option value="new" {% if current_type == 'new' %}selected{% endif %}>New Permit</option>
                     <option value="renewal" {% if current_type == 'renewal' %}selected{% endif %}>Renewal</option>
@@ -55,29 +55,49 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th class="sortable" data-field="application_number">
+                    <th>
                         <div style="display: flex; align-items: center;">
                             <span>Application #</span>
-                            <i class="fas fa-sort ml-2" style="color: var(--gray-300);"></i>
+                            <div class="sort-links ml-2">
+                                <a href="?order_by=application_number{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == 'application_number' %}active{% endif %}">↑</a>
+                                <a href="?order_by=-application_number{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == '-application_number' %}active{% endif %}">↓</a>
+                            </div>
                         </div>
                     </th>
-                    <th class="sortable" data-field="business_name">
+                    <th>
                         <div style="display: flex; align-items: center;">
                             <span>Business Name</span>
-                            <i class="fas fa-sort ml-2" style="color: var(--gray-300);"></i>
+                            <div class="sort-links ml-2">
+                                <a href="?order_by=business_name{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == 'business_name' %}active{% endif %}">↑</a>
+                                <a href="?order_by=-business_name{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == '-business_name' %}active{% endif %}">↓</a>
+                            </div>
                         </div>
                     </th>
                     <th>Type</th>
-                    <th class="sortable" data-field="status">
+                    <th>
                         <div style="display: flex; align-items: center;">
                             <span>Status</span>
-                            <i class="fas fa-sort ml-2" style="color: var(--gray-300);"></i>
+                            <div class="sort-links ml-2">
+                                <a href="?order_by=status{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == 'status' %}active{% endif %}">↑</a>
+                                <a href="?order_by=-status{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == '-status' %}active{% endif %}">↓</a>
+                            </div>
                         </div>
                     </th>
-                    <th class="sortable" data-field="submission_date">
+                    <th>
                         <div style="display: flex; align-items: center;">
                             <span>Submitted</span>
-                            <i class="fas fa-sort ml-2" style="color: var(--gray-300);"></i>
+                            <div class="sort-links ml-2">
+                                <a href="?order_by=submission_date{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == 'submission_date' %}active{% endif %}">↑</a>
+                                <a href="?order_by=-submission_date{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == '-submission_date' %}active{% endif %}">↓</a>
+                            </div>
                         </div>
                     </th>
                     <th style="text-align: right;">Action</th>
@@ -152,13 +172,36 @@
     </div>
     {% endif %}
 </div>
+
+<style>
+.sort-links {
+    display: flex;
+    flex-direction: column;
+    line-height: 0.7;
+}
+
+.sort-link {
+    color: var(--gray-300);
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.sort-link.active {
+    color: var(--primary);
+    font-weight: bold;
+}
+
+.sort-link:hover {
+    color: var(--primary);
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Initialize search functionality with debounce
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('search-input');
+        const searchForm = document.getElementById('search-form');
         let searchTimeout;
         
         // Debounce search to prevent too many requests
@@ -167,63 +210,18 @@
             searchTimeout = setTimeout(function() {
                 // Only submit if there are 3 or more characters or the field is empty
                 if (searchInput.value.length >= 3 || searchInput.value.length === 0) {
-                    document.getElementById('search-form').submit();
+                    searchForm.submit();
                 }
             }, 500); // 500ms delay
         });
         
-        // Handle table sorting
-        const sortableHeaders = document.querySelectorAll('.sortable');
-        sortableHeaders.forEach(header => {
-            header.style.cursor = 'pointer';
-            header.addEventListener('click', function() {
-                const field = this.getAttribute('data-field');
-                const sortIcon = this.querySelector('.fa-sort, .fa-sort-up, .fa-sort-down');
-                
-                // Determine new sort direction
-                let newOrder;
-                if (sortIcon.classList.contains('fa-sort')) {
-                    newOrder = field;
-                    sortIcon.classList.remove('fa-sort');
-                    sortIcon.classList.add('fa-sort-up');
-                } else if (sortIcon.classList.contains('fa-sort-up')) {
-                    newOrder = '-' + field;
-                    sortIcon.classList.remove('fa-sort-up');
-                    sortIcon.classList.add('fa-sort-down');
-                } else {
-                    newOrder = '';
-                    sortIcon.classList.remove('fa-sort-down');
-                    sortIcon.classList.add('fa-sort');
-                }
-                
-                // Reset other headers
-                sortableHeaders.forEach(otherHeader => {
-                    if (otherHeader !== header) {
-                        const otherIcon = otherHeader.querySelector('.fa-sort, .fa-sort-up, .fa-sort-down');
-                        otherIcon.className = 'fas fa-sort ml-2';
-                        otherIcon.style.color = 'var(--gray-300)';
-                    }
-                });
-                
-                // Highlight active sort
-                if (newOrder) {
-                    sortIcon.style.color = 'var(--primary)';
-                } else {
-                    sortIcon.style.color = 'var(--gray-300)';
-                }
-                
-                // Add order parameter to form and submit
-                const form = document.getElementById('search-form');
-                let orderInput = form.querySelector('input[name="order_by"]');
-                if (!orderInput) {
-                    orderInput = document.createElement('input');
-                    orderInput.type = 'hidden';
-                    orderInput.name = 'order_by';
-                    form.appendChild(orderInput);
-                }
-                orderInput.value = newOrder;
-                form.submit();
-            });
+        // Auto-submit on status or type change
+        document.querySelector('select[name="status"]').addEventListener('change', function() {
+            searchForm.submit();
+        });
+        
+        document.querySelector('select[name="type"]').addEventListener('change', function() {
+            searchForm.submit();
         });
     });
 </script>

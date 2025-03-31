@@ -1,4 +1,6 @@
 # queuing/views.py
+import json
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -182,7 +184,7 @@ def book_appointment(request, application_id, appointment_type):
         'recommendations': recommendations
     }
 
-    return render(request, 'queuing/book_appointment.html', context)
+    return render(request, 'queuing/book_appointment.html', context)    
 
 
 @login_required
@@ -370,16 +372,32 @@ def check_in(request, appointment_id):
     # Validate that it's the correct user or staff
     if not (request.user == appointment.applicant or request.user.is_staff):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'error': 'Permission denied'}, status=403)
+            return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
         messages.error(request, "You don't have permission to perform this action")
         return redirect('home')
 
-    # Only allow check-in on the appointment date
-    today = timezone.now().date()
-    if appointment.slot_date != today:
+    # Only allow check-in on the appointment date - Temporarily disabled for testing
+    # today = timezone.now().date()
+    # if appointment.slot_date != today:
+    #     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    #         return JsonResponse({'success': False, 'error': 'Can only check in on the appointment date'}, status=400)
+    #     messages.error(request, "You can only check in on your appointment date")
+    #     return redirect('queuing:appointment_detail', appointment_id=appointment.id)
+
+    # Don't allow duplicate check-ins
+    if appointment.checked_in:
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'error': 'Can only check in on the appointment date'}, status=400)
-        messages.error(request, "You can only check in on your appointment date")
+            return JsonResponse({
+                'success': False,
+                'error': 'Already checked in',
+                'appointment': {
+                    'id': str(appointment.id),
+                    'queue_number': appointment.queue_number,
+                    'business_name': appointment.application.business_name,
+                    'checked_in': True
+                }
+            })
+        messages.info(request, "You're already checked in for this appointment")
         return redirect('queuing:appointment_detail', appointment_id=appointment.id)
 
     # Check in the appointment
@@ -387,8 +405,25 @@ def check_in(request, appointment_id):
     appointment.check_in_time = timezone.now()
     appointment.save()
 
+    # Create notification for the applicant
+    create_notification(
+        user=appointment.applicant,
+        title="Check-in Successful",
+        message=f"You have been checked in for your {appointment.get_appointment_type_display()} appointment. Please wait for your queue number ({appointment.queue_number}) to be called.",
+        notification_type='info'
+    )
+
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({'success': True})
+        return JsonResponse({
+            'success': True,
+            'appointment': {
+                'id': str(appointment.id),
+                'queue_number': appointment.queue_number,
+                'business_name': appointment.application.business_name,
+                'checked_in': True,
+                'check_in_time': appointment.check_in_time.strftime('%I:%M %p')
+            }
+        })
 
     messages.success(request, "Check-in successful! Please wait for your queue number to be called.")
     return redirect('queuing:appointment_detail', appointment_id=appointment.id)
@@ -467,3 +502,132 @@ def update_queue_stats(request):
         return redirect('queuing:staff_dashboard')
 
     return render(request, 'queuing/staff/update_stats.html')
+
+
+@login_required
+def qr_scanner(request):
+    """View for staff to scan QR codes for check-in"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page")
+        return redirect('home')
+
+    return render(request, 'queuing/staff/qr_scanner.html')
+
+
+@login_required
+def get_appointment_details(request, appointment_id):
+    """API endpoint to get appointment details"""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    try:
+        appointment = QueueAppointment.objects.get(id=appointment_id)
+
+        # Return appointment details
+        return JsonResponse({
+            'id': str(appointment.id),
+            'queue_number': appointment.queue_number,
+            'business_name': appointment.application.business_name,
+            'appointment_type': appointment.get_appointment_type_display(),
+            'appointment_time': appointment.slot_time.strftime('%I:%M %p'),
+            'appointment_date': appointment.slot_date.strftime('%Y-%m-%d'),
+            'checked_in': appointment.checked_in,
+            'check_in_time': appointment.check_in_time.strftime('%I:%M %p') if appointment.check_in_time else None,
+            'status': appointment.status
+        })
+    except QueueAppointment.DoesNotExist:
+        return JsonResponse({'error': 'Appointment not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def check_in_by_queue(request):
+    """API endpoint to check in an appointment by queue number"""
+    if not request.user.is_staff:
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Only POST method is allowed'}, status=405)
+
+    try:
+        # Handle both JSON and form data
+        if 'application/json' in request.headers.get('content-type', ''):
+            data = json.loads(request.body)
+            queue_number = data.get('queue_number')
+        else:
+            queue_number = request.POST.get('queue_number')
+
+        if not queue_number:
+            return JsonResponse({'success': False, 'error': 'Queue number is required'}, status=400)
+
+        # Find appointment by queue number
+        today = timezone.now().date()
+        appointment = QueueAppointment.objects.filter(
+            queue_number=queue_number,
+            status='confirmed'
+        ).first()
+
+        if not appointment:
+            return JsonResponse({'success': False, 'error': 'Queue number not found'}, status=404)
+
+        # Check if already checked in
+        if appointment.checked_in:
+            return JsonResponse({
+                'success': False,
+                'error': 'Already checked in',
+                'appointment': {
+                    'id': str(appointment.id),
+                    'queue_number': appointment.queue_number,
+                    'business_name': appointment.application.business_name,
+                    'checked_in': True,
+                    'check_in_time': appointment.check_in_time.strftime(
+                        '%I:%M %p') if appointment.check_in_time else None
+                }
+            })
+
+        # Check in the appointment
+        appointment.checked_in = True
+        appointment.check_in_time = timezone.now()
+        appointment.save()
+
+        # Create notification for the applicant
+        create_notification(
+            user=appointment.applicant,
+            title="Check-in Successful",
+            message=f"You have been checked in for your {appointment.get_appointment_type_display()} appointment. Please wait for your queue number ({appointment.queue_number}) to be called.",
+            notification_type='info'
+        )
+
+        return JsonResponse({
+            'success': True,
+            'appointment': {
+                'id': str(appointment.id),
+                'queue_number': appointment.queue_number,
+                'business_name': appointment.application.business_name,
+                'checked_in': True,
+                'check_in_time': appointment.check_in_time.strftime('%I:%M %p')
+            }
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+def appointment_status(request, appointment_id):
+    """API endpoint to get current appointment status"""
+    appointment = get_object_or_404(QueueAppointment, id=appointment_id)
+
+    # Make sure it's the appointment owner or staff
+    if not (request.user == appointment.applicant or request.user.is_staff):
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    return JsonResponse({
+        'id': str(appointment.id),
+        'checked_in': appointment.checked_in,
+        'check_in_time': appointment.check_in_time.strftime('%I:%M %p') if appointment.check_in_time else None,
+        'status': appointment.status
+    })

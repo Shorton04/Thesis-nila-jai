@@ -17,4 +17,8 @@ urlpatterns = [
     path('staff/dashboard/', views.staff_queue_dashboard, name='staff_dashboard'),
     path('staff/counter/<int:counter_id>/next/', views.call_next, name='call_next'),
     path('staff/update-stats/', views.update_queue_stats, name='update_stats'),
+    path('staff/qr-scanner/', views.qr_scanner, name='qr_scanner'),
+    path('api/appointments/<uuid:appointment_id>/', views.get_appointment_details, name='get_appointment_details'),
+    path('staff/check-in-by-queue/', views.check_in_by_queue, name='check_in_by_queue'),
+    path('appointment/<uuid:appointment_id>/status/', views.appointment_status, name='appointment_status'),
 ]
