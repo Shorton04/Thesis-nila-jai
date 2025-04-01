@@ -12,3 +12,4 @@ python-docx
 python-decouple
 pytest
 pytest-django
+psycopg2-binary

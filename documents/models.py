@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from applications.models import BusinessApplication
+import uuid
 
 
 def document_upload_path(instance, filename):
@@ -53,6 +54,7 @@ class Document(models.Model):
         on_delete=models.CASCADE,
         related_name='documents'
     )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     document_type = models.CharField(max_length=50, choices=DOCUMENT_TYPES)
     file = models.FileField(upload_to=document_upload_path)
     filename = models.CharField(max_length=255)
