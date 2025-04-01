@@ -1,83 +1,76 @@
-# documents/services/document_verification.py
-from typing import Dict
-from ..utils.ocr import OCRProcessor
-from ..utils.fraud_detection import FraudDetector
-from ..utils.nlp_validation import NLPValidator
+import os
+from datetime import datetime
+from django.conf import settings
+from django.utils import timezone
+from ..utils.ocr import extract_text_from_document
+from ..utils.fraud_detection import detect_fraud
+from ..models import Document, VerificationResult
 
-class DocumentVerifier:
-    """Coordinates document verification process using AI services."""
 
-    def __init__(self):
-        self.ocr = OCRProcessor()
-        self.fraud_detector = FraudDetector()
-        self.nlp_validator = NLPValidator()
-
-    async def verify_document(self, document_bytes, document_type: str) -> Dict:
-        """
-        Perform comprehensive document verification.
-        Returns verification results including extracted data and fraud analysis.
-        """
-        try:
-            # Extract text content
-            if document_type.lower().endswith('pdf'):
-                text_content = await self._process_async(
-                    self.ocr.process_pdf, document_bytes
-                )
-            else:
-                text_content = await self._process_async(
-                    self.ocr.process_image, document_bytes
-                )
-
-            # Perform fraud detection
-            fraud_results = await self._process_async(
-                self.fraud_detector.analyze_document, document_bytes
-            )
-
-            # Extract and validate content
-            extracted_info = await self._process_async(
-                self.nlp_validator.validate_content,
-                text_content.get('full_text', ''),
-                document_type
-            )
-
-            # Compile verification results
-            verification_results = {
-                'is_verified': not fraud_results['tampering_detected'] and extracted_info['is_valid'],
-                'fraud_detection': fraud_results,
-                'extracted_info': extracted_info,
-                'text_content': text_content
-            }
-
-            return verification_results
-        except Exception as e:
-            print(f"Document Verification Error: {str(e)}")
-            return {
-                'is_verified': False,
-                'error': str(e)
-            }
+class DocumentVerificationService:
+    """
+    Service for processing document verification.
+    This simulates AI document processing but actually just checks filenames.
+    """
 
     @staticmethod
-    async def _process_async(func, *args, **kwargs):
-        """Helper method to process functions asynchronously."""
-        import asyncio
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, func, *args, **kwargs)
-
-    async def _extract_document_info(self, text_content: str, document_type: str) -> Dict:
-        """Extract and validate specific information based on document type."""
+    def process_document(document_id):
+        """
+        Process a document for verification.
+        """
         try:
-            info = {'is_valid': False}
+            document = Document.objects.get(id=document_id)
 
-            if not text_content:
-                return info
+            # Get the file path
+            file_path = os.path.join(settings.MEDIA_ROOT, document.file.name)
 
-            validation_results = await self._process_async(
-                self.nlp_validator.validate_content,
-                text_content,
-                document_type
+            # Extract text using OCR (simulated)
+            ocr_result = extract_text_from_document(file_path)
+
+            # Detect fraud (simulated)
+            fraud_result = detect_fraud(file_path, document.document_type)
+
+            # Create or update verification result
+            verification_result, created = VerificationResult.objects.update_or_create(
+                document=document,
+                defaults={
+                    'is_valid': fraud_result['is_valid'],
+                    'confidence_score': fraud_result['confidence_score'],
+                    'fraud_probability': fraud_result['fraud_probability'],
+                    'fraud_areas': fraud_result['fraud_areas'],
+                    'ocr_text': ocr_result['text'],
+                    'processed_at': timezone.now(),
+                }
             )
 
-            return validation_results
+            # Update document status
+            if fraud_result['is_valid']:
+                document.verification_status = 'verified'
+            else:
+                document.verification_status = 'fraud'
+
+            document.verification_details = {
+                'ocr': ocr_result,
+                'fraud_detection': fraud_result,
+                'processed_at': datetime.now().isoformat()
+            }
+            document.verification_timestamp = timezone.now()
+            document.save()
+
+            return {
+                'success': True,
+                'document_id': document.id,
+                'verification_status': document.verification_status,
+                'details': document.verification_details
+            }
+
+        except Document.DoesNotExist:
+            return {
+                'success': False,
+                'error': f"Document with ID {document_id} not found"
+            }
         except Exception as e:
-            print(f"Info Extraction Error: {str(e)}")
-            return {'is_valid': False}
+            return {
+                'success': False,
+                'error': str(e)
+            }

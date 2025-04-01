@@ -3,9 +3,10 @@ from datetime import datetime
 
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 
-from documents.models import DocumentVerificationResult, Document
-from documents.services.document_workflow import DocumentWorkflow
+from documents.models import VerificationResult, Document
+from documents.services.document_workflow import DocumentWorkflowService
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -28,7 +29,7 @@ from .forms import (
     ApplicationSearchForm, RequirementSubmissionForm
 )
 import uuid
-from notifications.utils import send_application_notification
+from notifications.utils import send_application_notification, create_notification
 
 
 @login_required
@@ -668,7 +669,7 @@ def requirement_upload(request, application_id, requirement_id):
         validation_results = validator.validate_document(document_bytes)
 
         # Store validation results
-        DocumentVerificationResult.objects.create(
+        VerificationResult.objects.create(
             document=document,
             is_authentic=not validation_results.get('fraud_detection_results', {}).get('tampering_detected', False),
             fraud_score=validation_results.get('fraud_detection_results', {}).get('confidence_score', 0.0),

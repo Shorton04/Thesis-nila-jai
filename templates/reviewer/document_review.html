@@ -1,0 +1,282 @@
+{% extends 'reviewer/base.html' %}
+{% load static %}
+
+{% block title %}Document Analysis - {{ document.filename }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="bg-primary">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-white">
+                Document Analysis
+            </h1>
+            <a href="{% url 'reviewer:application_detail' document.application.id %}" class="btn btn-light">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Application
+            </a>
+        </div>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Document Information -->
+        <div class="lg:col-span-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-file-alt mr-2"></i>
+                        Document Information
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <label class="form-label">Document Type</label>
+                        <p class="font-semibold">{{ document.get_document_type_display }}</p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Uploaded By</label>
+                        <p class="font-semibold">{{ document.user.get_full_name }}</p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Upload Date</label>
+                        <p class="font-semibold">{{ document.uploaded_at|date:"F d, Y H:i" }}</p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Filename</label>
+                        <p class="font-semibold">{{ document.original_filename }}</p>
+                    </div>
+                    <div>
+                        <label class="form-label">Status</label>
+                        <div>
+                            {% if document.verification_status == 'verified' %}
+                                <span class="badge bg-success text-light">
+                                    <i class="fas fa-check-circle mr-1"></i> Verified
+                                </span>
+                            {% elif document.verification_status == 'fraud' %}
+                                <span class="badge bg-danger text-light">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i> Potential Fraud
+                                </span>
+                            {% elif document.verification_status == 'rejected' %}
+                                <span class="badge bg-danger text-light">
+                                    <i class="fas fa-times-circle mr-1"></i> Rejected
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-clock mr-1"></i> Pending
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verification Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-clipboard-check mr-2"></i>
+                        Verification Actions
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'reviewer:verify_document' document.id %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="verification_status" class="form-label">Update Status</label>
+                            <select name="verification_status" id="verification_status" class="form-select">
+                                <option value="verified" {% if document.verification_status == 'verified' %}selected{% endif %}>Verify as Authentic</option>
+                                <option value="fraud" {% if document.verification_status == 'fraud' %}selected{% endif %}>Mark as Potential Fraud</option>
+                                <option value="rejected" {% if document.verification_status == 'rejected' %}selected{% endif %}>Reject Document</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="verification_notes" class="form-label">Notes</label>
+                            <textarea name="verification_notes" id="verification_notes" rows="3" class="form-control">{{ document.verification_details.manual_review.notes|default:"" }}</textarea>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save mr-2"></i> Save Decision
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="lg:col-span-8">
+            <!-- AI Verification Results -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-robot mr-2"></i>
+                        AI Verification Results
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if verification_result %}
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">AI Assessment</label>
+                                    <div>
+                                        {% if verification_result.is_valid %}
+                                            <span class="badge bg-success text-light">
+                                                <i class="fas fa-check-circle mr-1"></i> Authentic
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger text-light">
+                                                <i class="fas fa-exclamation-triangle mr-1"></i> Potentially Fraudulent
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Confidence Score</label>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-{{ verification_result.fraud_probability < 0.5|yesno:'success,danger' }}" 
+                                             role="progressbar" 
+                                             style="width: {{ verification_result.confidence_score|floatformat:0 }}%" 
+                                             aria-valuenow="{{ verification_result.confidence_score|floatformat:0 }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ verification_result.confidence_score|floatformat:0 }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Fraud Probability</label>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-{{ verification_result.fraud_probability < 0.5|yesno:'success,danger' }}" 
+                                             role="progressbar" 
+                                             style="width: {{ verification_result.fraud_probability|floatformat:0 }}%" 
+                                             aria-valuenow="{{ verification_result.fraud_probability|floatformat:0 }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ verification_result.fraud_probability|floatformat:0 }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Processed At</label>
+                                    <p class="font-semibold">{{ verification_result.processed_at|date:"F d, Y H:i" }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if verification_result.fraud_areas %}
+                            <div class="mb-4">
+                                <label class="form-label">Suspicious Areas</label>
+                                <p class="text-danger font-semibold">The AI has detected {{ verification_result.fraud_areas|length }} suspicious areas in the document</p>
+                            </div>
+                        {% endif %}
+
+                        {% if verification_result.ocr_text %}
+                            <div class="mb-4">
+                                <label class="form-label">Extracted Text</label>
+                                <div class="border rounded p-3 bg-light">
+                                    <pre class="mb-0 text-sm">{{ verification_result.ocr_text }}</pre>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            No AI verification has been performed on this document.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Document Preview -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-eye mr-2"></i>
+                        Document Preview
+                    </h3>
+                </div>
+                <div class="card-body p-0 text-center">
+                    <div class="position-relative">
+                        <!-- Document display -->
+                        {% if document.file.url|lower|slice:"-4:" == ".pdf" %}
+                            <div class="ratio ratio-1x1">
+                                <iframe src="{{ document.file.url }}" allowfullscreen></iframe>
+                            </div>
+                        {% elif document.file.url|lower|slice:"-4:" in ".jpg,.png,.gif,.jpeg,.webp" %}
+                            <div class="p-3">
+                                <img src="{{ document.file.url }}" class="img-fluid document-preview" alt="Document Preview">
+                                
+                                <!-- Overlay suspicious areas if any -->
+                                {% if verification_result.fraud_areas %}
+                                    <div class="position-relative">
+                                        {% for area in verification_result.fraud_areas %}
+                                        <div class="position-absolute border-2 border-danger bg-danger bg-opacity-10" 
+                                             style="left: {{ area.x }}%; top: {{ area.y }}%; width: {{ area.width }}%; height: {{ area.height }}%; pointer-events: none;">
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info m-3">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Preview not available for this file type.
+                                <a href="{{ document.file.url }}" class="alert-link" target="_blank">Click here to view</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add highlighting for suspicious areas
+        const imageContainer = document.querySelector('.document-preview');
+        if (imageContainer) {
+            imageContainer.addEventListener('load', function() {
+                const parent = imageContainer.parentElement;
+                parent.style.position = 'relative';
+                
+                // Now that the image is loaded, we know its dimensions
+                const imgWidth = this.width;
+                const imgHeight = this.height;
+                
+                // Get any fraud areas from the backend
+                const fraudAreas = {{ verification_result.fraud_areas|default:"[]"|safe }};
+                
+                fraudAreas.forEach(area => {
+                    const highlightElement = document.createElement('div');
+                    highlightElement.style.position = 'absolute';
+                    highlightElement.style.left = `${area.x}%`;
+                    highlightElement.style.top = `${area.y}%`;
+                    highlightElement.style.width = `${area.width}%`;
+                    highlightElement.style.height = `${area.height}%`;
+                    highlightElement.style.border = '2px solid red';
+                    highlightElement.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+                    highlightElement.style.pointerEvents = 'none';
+                    
+                    parent.appendChild(highlightElement);
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

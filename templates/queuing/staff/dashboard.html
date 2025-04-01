@@ -1,58 +1,50 @@
 <!-- queuing/templates/queuing/staff/dashboard.html -->
 {% extends 'reviewer/base.html' %}
 
-{% block title %}Queue Management{% endblock %}
+{% block title %}Queue Management Dashboard{% endblock %}
 
 {% block content %}
- <div class="container mx-auto py-6">
+<div class="container mx-auto py-6">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Queue Management</h1>
+        <h1 class="text-2xl font-bold text-gray-800">Queue Management Dashboard</h1>
         <div class="flex items-center space-x-4">
             <div class="text-sm text-gray-700">
                 <span class="font-medium">Today:</span> {{ today_date|date:"l, F j, Y" }}
             </div>
-            <!-- QR Scanner Button -->
-            <a href="{% url 'queuing:qr_scanner' %}" class="btn btn-sm btn-primary">
-                <i class="fas fa-qrcode mr-1"></i> QR Check-in
-            </a>
         </div>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
+    <!-- Action Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <!-- Queue Display -->
+        <div class="stat-card cursor-pointer" onclick="window.open('{% url 'queuing:queue_display' %}', '_blank')">
             <div class="stat-header">
-                <span class="stat-title">Payment Queue</span>
+                <span class="stat-title">Queue Display</span>
                 <div class="stat-icon" style="background-color: #3B82F6;">
-                    <i class="fas fa-money-bill-wave"></i>
+                    <i class="fas fa-tv"></i>
                 </div>
             </div>
-            <div class="stat-value">{{ payment_queue.count }}</div>
-            <p class="text-sm text-gray-600 mt-1">Appointments Today</p>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-header">
-                <span class="stat-title">Permit Release</span>
-                <div class="stat-icon" style="background-color: #8B5CF6;">
-                    <i class="fas fa-file-alt"></i>
-                </div>
+            <div class="stat-value">
+                <i class="fas fa-desktop text-gray-400"></i>
             </div>
-            <div class="stat-value">{{ release_queue.count }}</div>
-            <p class="text-sm text-gray-600 mt-1">Appointments Today</p>
+            <p class="text-sm text-gray-600 mt-1">Open public queue display</p>
         </div>
 
-        <div class="stat-card">
+        <!-- Queue Management -->
+        <div class="stat-card cursor-pointer" onclick="window.location.href='{% url 'queuing:queue_management' %}'">
             <div class="stat-header">
-                <span class="stat-title">Active Counters</span>
+                <span class="stat-title">Queue Management</span>
                 <div class="stat-icon" style="background-color: #10B981;">
-                    <i class="fas fa-desktop"></i>
+                    <i class="fas fa-tasks"></i>
                 </div>
             </div>
-            <div class="stat-value">{{ counters.count }}</div>
-            <p class="text-sm text-gray-600 mt-1">Service Counters</p>
+            <div class="stat-value">
+                <i class="fas fa-cogs text-gray-400"></i>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Manage counters & appointments</p>
         </div>
         
-        <!-- QR Scanner Card -->
+        <!-- QR Scanner -->
         <div class="stat-card cursor-pointer" onclick="window.location.href='{% url 'queuing:qr_scanner' %}'">
             <div class="stat-header">
                 <span class="stat-title">QR Check-in</span>
@@ -65,8 +57,23 @@
             </div>
             <p class="text-sm text-gray-600 mt-1">Scan appointment QR codes</p>
         </div>
+        
+        <!-- Statistics -->
+        <div class="stat-card cursor-pointer" onclick="window.location.href='{% url 'queuing:update_stats' %}'">
+            <div class="stat-header">
+                <span class="stat-title">Queue Statistics</span>
+                <div class="stat-icon" style="background-color: #8B5CF6;">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+            </div>
+            <div class="stat-value">
+                <i class="fas fa-chart-line text-gray-400"></i>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">View and update statistics</p>
+        </div>
     </div>
 
+    <!-- Statistics Overview -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-header">
@@ -92,13 +99,24 @@
 
         <div class="stat-card">
             <div class="stat-header">
-                <span class="stat-title">Active Counters</span>
-               <div class="stat-icon" style="background-color: #10B981;">
-                    <i class="fas fa-desktop"></i>
+                <span class="stat-title">Checked In</span>
+                <div class="stat-icon" style="background-color: #10B981;">
+                    <i class="fas fa-check-circle"></i>
                 </div>
             </div>
-            <div class="stat-value">{{ counters.count }}</div>
-            <p class="text-sm text-gray-600 mt-1">Service Counters</p>
+            <div class="stat-value">{{ checked_in_count }}</div>
+            <p class="text-sm text-gray-600 mt-1">Ready for service</p>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Now Serving</span>
+                <div class="stat-icon" style="background-color: #EC4899;">
+                    <i class="fas fa-headset"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ now_serving_count }}</div>
+            <p class="text-sm text-gray-600 mt-1">Currently at counters</p>
         </div>
     </div>
 
@@ -107,7 +125,7 @@
         <div class="card">
             <div class="card-header">
                 <h2 class="card-title">Payment Processing Queue</h2>
-                <button class="btn btn-sm btn-primary" onclick="refreshQueue('payment')">
+                <button class="btn btn-sm btn-primary" id="refreshPaymentQueue">
                     <i class="fas fa-sync"></i> Refresh
                 </button>
             </div>
@@ -172,7 +190,7 @@
         <div class="card">
             <div class="card-header">
                 <h2 class="card-title">Permit Release Queue</h2>
-                <button class="btn btn-sm btn-primary" onclick="refreshQueue('release')">
+                <button class="btn btn-sm btn-primary" id="refreshReleaseQueue">
                     <i class="fas fa-sync"></i> Refresh
                 </button>
             </div>
@@ -319,11 +337,11 @@
                         </li>
                         <li class="flex justify-between">
                             <span class="text-gray-600">Completed:</span>
-                            <span class="font-semibold" id="completedCount">0</span>
+                            <span class="font-semibold" id="completedCount">{{ completed_count|default:"0" }}</span>
                         </li>
                         <li class="flex justify-between">
                             <span class="text-gray-600">No-shows:</span>
-                            <span class="font-semibold" id="noShowCount">0</span>
+                            <span class="font-semibold" id="noShowCount">{{ no_show_count|default:"0" }}</span>
                         </li>
                     </ul>
                     
@@ -337,11 +355,11 @@
                 <div>
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
                     <div class="space-y-4">
-                        <button class="btn btn-warning" onclick="markNoShows()">
+                        <button class="btn btn-warning" id="markNoShowsBtn">
                             <i class="fas fa-user-times mr-2"></i> Mark No-Shows
                         </button>
                         
-                        <button class="btn btn-success" onclick="printQueueSummary()">
+                        <button class="btn btn-success" id="printQueueSummaryBtn">
                             <i class="fas fa-print mr-2"></i> Print Queue Summary
                         </button>
                     </div>
@@ -352,16 +370,76 @@
 </div>
 
 <script>
-    // Call next appointment for a counter
-    document.querySelectorAll('.next-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const counterId = this.dataset.counter;
+    document.addEventListener('DOMContentLoaded', function() {
+        // Call next appointment for a counter
+        document.querySelectorAll('.next-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const counterId = this.dataset.counter;
+                callNextAppointment(counterId);
+            });
+        });
+        
+        // Call specific appointment to counter
+        document.querySelectorAll('.call-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const counterId = this.dataset.counter;
+                const appointmentId = this.dataset.appointment;
+                callSpecificAppointment(counterId, appointmentId);
+            });
+        });
+        
+        // Complete appointment at counter
+        document.querySelectorAll('.complete-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const counterId = this.dataset.counter;
+                const appointmentId = this.dataset.appointment;
+                completeAppointment(counterId, appointmentId);
+            });
+        });
+        
+        // Check in an appointment
+        document.querySelectorAll('.check-in-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const appointmentId = this.dataset.appointment;
+                checkInAppointment(appointmentId, this);
+            });
+        });
+        
+        // Refresh buttons
+        document.getElementById('refreshPaymentQueue').addEventListener('click', function() {
+            refreshQueue('payment');
+        });
+        
+        document.getElementById('refreshReleaseQueue').addEventListener('click', function() {
+            refreshQueue('release');
+        });
+        
+        document.getElementById('refreshCounters').addEventListener('click', function() {
+            refreshCounters();
+        });
+        
+        // Mark no-shows button
+        document.getElementById('markNoShowsBtn').addEventListener('click', function() {
+            markNoShows();
+        });
+        
+        // Print queue summary button
+        document.getElementById('printQueueSummaryBtn').addEventListener('click', function() {
+            printQueueSummary();
+        });
+        
+        // Function to call next appointment
+        function callNextAppointment(counterId) {
+            const button = document.querySelector(`.next-btn[data-counter="${counterId}"]`);
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Calling...';
             
             fetch(`{% url 'queuing:call_next' 0 %}`.replace('0', counterId), {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
             .then(response => response.json())
@@ -369,23 +447,115 @@
                 if (data.success) {
                     // Show success message
                     alert(`Called queue number ${data.appointment.queue_number} to counter`);
-                    // Refresh page
-                    location.reload();
+                    // Refresh relevant sections
+                    refreshCounters();
+                    refreshQueue('payment');
+                    refreshQueue('release');
                 } else {
                     alert(data.message || 'No more appointments in queue');
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-arrow-right mr-1"></i> Call Next';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Failed to call next appointment');
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-arrow-right mr-1"></i> Call Next';
             });
-        });
-    });
-    
-    // Check in an appointment
-    document.querySelectorAll('.check-in-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const appointmentId = this.dataset.appointment;
+        }
+        
+        // Function to call specific appointment
+        function callSpecificAppointment(counterId, appointmentId) {
+            const button = document.querySelector(`.call-btn[data-counter="${counterId}"][data-appointment="${appointmentId}"]`);
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Calling...';
+            
+            fetch('{% url "queuing:call_specific" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    counter_id: counterId,
+                    appointment_id: appointmentId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    alert(`Called appointment to Counter #${data.counter_number}`);
+                    // Refresh relevant sections
+                    refreshCounters();
+                    refreshQueue('payment');
+                    refreshQueue('release');
+                } else {
+                    alert(data.error || 'Failed to call appointment');
+                    button.disabled = false;
+                    button.innerHTML = 'Call';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to call appointment');
+                button.disabled = false;
+                button.innerHTML = 'Call';
+            });
+        }
+        
+        // Function to complete appointment
+        function completeAppointment(counterId, appointmentId) {
+            if (!confirm('Are you sure you want to mark this appointment as completed?')) {
+                return;
+            }
+            
+            const button = document.querySelector(`.complete-btn[data-counter="${counterId}"][data-appointment="${appointmentId}"]`);
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Completing...';
+            
+            fetch('{% url "queuing:complete_appointment" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    counter_id: counterId,
+                    appointment_id: appointmentId,
+                    notes: ''
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    alert('Appointment completed successfully');
+                    // Refresh relevant sections
+                    refreshCounters();
+                    refreshQueue('payment');
+                    refreshQueue('release');
+                } else {
+                    alert(data.error || 'Failed to complete appointment');
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-check mr-1"></i> Complete';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to complete appointment');
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-check mr-1"></i> Complete';
+            });
+        }
+        
+        // Function to check in appointment
+        function checkInAppointment(appointmentId, buttonElement) {
+            buttonElement.disabled = true;
+            buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Processing...';
             
             fetch(`{% url 'queuing:check_in' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', appointmentId), {
                 method: 'POST',
@@ -404,35 +574,486 @@
                     statusCell.innerHTML = '<span class="status-badge status-submitted">Checked In</span>';
                     
                     // Remove the check-in button
-                    this.remove();
+                    buttonElement.remove();
+                    
+                    // Show success message
+                    alert('Check-in successful!');
                 } else {
                     alert(data.error || 'Failed to check in');
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = 'Check In';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Failed to check in the appointment');
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = 'Check In';
             });
-        });
-    });
-    
-    // Refresh queue
-    function refreshQueue(type) {
-        location.reload();
-    }
-    
-    // Mark no-shows
-    function markNoShows() {
-        if (confirm('Mark all unchecked-in appointments that have passed their scheduled time as no-shows?')) {
-            // Implement AJAX call to mark no-shows
-            alert('No-shows have been marked');
-            location.reload();
         }
-    }
-    
-    // Print queue summary
-    function printQueueSummary() {
-        window.print();
-    }
+        
+        // Function to refresh queue
+        function refreshQueue(type) {
+            const tableId = type === 'payment' ? 'paymentQueueTable' : 'releaseQueueTable';
+            const buttonId = type === 'payment' ? 'refreshPaymentQueue' : 'refreshReleaseQueue';
+            
+            const button = document.getElementById(buttonId);
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            
+            fetch(`{% url 'queuing:get_queue' %}?type=${type}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.querySelector(`#${tableId} tbody`);
+                
+                if (data.appointments.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center py-8 text-gray-500">
+                                <i class="fas fa-info-circle mr-2"></i> No ${type} appointments scheduled for today.
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    tbody.innerHTML = '';
+                    
+                    data.appointments.forEach(appointment => {
+                        const tr = document.createElement('tr');
+                        tr.id = `appointment-${appointment.id}`;
+                        
+                        const checkedInStatus = appointment.checked_in 
+                            ? '<span class="status-badge status-submitted">Checked In</span>'
+                            : '<span class="status-badge status-requires_revision">Not Checked In</span>';
+                        
+                        let actionsHtml = '<div class="flex space-x-2">';
+                        
+                        // Add call buttons for counters of matching type
+                        data.counters.forEach(counter => {
+                            if (counter.counter_type === type) {
+                                const isDisabled = appointment.current_counter ? 'disabled' : '';
+                                actionsHtml += `
+                                    <button class="btn btn-sm btn-success call-btn" data-counter="${counter.id}" data-appointment="${appointment.id}" ${isDisabled}>
+                                        Call to #${counter.counter_number}
+                                    </button>
+                                `;
+                            }
+                        });
+                        
+                        // Add check-in button if not checked in
+                        if (!appointment.checked_in) {
+                            actionsHtml += `
+                                <button class="btn btn-sm btn-warning check-in-btn" data-appointment="${appointment.id}">
+                                    Check In
+                                </button>
+                            `;
+                        }
+                        
+                        actionsHtml += '</div>';
+                        
+                        tr.innerHTML = `
+                            <td>
+                                <span class="font-bold">${appointment.queue_number}</span>
+                            </td>
+                            <td>${appointment.business_name}</td>
+                            <td>${appointment.slot_time}</td>
+                            <td>${checkedInStatus}</td>
+                            <td>${actionsHtml}</td>
+                        `;
+                        
+                        tbody.appendChild(tr);
+                    });
+                    
+                    // Re-attach event listeners
+                    tbody.querySelectorAll('.call-btn').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const counterId = this.dataset.counter;
+                            const appointmentId = this.dataset.appointment;
+                            callSpecificAppointment(counterId, appointmentId);
+                        });
+                    });
+                    
+                    tbody.querySelectorAll('.check-in-btn').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const appointmentId = this.dataset.appointment;
+                            checkInAppointment(appointmentId, this);
+                        });
+                    });
+                }
+                
+                // Reset refresh button
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-sync"></i> Refresh';
+            })
+            .catch(error => {
+                console.error('Error refreshing queue:', error);
+                alert('Failed to refresh queue');
+                
+                // Reset refresh button
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-sync"></i> Refresh';
+            });
+        }
+        
+        // Function to refresh counters
+        function refreshCounters() {
+            const button = document.getElementById('refreshCounters');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            
+            fetch('{% url "queuing:get_counters" %}', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.querySelector('.card:nth-of-type(3) tbody');
+                
+                if (data.counters.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center py-8 text-gray-500">
+                                <i class="fas fa-info-circle mr-2"></i> No active service counters.
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    tbody.innerHTML = '';
+                    
+                    data.counters.forEach(counter => {
+                        const tr = document.createElement('tr');
+                        tr.id = `counter-${counter.id}`;
+                        
+                        const statusBadge = counter.is_active
+                            ? '<span class="status-badge status-approved">Active</span>'
+                            : '<span class="status-badge status-rejected">Inactive</span>';
+                        
+                        let currentQueueHtml = '<span class="text-gray-500">No active client</span>';
+                        if (counter.current_queue) {
+                            currentQueueHtml = `
+                                <span class="font-medium">${counter.current_queue.queue_number}</span>
+                                <span class="text-sm text-gray-500 ml-2">${counter.current_queue.business_name}</span>
+                            `;
+                        }
+                        
+                        let actionsHtml = `
+                            <div class="flex space-x-2">
+                                <button class="btn btn-sm btn-primary next-btn" data-counter="${counter.id}">
+                                    <i class="fas fa-arrow-right mr-1"></i> Call Next
+                                </button>
+                        `;
+                        
+                        if (counter.current_queue) {
+                            actionsHtml += `
+                                <button class="btn btn-sm btn-success complete-btn" data-counter="${counter.id}" data-appointment="${counter.current_queue.id}">
+                                    <i class="fas fa-check mr-1"></i> Complete
+                                </button>
+                            `;
+                        }
+                        
+                        actionsHtml += '</div>';
+                        
+                        tr.innerHTML = `
+                            <td>
+                                <span class="font-bold">#${counter.counter_number}</span>
+                            </td>
+                            <td>${counter.counter_type === 'payment' ? 'Payment Processing' : 'Permit Release'}</td>
+                            <td>${currentQueueHtml}</td>
+                            <td>${statusBadge}</td>
+                            <td>${actionsHtml}</td>
+                        `;
+                        
+                        tbody.appendChild(tr);
+                    });
+                    
+                    // Re-attach event listeners
+                    tbody.querySelectorAll('.next-btn').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const counterId = this.dataset.counter;
+                            callNextAppointment(counterId);
+                        });
+                    });
+                    
+                    tbody.querySelectorAll('.complete-btn').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const counterId = this.dataset.counter;
+                            const appointmentId = this.dataset.appointment;
+                            completeAppointment(counterId, appointmentId);
+                        });
+                    });
+                }
+                
+                // Reset refresh button
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-sync"></i> Refresh';
+            })
+            .catch(error => {
+                console.error('Error refreshing counters:', error);
+                alert('Failed to refresh counters');
+                
+                // Reset refresh button
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-sync"></i> Refresh';
+            });
+        }
+        
+        // Function to mark no-shows
+        function markNoShows() {
+            if (!confirm('Mark all unchecked-in appointments that have passed their scheduled time as no-shows?')) {
+                return;
+            }
+            
+            fetch('{% url "queuing:mark_no_shows" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Marked ${data.count} appointments as no-shows`);
+                    // Update the no-show count on the page
+                    document.getElementById('noShowCount').textContent = data.total_no_shows;
+                    // Refresh the queues
+                    refreshQueue('payment');
+                    refreshQueue('release');
+                } else {
+                    alert(data.error || 'Failed to mark no-shows');
+                }
+            })
+            .catch(error => {
+                console.error('Error marking no-shows:', error);
+                alert('Failed to mark no-shows');
+            });
+        }
+        
+        // Function to print queue summary
+        function printQueueSummary() {
+            // Open a new window with a printable summary
+            const printWindow = window.open('', '_blank');
+            
+            // Get current date and time
+            const now = new Date();
+            const dateString = now.toLocaleDateString();
+            const timeString = now.toLocaleTimeString();
+            
+            // Prepare content
+            let content = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Queue Summary - ${dateString}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h1 { color: #1e40af; }
+                        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f0f4f8; }
+                        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+                        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+                        .stat-card { border: 1px solid #ddd; padding: 10px; border-radius: 4px; }
+                        .stat-title { font-weight: bold; margin-bottom: 5px; }
+                        .stat-value { font-size: 24px; font-weight: bold; color: #1e40af; }
+                        @media print {
+                            button { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Queue Management Summary</h1>
+                        <div>
+                            <p><strong>Date:</strong> ${dateString}</p>
+                            <p><strong>Time:</strong> ${timeString}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-title">Payment Queue</div>
+                            <div class="stat-value">${document.querySelector('.stats-grid .stat-card:nth-child(1) .stat-value').textContent}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Permit Release</div>
+                            <div class="stat-value">${document.querySelector('.stats-grid .stat-card:nth-child(2) .stat-value').textContent}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Checked In</div>
+                            <div class="stat-value">${document.querySelector('.stats-grid .stat-card:nth-child(3) .stat-value').textContent}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Now Serving</div>
+                            <div class="stat-value">${document.querySelector('.stats-grid .stat-card:nth-child(4) .stat-value').textContent}</div>
+                        </div>
+                    </div>
+                    
+                    <h2>Payment Processing Queue</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Queue #</th>
+                                <th>Business Name</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            // Add payment queue data
+            const paymentRows = document.querySelectorAll('#paymentQueueTable tbody tr');
+            if (paymentRows.length === 0 || (paymentRows.length === 1 && paymentRows[0].cells.length === 1)) {
+                content += `
+                    <tr>
+                        <td colspan="4" style="text-align: center;">No payment appointments scheduled for today.</td>
+                    </tr>
+                `;
+            } else {
+                paymentRows.forEach(row => {
+                    if (row.cells.length > 1) { // Skip empty message row
+                        content += `
+                            <tr>
+                                <td>${row.cells[0].textContent.trim()}</td>
+                                <td>${row.cells[1].textContent.trim()}</td>
+                                <td>${row.cells[2].textContent.trim()}</td>
+                                <td>${row.cells[3].textContent.trim()}</td>
+                            </tr>
+                        `;
+                    }
+                });
+            }
+            
+            content += `
+                    </tbody>
+                </table>
+                
+                <h2>Permit Release Queue</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Queue #</th>
+                            <th>Business Name</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            // Add release queue data
+            const releaseRows = document.querySelectorAll('#releaseQueueTable tbody tr');
+            if (releaseRows.length === 0 || (releaseRows.length === 1 && releaseRows[0].cells.length === 1)) {
+                content += `
+                    <tr>
+                        <td colspan="4" style="text-align: center;">No permit release appointments scheduled for today.</td>
+                    </tr>
+                `;
+            } else {
+                releaseRows.forEach(row => {
+                    if (row.cells.length > 1) { // Skip empty message row
+                        content += `
+                            <tr>
+                                <td>${row.cells[0].textContent.trim()}</td>
+                                <td>${row.cells[1].textContent.trim()}</td>
+                                <td>${row.cells[2].textContent.trim()}</td>
+                                <td>${row.cells[3].textContent.trim()}</td>
+                            </tr>
+                        `;
+                    }
+                });
+            }
+            
+            content += `
+                    </tbody>
+                </table>
+                
+                <h2>Active Service Counters</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Counter</th>
+                            <th>Type</th>
+                            <th>Current Queue</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            // Add counter data
+            const counterRows = document.querySelectorAll('.card:nth-of-type(3) tbody tr');
+            if (counterRows.length === 0 || (counterRows.length === 1 && counterRows[0].cells.length === 1)) {
+                content += `
+                    <tr>
+                        <td colspan="4" style="text-align: center;">No active service counters.</td>
+                    </tr>
+                `;
+            } else {
+                counterRows.forEach(row => {
+                    if (row.cells.length > 1) { // Skip empty message row
+                        content += `
+                            <tr>
+                                <td>${row.cells[0].textContent.trim()}</td>
+                                <td>${row.cells[1].textContent.trim()}</td>
+                                <td>${row.cells[2].textContent.trim()}</td>
+                                <td>${row.cells[3].textContent.trim()}</td>
+                            </tr>
+                        `;
+                    }
+                });
+            }
+            
+            content += `
+                    </tbody>
+                </table>
+                
+                <div style="display: flex; justify-content: space-between; margin-top: 40px;">
+                    <div style="width: 45%;">
+                        <h3>Summary Statistics</h3>
+                        <table>
+                            <tr>
+                                <td><strong>Total Appointments Today:</strong></td>
+                                <td>${document.querySelector('li:nth-child(1) .font-semibold').textContent}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Completed:</strong></td>
+                                <td>${document.querySelector('li:nth-child(2) .font-semibold').textContent}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>No-shows:</strong></td>
+                                <td>${document.querySelector('li:nth-child(3) .font-semibold').textContent}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div style="width: 45%;">
+                        <p><strong>Generated:</strong> ${dateString} at ${timeString}</p>
+                        <p><strong>Printed by:</strong> {{ request.user.get_full_name }}</p>
+                        <br>
+                        <button onclick="window.print()" style="padding: 8px 16px; background-color: #1e40af; color: white; border: none; border-radius: 4px; cursor: pointer;">Print</button>
+                    </div>
+                </div>
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.open();
+            printWindow.document.write(content);
+            printWindow.document.close();
+        }
+        
+        // Auto-refresh every 60 seconds
+        setInterval(function() {
+            refreshCounters();
+            refreshQueue('payment');
+            refreshQueue('release');
+        }, 60000);
+    });
 </script>
 {% endblock %}

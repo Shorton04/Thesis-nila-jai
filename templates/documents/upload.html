@@ -1,0 +1,536 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Document Upload - {{ application.business_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header Section -->
+    <div class="bg-gradient-to-r from-green-600 to-green-800 text-white rounded-lg p-6 mb-6 shadow-md">
+        <h1 class="text-3xl font-bold">Required Documents</h1>
+        <p class="mt-2">Upload the required documents for your business permit application</p>
+        <div class="mt-4 flex items-center">
+            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 text-green-600">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <span class="text-sm opacity-75">Application ID:</span>
+                <span class="text-base font-semibold">{{ application.application_number }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages/Alerts -->
+    {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="p-4 mb-2 rounded-md flex items-center {% if message.tags == 'success' %}bg-green-100 text-green-800 border-l-4 border-green-600{% elif message.tags == 'error' %}bg-red-100 text-red-800 border-l-4 border-red-600{% else %}bg-blue-100 text-blue-800 border-l-4 border-blue-600{% endif %}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {% if message.tags == 'success' %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                {% elif message.tags == 'error' %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {% else %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {% endif %}
+            </svg>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Document Upload Section -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="p-6 bg-gray-50 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-800">Upload Required Documents</h2>
+            <p class="text-gray-600">Your documents will be scanned using our AI verification system</p>
+        </div>
+
+        <div class="p-6">
+            <!-- Required Documents List -->
+            <div class="mb-6">
+                <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                    <ul role="list" class="divide-y divide-gray-200">
+                        {% for requirement in requirements %}
+                        <li>
+                            <div class="px-4 py-4 sm:px-6">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm font-medium text-gray-900">{{ requirement.requirement_name }}</p>
+                                            <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Status badges -->
+                                    {% if requirement.is_submitted %}
+                                        {% if requirement.document %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <svg class="-ml-0.5 mr-1 h-3 w-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Submitted
+                                        </span>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="flex">
+                                            <button type="button" onclick="openCamera('{{ requirement.id }}')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                                <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                Camera
+                                            </button>
+                                            <form id="upload-form-{{ requirement.id }}" method="post" enctype="multipart/form-data" class="flex">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="requirement_id" value="{{ requirement.id }}">
+                                                <input type="file" id="document-{{ requirement.id }}" name="document" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this, {{ requirement.id }})">
+                                                <label for="document-{{ requirement.id }}" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                                    </svg>
+                                                    Upload
+                                                </label>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Preview area for newly selected documents -->
+                                <div id="preview-{{ requirement.id }}" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-medium text-gray-900 document-name"></span>
+                                        <div class="flex items-center">
+                                            <div id="upload-status-{{ requirement.id }}" class="mr-2 hidden">
+                                                <svg class="animate-spin h-4 w-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            </div>
+                                            <button type="button" onclick="cancelUpload({{ requirement.id }})" class="text-red-600 hover:text-red-800">
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Already uploaded document -->
+                                {% if requirement.document %}
+                                <div class="mt-3">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <svg class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                            </svg>
+                                            <span class="text-sm text-gray-700">{{ requirement.document.name }}</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <a href="{{ requirement.document.url }}" target="_blank" class="text-blue-600 hover:text-blue-800 mr-3">
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                            </a>
+                                            <form method="post" action="{% url 'applications:delete_requirement' application.id requirement.id %}" class="inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="text-red-600 hover:text-red-800" onclick="return confirm('Are you sure you want to delete this document?')">
+                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div id="verification-status-{{ requirement.id }}" class="mt-2">
+                                        <!-- Verification status will be loaded here via AJAX -->
+                                        <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            <svg class="-ml-0.5 mr-1 h-3 w-3 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Verification in progress
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- AI Assisted Scanning Information -->
+            <div class="rounded-md bg-blue-50 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-3 flex-1 md:flex md:justify-between">
+                        <p class="text-sm text-blue-700">
+                            Our AI-powered system will scan your documents for authenticity and extract information automatically.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <a href="{% url 'applications:application_detail' application.id %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <svg class="mr-2 -ml-1 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Finish
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Camera Modal -->
+<div id="cameraModal" class="fixed inset-0 z-10 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="w-full">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            Take a Photo
+                        </h3>
+                        <div class="mt-4">
+                            <div id="camera-container" class="w-full h-64 bg-gray-200 rounded-md overflow-hidden">
+                                <video id="camera-stream" class="w-full h-full object-cover" autoplay></video>
+                                <canvas id="camera-canvas" class="hidden w-full h-full"></canvas>
+                            </div>
+                            <div id="capture-ui" class="flex justify-center mt-4">
+                                <button type="button" id="capture-button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    <svg class="mr-1 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                    </svg>
+                                    Take Photo
+                                </button>
+                            </div>
+                            <div id="retake-ui" class="hidden flex justify-center space-x-4 mt-4">
+                                <button type="button" id="retake-button" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    Retake
+                                </button>
+                                <button type="button" id="use-photo-button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    Use Photo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" id="close-camera-button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Camera related global variables
+    let currentRequirementId = null;
+    let mediaStream = null;
+    
+    // Camera handling functions
+    window.openCamera = function(requirementId) {
+        currentRequirementId = requirementId;
+        const cameraModal = document.getElementById('cameraModal');
+        
+        if (!cameraModal) {
+            console.error("Camera modal not found in the DOM");
+            return;
+        }
+        
+        const cameraStream = document.getElementById('camera-stream');
+        const cameraCanvas = document.getElementById('camera-canvas');
+        const captureUI = document.getElementById('capture-ui');
+        const retakeUI = document.getElementById('retake-ui');
+        
+        if (!cameraStream || !cameraCanvas || !captureUI || !retakeUI) {
+            console.error("Camera elements not found");
+            return;
+        }
+        
+        cameraModal.classList.remove('hidden');
+        captureUI.classList.remove('hidden');
+        retakeUI.classList.add('hidden');
+        cameraStream.classList.remove('hidden');
+        cameraCanvas.classList.add('hidden');
+        
+        // Request camera access
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(function(stream) {
+                mediaStream = stream;
+                cameraStream.srcObject = stream;
+            })
+            .catch(function(err) {
+                console.error('Camera error:', err);
+                alert('Unable to access camera. Please use the upload option instead.');
+                closeCameraModal();
+            });
+    };
+    
+    // Close camera modal and clean up
+    function closeCameraModal() {
+        const cameraModal = document.getElementById('cameraModal');
+        
+        if (cameraModal) {
+            cameraModal.classList.add('hidden');
+        }
+        
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            mediaStream = null;
+        }
+    }
+    
+    // Setup camera button handlers
+    const captureButton = document.getElementById('capture-button');
+    const retakeButton = document.getElementById('retake-button');
+    const usePhotoButton = document.getElementById('use-photo-button');
+    const closeCameraButton = document.getElementById('close-camera-button');
+    
+    // Check if buttons exist before adding event listeners
+    if (captureButton) {
+        captureButton.addEventListener('click', function() {
+            const cameraStream = document.getElementById('camera-stream');
+            const cameraCanvas = document.getElementById('camera-canvas');
+            const captureUI = document.getElementById('capture-ui');
+            const retakeUI = document.getElementById('retake-ui');
+            
+            if (!cameraStream || !cameraCanvas || !captureUI || !retakeUI) {
+                console.error("Camera elements not found for capture");
+                return;
+            }
+            
+            const context = cameraCanvas.getContext('2d');
+            cameraCanvas.width = cameraStream.videoWidth;
+            cameraCanvas.height = cameraStream.videoHeight;
+            
+            context.drawImage(cameraStream, 0, 0, cameraCanvas.width, cameraCanvas.height);
+            
+            captureUI.classList.add('hidden');
+            retakeUI.classList.remove('hidden');
+            cameraStream.classList.add('hidden');
+            cameraCanvas.classList.remove('hidden');
+        });
+    }
+    
+    if (retakeButton) {
+        retakeButton.addEventListener('click', function() {
+            const captureUI = document.getElementById('capture-ui');
+            const retakeUI = document.getElementById('retake-ui');
+            const cameraStream = document.getElementById('camera-stream');
+            const cameraCanvas = document.getElementById('camera-canvas');
+            
+            if (captureUI && retakeUI && cameraStream && cameraCanvas) {
+                captureUI.classList.remove('hidden');
+                retakeUI.classList.add('hidden');
+                cameraStream.classList.remove('hidden');
+                cameraCanvas.classList.add('hidden');
+            }
+        });
+    }
+    
+    if (usePhotoButton) {
+        usePhotoButton.addEventListener('click', function() {
+            if (currentRequirementId) {
+                const cameraCanvas = document.getElementById('camera-canvas');
+                
+                if (!cameraCanvas) {
+                    console.error("Camera canvas not found");
+                    return;
+                }
+                
+                cameraCanvas.toBlob(function(blob) {
+                    const fileName = `camera_capture_${Date.now()}.jpg`;
+                    const file = new File([blob], fileName, { type: 'image/jpeg' });
+                    
+                    // Create a DataTransfer object to handle the file
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    
+                    // Set file input value
+                    const fileInput = document.getElementById(`document-${currentRequirementId}`);
+                    
+                    if (fileInput) {
+                        fileInput.files = dataTransfer.files;
+                        
+                        // Trigger the handleFileSelect function
+                        handleFileSelect(fileInput, currentRequirementId);
+                    } else {
+                        console.error("File input not found:", currentRequirementId);
+                    }
+                    
+                    // Close modal
+                    closeCameraModal();
+                }, 'image/jpeg', 0.95);
+            }
+        });
+    }
+    
+    if (closeCameraButton) {
+        closeCameraButton.addEventListener('click', closeCameraModal);
+    }
+    
+    // Handle file selection
+    window.handleFileSelect = function(input, requirementId) {
+        if (input && input.files && input.files[0]) {
+            const file = input.files[0];
+            const previewDiv = document.getElementById(`preview-${requirementId}`);
+            
+            if (!previewDiv) {
+                console.error(`Preview div not found for requirement ${requirementId}`);
+                return;
+            }
+            
+            const nameSpan = previewDiv.querySelector('.document-name');
+            
+            if (nameSpan) {
+                // Update preview with file name
+                nameSpan.textContent = file.name;
+                previewDiv.classList.remove('hidden');
+                
+                // Show upload status spinner
+                const uploadStatus = document.getElementById(`upload-status-${requirementId}`);
+                if (uploadStatus) {
+                    uploadStatus.classList.remove('hidden');
+                }
+                
+                // Submit the form for this specific requirement
+                const form = document.getElementById(`upload-form-${requirementId}`);
+                if (form) {
+                    setTimeout(() => {  // Small delay to allow the UI to update
+                        form.submit();
+                    }, 300);
+                } else {
+                    console.error(`Form not found for requirement ${requirementId}`);
+                }
+            } else {
+                console.error(`Name span not found in preview div for requirement ${requirementId}`);
+            }
+        }
+    };
+    
+    // Cancel upload
+    window.cancelUpload = function(requirementId) {
+        const input = document.getElementById(`document-${requirementId}`);
+        const previewDiv = document.getElementById(`preview-${requirementId}`);
+        
+        if (input && previewDiv) {
+            // Clear file input
+            input.value = '';
+            
+            // Hide preview
+            previewDiv.classList.add('hidden');
+            
+            // Hide upload status spinner
+            const uploadStatus = document.getElementById(`upload-status-${requirementId}`);
+            if (uploadStatus) {
+                uploadStatus.classList.add('hidden');
+            }
+        }
+    };
+    
+    // Function to check document verification status
+    function checkVerificationStatus(documentId, requirementId) {
+        if (!documentId) return;
+        
+        fetch(`/api/documents/${documentId}/status/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const statusContainer = document.getElementById(`verification-status-${requirementId}`);
+                    if (!statusContainer) return;
+                    
+                    const status = data.document.verification_status;
+                    let badgeHtml = '';
+                    
+                    switch(status) {
+                        case 'verified':
+                            badgeHtml = `
+                                <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <svg class="-ml-0.5 mr-1 h-3 w-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Verified
+                                </div>`;
+                            break;
+                        case 'fraud':
+                            badgeHtml = `
+                                <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <svg class="-ml-0.5 mr-1 h-3 w-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    Potential Fraud Detected
+                                </div>`;
+                            break;
+                        case 'rejected':
+                            badgeHtml = `
+                                <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <svg class="-ml-0.5 mr-1 h-3 w-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    Rejected
+                                </div>`;
+                            break;
+                        default:
+                            badgeHtml = `
+                                <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    <svg class="-ml-0.5 mr-1 h-3 w-3 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Verification in progress
+                                </div>`;
+                    }
+                    
+                    statusContainer.innerHTML = badgeHtml;
+                    
+                    // If still pending, check again in a few seconds
+                    if (status === 'pending') {
+                        setTimeout(() => {
+                            checkVerificationStatus(documentId, requirementId);
+                        }, 5000);  // Check every 5 seconds
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error checking verification status:', error);
+            });
+    }
+    
+    // Check verification status of existing documents
+    document.querySelectorAll('[id^="verification-status-"]').forEach(statusElement => {
+        const requirementId = statusElement.id.replace('verification-status-', '');
+        // Here you would typically query for the document ID associated with this requirement
+        // For now, we're just simulating with a placeholder
+        const documentId = '123'; // This should come from your backend data
+        
+        if (documentId) {
+            checkVerificationStatus(documentId, requirementId);
+        }
+    });
+});
+</script>
+{% endblock %}

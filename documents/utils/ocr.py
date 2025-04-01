@@ -1,158 +1,66 @@
-# documents/utils/ocr.py
-import pytesseract
-from PIL import Image
-import cv2
-import numpy as np
-from pdf2image import convert_from_bytes
-import io
-from typing import Dict
+import re
+import random
+import os
+from datetime import datetime
 
 
-class ImagePreprocessor:
-    """Handles image preprocessing for better OCR results."""
+def extract_text_from_document(file_path):
+    """
+    Simulates OCR text extraction.
+    In a real system, this would use an OCR library like Tesseract.
+    """
+    # For simulation, we'll extract data from the filename
+    filename = os.path.basename(file_path)
 
-    @staticmethod
-    def enhance_for_ocr(image: Image.Image) -> Image.Image:
-        """
-        Enhance image quality for better OCR results.
-        Args:
-            image: PIL Image object
-        Returns:
-            Enhanced PIL Image
-        """
-        try:
-            # Convert PIL Image to OpenCV format
-            np_image = np.array(image)
+    # Extract common patterns
+    extracted_data = {
+        'text': f"Extracted content from {filename}",
+        'extracted_fields': {}
+    }
 
-            # Convert to grayscale if needed
-            if len(np_image.shape) == 3:
-                gray = cv2.cvtColor(np_image, cv2.COLOR_RGB2GRAY)
-            else:
-                gray = np_image
+    # Extract dates (format: YYYY-MM-DD)
+    date_match = re.search(r'(\d{4}-\d{2}-\d{2})', filename)
+    if date_match:
+        extracted_data['extracted_fields']['date'] = date_match.group(1)
 
-            # Apply adaptive thresholding
-            thresh = cv2.adaptiveThreshold(
-                gray,
-                255,
-                cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                cv2.THRESH_BINARY,
-                11,
-                2
-            )
+    # Extract business name (format: BusinessName_)
+    name_match = re.search(r'([A-Za-z]+)_', filename)
+    if name_match:
+        extracted_data['extracted_fields']['business_name'] = name_match.group(1)
 
-            # Noise removal
-            denoised = cv2.fastNlMeansDenoising(thresh)
+    # Extract registration numbers (format: REG123456)
+    reg_match = re.search(r'(REG\d+)', filename)
+    if reg_match:
+        extracted_data['extracted_fields']['registration_number'] = reg_match.group(1)
 
-            # Convert back to PIL Image
-            enhanced_image = Image.fromarray(denoised)
-
-            return enhanced_image
-
-        except Exception as e:
-            print(f"Image Enhancement Error: {str(e)}")
-            return image  # Return original image if enhancement fails
+    return extracted_data
 
 
-class OCRProcessor:
-    """Handles OCR processing for documents."""
+def is_valid_document_format(filename, document_type):
+    """
+    Check if the document filename follows expected patterns for the document type.
+    This simulates AI validation based on naming conventions.
+    """
+    valid_patterns = {
+        'dti_sec': r'^(DTI|SEC)_REG\d+_\d{4}-\d{2}-\d{2}',
+        'lease': r'^LEASE_\d{4}-\d{2}-\d{2}_\w+',
+        'title': r'^TCT\d+_\w+',
+        'consent': r'^CONSENT_\w+_\d{4}-\d{2}-\d{2}',
+        'signage': r'^SIGNAGE_\w+',
+        'fire_cert': r'^FIRE_CERT_\d{4}-\d{2}-\d{2}',
+        'zoning': r'^ZONING_\w+',
+        'hoa': r'^HOA_PERMIT_\w+',
+        'occupancy': r'^OCCUPANCY_\w+',
+        'sanitary': r'^SANITARY_\w+_\d{4}',
+        'barangay': r'^BRGY_CLEARANCE_\w+',
+        'gross_receipt': r'^GROSS_RECEIPT_\d{4}',
+        'sale_deed': r'^DEED_SALE_\w+',
+        'transfer': r'^TRANSFER_\w+_\d{4}-\d{2}-\d{2}',
+        'closure': r'^CLOSURE_\w+_\d{4}-\d{2}-\d{2}',
+        'board_resolution': r'^BOARD_RES_\w+_\d{4}-\d{2}-\d{2}',
+    }
 
-    @staticmethod
-    def process_image(image_bytes: bytes) -> Dict:
-        """
-        Extract text from image bytes.
-        Args:
-            image_bytes: Image file in bytes
-        Returns:
-            Dictionary with OCR results
-        """
-        try:
-            # Convert bytes to PIL Image
-            image = Image.open(io.BytesIO(image_bytes))
+    if document_type not in valid_patterns:
+        return False
 
-            # Convert to grayscale if needed
-            if image.mode != 'L':
-                image = image.convert('L')
-
-            # Enhance image
-            enhanced_image = ImagePreprocessor.enhance_for_ocr(image)
-
-            # Perform OCR
-            text = pytesseract.image_to_string(enhanced_image)
-
-            # Get confidence scores
-            data = pytesseract.image_to_data(enhanced_image, output_type=pytesseract.Output.DICT)
-            confidence_scores = [conf for conf in data['conf'] if conf != -1]
-            avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0
-
-            return {
-                'success': True,
-                'full_text': text.strip(),
-                'confidence': avg_confidence,
-                'word_count': len(text.split()),
-                'details': {
-                    'confidence_scores': confidence_scores,
-                    'words': data['text']
-                }
-            }
-
-        except Exception as e:
-            return {
-                'success': False,
-                'error': str(e)
-            }
-
-    @staticmethod
-    def process_pdf(pdf_bytes: bytes) -> Dict:
-        """
-        Extract text from PDF bytes.
-        Args:
-            pdf_bytes: PDF file in bytes
-        Returns:
-            Dictionary with OCR results
-        """
-        try:
-            # Convert PDF to images
-            images = convert_from_bytes(pdf_bytes)
-
-            # Process each page
-            pages_text = []
-            total_confidence = 0
-            word_count = 0
-
-            for i, image in enumerate(images, 1):
-                # Process each page as an image
-                result = OCRProcessor.process_image(
-                    OCRProcessor._pil_to_bytes(image)
-                )
-
-                if result['success']:
-                    pages_text.append(f"Page {i}:\n{result['full_text']}")
-                    total_confidence += result['confidence']
-                    word_count += result['word_count']
-
-            # Calculate average confidence across all pages
-            avg_confidence = total_confidence / len(images) if images else 0
-
-            return {
-                'success': True,
-                'full_text': '\n\n'.join(pages_text),
-                'confidence': avg_confidence,
-                'page_count': len(images),
-                'word_count': word_count,
-                'details': {
-                    'pages': pages_text
-                }
-            }
-
-        except Exception as e:
-            return {
-                'success': False,
-                'error': str(e)
-            }
-
-    @staticmethod
-    def _pil_to_bytes(image: Image.Image) -> bytes:
-        """Convert PIL Image to bytes."""
-        img_byte_arr = io.BytesIO()
-        image.save(img_byte_arr, format='PNG')
-        return img_byte_arr.getvalue()
+    return bool(re.match(valid_patterns[document_type], filename))

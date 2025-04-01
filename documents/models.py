@@ -1,150 +1,90 @@
-# documents/models.py
 from django.db import models
 from django.conf import settings
 from applications.models import BusinessApplication
-import uuid
-import os
+
 
 def document_upload_path(instance, filename):
-    # Generate path like: documents/application_id/document_type/filename
+    """
+    Define the upload path for document files.
+    Files will be uploaded to MEDIA_ROOT/documents/user_<id>/<document_type>/<filename>
+    """
+    # Get the extension of the uploaded file
     ext = filename.split('.')[-1]
-    filename = f"{uuid.uuid4()}.{ext}"
-    return os.path.join('documents', str(instance.application.id), instance.document_type, filename)
+    # Construct the new filename using document type and original filename
+    new_filename = f"{instance.document_type}_{filename}"
+    # Return the upload path
+    return f'documents/user_{instance.user.id}/{instance.document_type}/{new_filename}'
+
 
 class Document(models.Model):
-    DOCUMENT_TYPES = [
-        ('dti_registration', 'DTI Registration'),
-        ('business_permit', 'Business Permit'),
-        ('valid_id', 'Valid ID'),
-        ('lease_contract', 'Lease Contract'),
-        ('sanitary_permit', 'Sanitary Permit'),
-        ('fire_safety', 'Fire Safety Permit'),
-        ('barangay_clearance', 'Barangay Clearance'),
-        ('zoning_clearance', 'Zoning Clearance'),
-        ('tax_declaration', 'Tax Declaration'),
-        ('other', 'Other Document')
-    ]
+    DOCUMENT_TYPES = (
+        ('dti_sec', 'DTI/SEC Registration'),
+        ('lease', 'Contract of Lease'),
+        ('title', 'Transfer Certificate of Title'),
+        ('consent', 'Notarized Consent'),
+        ('signage', 'Picture with Signage'),
+        ('fire_cert', 'Fire Safety Inspection Certificate'),
+        ('zoning', 'Zoning Clearance'),
+        ('hoa', 'HOA Permit'),
+        ('occupancy', 'Occupancy Permit'),
+        ('sanitary', 'Sanitary Permit'),
+        ('barangay', 'Barangay Clearance'),
+        ('gross_receipt', 'Proof of Annual Gross Receipts'),
+        ('sale_deed', 'Deed of Absolute Sale'),
+        ('transfer', 'Deed of Assignment/Transfer of Rights'),
+        ('closure', 'Affidavit of Closure'),
+        ('board_resolution', 'Board Resolution'),
+    )
 
-    VERIFICATION_STATUS = [
-        ('pending', 'Pending'),
-        ('in_progress', 'In Progress'),
+    VERIFICATION_STATUS = (
+        ('pending', 'Pending Verification'),
         ('verified', 'Verified'),
+        ('fraud', 'Potential Fraud Detected'),
         ('rejected', 'Rejected'),
-        ('quarantined', 'Quarantined')
-    ]
+    )
 
-    QUARANTINE_REASONS = [
-        ('tampering', 'Signs of Tampering'),
-        ('low_quality', 'Low Quality'),
-        ('suspicious_noise', 'Suspicious Noise Patterns'),
-        ('resolution', 'Poor Resolution'),
-        ('other', 'Other')
-    ]
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    application = models.ForeignKey(BusinessApplication, on_delete=models.CASCADE)
+    application = models.ForeignKey(
+        BusinessApplication,
+        on_delete=models.CASCADE,
+        related_name='documents'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='documents'
+    )
     document_type = models.CharField(max_length=50, choices=DOCUMENT_TYPES)
     file = models.FileField(upload_to=document_upload_path)
-    filename = models.CharField(max_length=255, default='document.pdf')  # Added default
-    content_type = models.CharField(max_length=100, default='application/pdf')  # Added default
-    file_size = models.IntegerField(default=0)  # Added default
-    uploaded_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,  # Changed to SET_NULL
-        null=True,
-        blank=True,
-        related_name='uploaded_documents'  # Added related_name
-    )
+    filename = models.CharField(max_length=255)
+    original_filename = models.CharField(max_length=255)
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS, default='pending')
-    verified_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='verified_documents'
+    verification_status = models.CharField(
+        max_length=20,
+        choices=VERIFICATION_STATUS,
+        default='pending'
     )
-    verified_at = models.DateTimeField(null=True, blank=True)
-    verification_remarks = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
-    metadata = models.JSONField(default=dict, blank=True)
-    is_quarantined = models.BooleanField(default=False)
-    quarantine_reason = models.CharField(
-        max_length=50,
-        choices=QUARANTINE_REASONS,
-        null=True,
-        blank=True
-    )
-    quarantine_date = models.DateTimeField(null=True, blank=True)
-    quarantine_notes = models.TextField(blank=True)
-    release_date = models.DateTimeField(null=True, blank=True)
-    released_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='released_documents'
-    )
+    verification_details = models.JSONField(null=True, blank=True)
+    verification_timestamp = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['-uploaded_at']
-        indexes = [
-            models.Index(fields=['application', 'document_type']),
-            models.Index(fields=['verification_status']),
-        ]
 
     def __str__(self):
-        return f"{self.get_document_type_display()} - {self.filename}"
-
-    def get_file_extension(self):
-        return os.path.splitext(self.filename)[1].lower()
-
-    def is_image(self):
-        image_extensions = ['.jpg', '.jpeg', '.png', '.gif']
-        return self.get_file_extension() in image_extensions
-
-    def is_pdf(self):
-        return self.get_file_extension() == '.pdf'
+        return f"{self.get_document_type_display()} - {self.application}"
 
 
-class DocumentVerificationResult(models.Model):
-    document = models.OneToOneField(Document, on_delete=models.CASCADE)
-    verification_id = models.UUIDField(default=uuid.uuid4, editable=False)
-    is_authentic = models.BooleanField(default=False)
-    fraud_score = models.FloatField(default=0.0)
-    extracted_text = models.TextField(blank=True)
-    extracted_data = models.JSONField(default=dict)
-    verification_details = models.JSONField(default=dict)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Verification Result - {self.document.filename}"
-
-
-class DocumentActivity(models.Model):
-    ACTIVITY_TYPES = [
-        ('upload', 'Upload'),
-        ('verify', 'Verify'),
-        ('reject', 'Reject'),
-        ('delete', 'Delete'),
-        ('view', 'View')
-    ]
-
-    document = models.ForeignKey(Document, on_delete=models.CASCADE)
-    activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES)
-    performed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,  # Changed to SET_NULL
-        null=True  # Added null=True
+class VerificationResult(models.Model):
+    document = models.OneToOneField(
+        Document,
+        on_delete=models.CASCADE,
+        related_name='result'
     )
-    performed_at = models.DateTimeField(auto_now_add=True)
-    details = models.TextField(blank=True)
-    metadata = models.JSONField(default=dict, blank=True)
-
-    class Meta:
-        ordering = ['-performed_at']
-        verbose_name_plural = 'Document activities'
+    is_valid = models.BooleanField(default=False)
+    confidence_score = models.FloatField(default=0.0)
+    fraud_probability = models.FloatField(default=0.0)
+    fraud_areas = models.JSONField(null=True, blank=True)
+    ocr_text = models.TextField(null=True, blank=True)
+    processed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.get_activity_type_display()} - {self.document.filename}"
+        return f"Verification for {self.document}"

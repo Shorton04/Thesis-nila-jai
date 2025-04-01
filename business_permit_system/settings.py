@@ -158,3 +158,12 @@ if 'test' in sys.argv:
 
 ASGI_APPLICATION = 'your_project.asgi.application'
 
+# Maximum file upload size (10 MB)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
+# Add this to control what file types can be uploaded
+ALLOWED_UPLOAD_EXTENSIONS = [
+    '.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx'
+]
+

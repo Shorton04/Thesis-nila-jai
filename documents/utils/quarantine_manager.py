@@ -1,4 +1,4 @@
-# documents/utils/quarantine_manager.py
+'''# documents/utils/quarantine_manager.py
 from django.utils import timezone
 from ..models import Document, DocumentActivity
 from .notifications import QuarantineNotifier
@@ -41,4 +41,4 @@ class QuarantineManager:
             activity_type='release',
             performed_by=user,
             details=f"Document released from quarantine. Notes: {notes or 'N/A'}"
-        )
+        )'''

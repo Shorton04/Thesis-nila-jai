@@ -1,30 +1,38 @@
-# documents/admin.py
 from django.contrib import admin
-from .models import Document, DocumentVerificationResult, DocumentActivity
+from .models import Document, VerificationResult
+
+
+class VerificationResultInline(admin.StackedInline):
+    model = VerificationResult
+    can_delete = False
+    readonly_fields = ('processed_at',)
+    extra = 0
+
 
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
-    list_display = ('filename', 'document_type', 'application', 'uploaded_by', 
-                   'verification_status', 'uploaded_at')
+    list_display = ('id', 'document_type', 'filename', 'user', 'verification_status', 'uploaded_at')
     list_filter = ('document_type', 'verification_status', 'uploaded_at')
-    search_fields = ('filename', 'application__business_name', 
-                    'uploaded_by__email')
-    readonly_fields = ('id', 'uploaded_at')
-    raw_id_fields = ('application', 'uploaded_by', 'verified_by')
+    search_fields = ('original_filename', 'filename', 'user__username', 'user__email')
+    readonly_fields = ('uploaded_at', 'verification_timestamp')
+    inlines = [VerificationResultInline]
 
-@admin.register(DocumentVerificationResult)
-class DocumentVerificationResultAdmin(admin.ModelAdmin):
-    list_display = ('document', 'verification_id', 'is_authentic', 
-                   'fraud_score', 'created_at')
-    list_filter = ('is_authentic', 'created_at')
-    search_fields = ('document__filename', 'verification_id')
-    readonly_fields = ('verification_id', 'created_at', 'updated_at')
+    fieldsets = (
+        ('Document Information', {
+            'fields': ('document_type', 'file', 'original_filename', 'filename', 'uploaded_at')
+        }),
+        ('Relation', {
+            'fields': ('user', 'application')
+        }),
+        ('Verification', {
+            'fields': ('verification_status', 'verification_timestamp', 'verification_details')
+        }),
+    )
 
-@admin.register(DocumentActivity)
-class DocumentActivityAdmin(admin.ModelAdmin):
-    list_display = ('document', 'activity_type', 'performed_by', 
-                   'performed_at')
-    list_filter = ('activity_type', 'performed_at')
-    search_fields = ('document__filename', 'performed_by__email', 
-                    'details')
-    readonly_fields = ('performed_at',)
+
+@admin.register(VerificationResult)
+class VerificationResultAdmin(admin.ModelAdmin):
+    list_display = ('id', 'document', 'is_valid', 'confidence_score', 'fraud_probability', 'processed_at')
+    list_filter = ('is_valid', 'processed_at')
+    search_fields = ('document__original_filename', 'document__user__username')
+    readonly_fields = ('processed_at',)

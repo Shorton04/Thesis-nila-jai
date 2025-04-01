@@ -12,6 +12,9 @@ from .models import QueueSlot, QueueAppointment, QueueCounter, QueueStats
 from applications.models import BusinessApplication, ApplicationAssessment
 from notifications.utils import create_notification
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+import traceback
+import logging
 
 
 @login_required
@@ -267,7 +270,6 @@ def reschedule_appointment(request, appointment_id):
                     appointment_type=appointment.appointment_type)
 
 
-# Admin/staff views for queue management
 @login_required
 def staff_queue_dashboard(request):
     """View for staff to manage the queue"""
@@ -293,11 +295,39 @@ def staff_queue_dashboard(request):
     # Get active counters
     counters = QueueCounter.objects.filter(is_active=True)
 
+    # Get statistics
+    checked_in_count = QueueAppointment.objects.filter(
+        slot_date=today,
+        status='confirmed',
+        checked_in=True
+    ).count()
+
+    now_serving_count = QueueAppointment.objects.filter(
+        slot_date=today,
+        status='confirmed',
+        checked_in=True,
+        current_counter__isnull=False
+    ).count()
+
+    completed_count = QueueAppointment.objects.filter(
+        slot_date=today,
+        status='completed'
+    ).count()
+
+    no_show_count = QueueAppointment.objects.filter(
+        slot_date=today,
+        status='no_show'
+    ).count()
+
     context = {
         'payment_queue': payment_queue,
         'release_queue': release_queue,
         'counters': counters,
-        'today_date': today
+        'today_date': today,
+        'checked_in_count': checked_in_count,
+        'now_serving_count': now_serving_count,
+        'completed_count': completed_count,
+        'no_show_count': no_show_count
     }
     return render(request, 'queuing/staff/dashboard.html', context)
 
@@ -372,17 +402,9 @@ def check_in(request, appointment_id):
     # Validate that it's the correct user or staff
     if not (request.user == appointment.applicant or request.user.is_staff):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+            return JsonResponse({'error': 'Permission denied'}, status=403)
         messages.error(request, "You don't have permission to perform this action")
         return redirect('home')
-
-    # Only allow check-in on the appointment date - Temporarily disabled for testing
-    # today = timezone.now().date()
-    # if appointment.slot_date != today:
-    #     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-    #         return JsonResponse({'success': False, 'error': 'Can only check in on the appointment date'}, status=400)
-    #     messages.error(request, "You can only check in on your appointment date")
-    #     return redirect('queuing:appointment_detail', appointment_id=appointment.id)
 
     # Don't allow duplicate check-ins
     if appointment.checked_in:
@@ -403,15 +425,19 @@ def check_in(request, appointment_id):
     # Check in the appointment
     appointment.checked_in = True
     appointment.check_in_time = timezone.now()
-    appointment.save()
+    appointment.save(update_fields=['checked_in', 'check_in_time'])  # Only update these specific fields
 
     # Create notification for the applicant
-    create_notification(
-        user=appointment.applicant,
-        title="Check-in Successful",
-        message=f"You have been checked in for your {appointment.get_appointment_type_display()} appointment. Please wait for your queue number ({appointment.queue_number}) to be called.",
-        notification_type='info'
-    )
+    try:
+        create_notification(
+            user=appointment.applicant,
+            title="Check-in Successful",
+            message=f"You have been checked in for your {appointment.get_appointment_type_display()} appointment. Please wait for your queue number ({appointment.queue_number}) to be called.",
+            notification_type='info'
+        )
+    except Exception:
+        # Continue even if notification fails
+        pass
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({
@@ -544,15 +570,16 @@ def get_appointment_details(request, appointment_id):
 @login_required
 def check_in_by_queue(request):
     """API endpoint to check in an appointment by queue number"""
-    if not request.user.is_staff:
-        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
-
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Only POST method is allowed'}, status=405)
-
     try:
+        if not request.user.is_staff:
+            return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+
+        if request.method != 'POST':
+            return JsonResponse({'success': False, 'error': 'Only POST method is allowed'}, status=405)
+
         # Handle both JSON and form data
-        if 'application/json' in request.headers.get('content-type', ''):
+        queue_number = None
+        if 'application/json' in request.content_type:
             data = json.loads(request.body)
             queue_number = data.get('queue_number')
         else:
@@ -562,7 +589,6 @@ def check_in_by_queue(request):
             return JsonResponse({'success': False, 'error': 'Queue number is required'}, status=400)
 
         # Find appointment by queue number
-        today = timezone.now().date()
         appointment = QueueAppointment.objects.filter(
             queue_number=queue_number,
             status='confirmed'
@@ -586,18 +612,22 @@ def check_in_by_queue(request):
                 }
             })
 
-        # Check in the appointment
+        # Check in the appointment - we're not creating a new record, just updating an existing one
         appointment.checked_in = True
         appointment.check_in_time = timezone.now()
-        appointment.save()
+        appointment.save(update_fields=['checked_in', 'check_in_time'])  # Only update these specific fields
 
         # Create notification for the applicant
-        create_notification(
-            user=appointment.applicant,
-            title="Check-in Successful",
-            message=f"You have been checked in for your {appointment.get_appointment_type_display()} appointment. Please wait for your queue number ({appointment.queue_number}) to be called.",
-            notification_type='info'
-        )
+        try:
+            create_notification(
+                user=appointment.applicant,
+                title="Check-in Successful",
+                message=f"You have been checked in for your {appointment.get_appointment_type_display()} appointment. Please wait for your queue number ({appointment.queue_number}) to be called.",
+                notification_type='info'
+            )
+        except Exception as e:
+            # Continue even if notification fails
+            pass
 
         return JsonResponse({
             'success': True,
@@ -613,7 +643,7 @@ def check_in_by_queue(request):
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        return JsonResponse({'success': False, 'error': f'Server error: {str(e)}'}, status=500)
 
 
 @login_required
@@ -631,3 +661,576 @@ def appointment_status(request, appointment_id):
         'check_in_time': appointment.check_in_time.strftime('%I:%M %p') if appointment.check_in_time else None,
         'status': appointment.status
     })
+
+
+@login_required
+def queue_display(request):
+    """Public display view for showing current queue status"""
+    # Staff permission check is not needed for this view since it's a display
+
+    # Get active counters with current appointments
+    active_counters = QueueCounter.objects.filter(
+        is_active=True
+    ).select_related('current_queue__application')
+
+    # Get next in line appointments (checked in but not yet called)
+    today = timezone.now().date()
+    next_in_line = QueueAppointment.objects.filter(
+        slot_date=today,
+        status='confirmed',
+        checked_in=True,
+        current_counter__isnull=True
+    ).select_related('application').order_by('check_in_time')[:10]  # Show top 10
+
+    context = {
+        'active_counters': active_counters,
+        'next_in_line': next_in_line,
+        'current_date': today
+    }
+
+    return render(request, 'queuing/queue_display.html', context)
+
+
+@login_required
+def queue_display_data(request):
+    """API endpoint to get current queue data for the display"""
+    if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'AJAX request required'}, status=400)
+
+    # Get active counters with current appointments
+    active_counters_data = []
+    active_counters = QueueCounter.objects.filter(
+        is_active=True
+    ).select_related('current_queue__application')
+
+    for counter in active_counters:
+        counter_data = {
+            'counter_number': counter.counter_number,
+            'counter_type': counter.counter_type,
+            'current_queue': None
+        }
+
+        if counter.current_queue:
+            # Check if this appointment was called within the last minute (for blinking effect)
+            recently_called = False
+            if counter.current_queue.check_in_time:
+                time_difference = timezone.now() - counter.current_queue.check_in_time
+                recently_called = time_difference.total_seconds() < 60
+
+            counter_data['current_queue'] = {
+                'id': str(counter.current_queue.id),
+                'queue_number': counter.current_queue.queue_number,
+                'business_name': counter.current_queue.application.business_name,
+                'recently_called': recently_called
+            }
+
+        active_counters_data.append(counter_data)
+
+    # Get next in line appointments (checked in but not yet called)
+    today = timezone.now().date()
+    next_in_line_data = []
+    next_in_line = QueueAppointment.objects.filter(
+        slot_date=today,
+        status='confirmed',
+        checked_in=True,
+        current_counter__isnull=True
+    ).select_related('application').order_by('check_in_time')[:10]  # Show top 10
+
+    for appointment in next_in_line:
+        # Check if this appointment was checked in within the last minute (for highlight effect)
+        recently_added = False
+        if appointment.check_in_time:
+            time_difference = timezone.now() - appointment.check_in_time
+            recently_added = time_difference.total_seconds() < 60
+
+        next_in_line_data.append({
+            'id': str(appointment.id),
+            'queue_number': appointment.queue_number,
+            'business_name': appointment.application.business_name,
+            'appointment_type': appointment.appointment_type,
+            'checked_in': appointment.checked_in,
+            'recently_added': recently_added
+        })
+
+    # Add any announcements if needed
+    announcements = [
+        "Please be ready with your documents when your queue number is called.",
+        "Ensure you have checked in at the reception desk upon arrival.",
+        "Payment counters accept cash, checks, and bank transfers."
+    ]
+
+    return JsonResponse({
+        'active_counters': active_counters_data,
+        'next_in_line': next_in_line_data,
+        'announcements': announcements
+    })
+
+
+@login_required
+def queue_management(request):
+    """Staff view for managing queues and counters"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page")
+        return redirect('home')
+
+    today = timezone.now().date()
+
+    # Get active counters
+    counters = QueueCounter.objects.filter(
+        is_active=True
+    ).select_related('current_queue__application')
+
+    # Get waiting queue
+    waiting_queue = QueueAppointment.objects.filter(
+        slot_date=today,
+        status='confirmed',
+        checked_in=True,
+        current_counter__isnull=True
+    ).select_related('application').order_by('check_in_time')
+
+    # Statistics
+    total_appointments = QueueAppointment.objects.filter(
+        slot_date=today,
+        status='confirmed'
+    ).count()
+
+    checked_in_count = QueueAppointment.objects.filter(
+        slot_date=today,
+        status='confirmed',
+        checked_in=True
+    ).count()
+
+    now_serving_count = QueueAppointment.objects.filter(
+        slot_date=today,
+        status='confirmed',
+        checked_in=True,
+        current_counter__isnull=False
+    ).count()
+
+    waiting_count = QueueAppointment.objects.filter(
+        slot_date=today,
+        status='confirmed',
+        checked_in=True,
+        current_counter__isnull=True
+    ).count()
+
+    stats = {
+        'total_appointments': total_appointments,
+        'checked_in_count': checked_in_count,
+        'now_serving_count': now_serving_count,
+        'waiting_count': waiting_count
+    }
+
+    context = {
+        'counters': counters,
+        'waiting_queue': waiting_queue,
+        'stats': stats
+    }
+
+    return render(request, 'queuing/staff/queue_management.html', context)
+
+
+@login_required
+def get_counters(request):
+    """API endpoint to get current counter data"""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'AJAX request required'}, status=400)
+
+    counters_data = []
+    counters = QueueCounter.objects.all().select_related('current_queue__application')
+
+    for counter in counters:
+        counter_data = {
+            'id': counter.id,
+            'counter_number': counter.counter_number,
+            'counter_type': counter.counter_type,
+            'is_active': counter.is_active,
+            'current_queue': None
+        }
+
+        if counter.current_queue:
+            counter_data['current_queue'] = {
+                'id': str(counter.current_queue.id),
+                'queue_number': counter.current_queue.queue_number,
+                'business_name': counter.current_queue.application.business_name,
+                'check_in_time': counter.current_queue.check_in_time.strftime('%I:%M %p')
+            }
+
+        counters_data.append(counter_data)
+
+    return JsonResponse({'counters': counters_data})
+
+
+@login_required
+def get_waiting_queue(request):
+    """API endpoint to get waiting queue data"""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'AJAX request required'}, status=400)
+
+    today = timezone.now().date()
+    waiting_queue_data = []
+
+    waiting_queue = QueueAppointment.objects.filter(
+        slot_date=today,
+        status='confirmed',
+        checked_in=True
+    ).select_related('application', 'current_counter').order_by('check_in_time')
+
+    for appointment in waiting_queue:
+        appointment_data = {
+            'id': str(appointment.id),
+            'queue_number': appointment.queue_number,
+            'business_name': appointment.application.business_name,
+            'application_id': str(appointment.application.id),
+            'application_number': appointment.application.application_number,
+            'appointment_type': appointment.appointment_type,
+            'checked_in': appointment.checked_in,
+            'check_in_time': appointment.check_in_time.strftime('%I:%M %p') if appointment.check_in_time else None,
+            'current_counter': appointment.current_counter.counter_number if appointment.current_counter else None
+        }
+
+        waiting_queue_data.append(appointment_data)
+
+    return JsonResponse({'waiting_queue': waiting_queue_data})
+
+
+@login_required
+def get_appointment_details(request):
+    """API endpoint to get details for a specific appointment"""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'AJAX request required'}, status=400)
+
+    appointment_id = request.GET.get('appointment_id')
+    if not appointment_id:
+        return JsonResponse({'error': 'Appointment ID is required'}, status=400)
+
+    try:
+        appointment = QueueAppointment.objects.select_related('application').get(id=appointment_id)
+
+        # Get assessment amount for payment appointments
+        assessment_amount = None
+        if appointment.appointment_type == 'payment' and hasattr(appointment.application, 'assessment'):
+            assessment_amount = str(appointment.application.assessment.total_amount)
+
+        appointment_data = {
+            'id': str(appointment.id),
+            'queue_number': appointment.queue_number,
+            'business_name': appointment.application.business_name,
+            'application_id': str(appointment.application.id),
+            'application_number': appointment.application.application_number,
+            'appointment_type': appointment.appointment_type,
+            'checked_in': appointment.checked_in,
+            'check_in_time': appointment.check_in_time.strftime('%I:%M %p') if appointment.check_in_time else None,
+            'assessment_amount': assessment_amount
+        }
+
+        return JsonResponse({'success': True, 'appointment': appointment_data})
+    except QueueAppointment.DoesNotExist:
+        return JsonResponse({'error': 'Appointment not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def get_available_counters(request):
+    """API endpoint to get available counters for a specific appointment type"""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'AJAX request required'}, status=400)
+
+    appointment_type = request.GET.get('appointment_type')
+    if not appointment_type:
+        return JsonResponse({'error': 'Appointment type is required'}, status=400)
+
+    counters = QueueCounter.objects.filter(
+        counter_type=appointment_type,
+        is_active=True
+    ).select_related('current_queue')
+
+    counters_data = []
+    for counter in counters:
+        counters_data.append({
+            'id': counter.id,
+            'counter_number': counter.counter_number,
+            'current_queue': counter.current_queue.queue_number if counter.current_queue else None
+        })
+
+    return JsonResponse({'counters': counters_data})
+
+
+@login_required
+def complete_appointment(request):
+    """API endpoint to complete an appointment and mark it as released"""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        counter_id = data.get('counter_id')
+        appointment_id = data.get('appointment_id')
+        notes = data.get('notes')
+
+        if not counter_id or not appointment_id:
+            return JsonResponse({'error': 'Counter ID and Appointment ID are required'}, status=400)
+
+        counter = get_object_or_404(QueueCounter, id=counter_id)
+        appointment = get_object_or_404(QueueAppointment, id=appointment_id)
+
+        # Ensure this appointment is actually at this counter
+        if counter.current_queue != appointment:
+            return JsonResponse({'error': 'This appointment is not currently at this counter'}, status=400)
+
+        # Mark appointment as completed
+        appointment.status = 'completed'
+        appointment.completion_time = timezone.now()
+        appointment.save(update_fields=['status', 'completion_time'])
+
+        # Clear the counter
+        counter.current_queue = None
+        counter.save(update_fields=['current_queue'])
+
+        # Handle appointment type specific actions
+        if appointment.appointment_type == 'payment':
+            # Record payment details if provided
+            payment_amount = data.get('paymentAmount')
+            payment_method = data.get('paymentMethod')
+            receipt_number = data.get('receiptNumber')
+
+            # Mark application as paid in the assessment model if it exists
+            if hasattr(appointment.application, 'assessment'):
+                assessment = appointment.application.assessment
+                assessment.is_paid = True
+                assessment.payment_date = timezone.now().date()
+                assessment.payment_method = payment_method
+                assessment.receipt_number = receipt_number
+                assessment.payment_amount = payment_amount
+                assessment.save()
+
+        elif appointment.appointment_type == 'release':
+            # Record release details if provided
+            permit_number = data.get('permitNumber')
+            release_to = data.get('releaseTo')
+            id_presented = data.get('idPresented', False)
+
+            # Mark application as released
+            application = appointment.application
+            application.is_released = True
+            application.release_date = timezone.now().date()
+            application.released_to = release_to
+            application.permit_number = permit_number
+            application.id_presented = id_presented
+            application.save()
+
+        # Create notification for the applicant
+        create_notification(
+            user=appointment.applicant,
+            title=f"{appointment.get_appointment_type_display()} Completed",
+            message=f"Your {appointment.get_appointment_type_display()} has been completed successfully.",
+            notification_type='success'
+        )
+
+        return JsonResponse({'success': True})
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def return_to_queue(request):
+    """API endpoint to return an appointment to the waiting queue"""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        counter_id = data.get('counter_id')
+        appointment_id = data.get('appointment_id')
+
+        if not counter_id or not appointment_id:
+            return JsonResponse({'error': 'Counter ID and Appointment ID are required'}, status=400)
+
+        counter = get_object_or_404(QueueCounter, id=counter_id)
+        appointment = get_object_or_404(QueueAppointment, id=appointment_id)
+
+        # Ensure this appointment is actually at this counter
+        if counter.current_queue != appointment:
+            return JsonResponse({'error': 'This appointment is not currently at this counter'}, status=400)
+
+        # Return appointment to queue
+        counter.current_queue = None
+        counter.save(update_fields=['current_queue'])
+
+        # Create notification for the applicant
+        create_notification(
+            user=appointment.applicant,
+            title="Returned to Queue",
+            message=f"Your {appointment.get_appointment_type_display()} has been returned to the waiting queue. Please wait to be called again.",
+            notification_type='info'
+        )
+
+        return JsonResponse({'success': True})
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def call_specific(request):
+    """API endpoint to call a specific appointment to a counter"""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        counter_id = data.get('counter_id')
+        appointment_id = data.get('appointment_id')
+
+        if not counter_id or not appointment_id:
+            return JsonResponse({'error': 'Counter ID and Appointment ID are required'}, status=400)
+
+        counter = get_object_or_404(QueueCounter, id=counter_id)
+        appointment = get_object_or_404(QueueAppointment, id=appointment_id)
+
+        # Check if counter is available
+        if counter.current_queue:
+            return JsonResponse({'error': 'This counter is already serving another appointment'}, status=400)
+
+        # Check if appointment is already at a counter
+        if appointment.current_counter:
+            return JsonResponse({'error': 'This appointment is already being served at another counter'}, status=400)
+
+        # Call appointment to counter
+        counter.current_queue = appointment
+        counter.save(update_fields=['current_queue'])
+
+        # Create notification for the applicant
+        create_notification(
+            user=appointment.applicant,
+            title="You're Up Next!",
+            message=f"Your {appointment.get_appointment_type_display()} appointment is now being processed at Counter {counter.counter_number}.",
+            notification_type='info'
+        )
+
+        return JsonResponse({'success': True, 'counter_number': counter.counter_number})
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def get_queue(request):
+    """API endpoint to get queue data for a specific type"""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+        return JsonResponse({'error': 'AJAX request required'}, status=400)
+
+    queue_type = request.GET.get('type')
+    if queue_type not in ['payment', 'release']:
+        return JsonResponse({'error': 'Invalid queue type'}, status=400)
+
+    today = timezone.now().date()
+    appointments = QueueAppointment.objects.filter(
+        slot_date=today,
+        status='confirmed',
+        appointment_type=queue_type
+    ).select_related('application', 'current_counter').order_by('slot_time')
+
+    counters = QueueCounter.objects.filter(
+        counter_type=queue_type,
+        is_active=True
+    )
+
+    appointments_data = []
+    for appointment in appointments:
+        appointments_data.append({
+            'id': str(appointment.id),
+            'queue_number': appointment.queue_number,
+            'business_name': appointment.application.business_name,
+            'application_id': str(appointment.application.id),
+            'slot_time': appointment.slot_time.strftime('%I:%M %p'),
+            'checked_in': appointment.checked_in,
+            'current_counter': appointment.current_counter.counter_number if appointment.current_counter else None
+        })
+
+    counters_data = []
+    for counter in counters:
+        counters_data.append({
+            'id': counter.id,
+            'counter_number': counter.counter_number,
+            'counter_type': counter.counter_type
+        })
+
+    return JsonResponse({
+        'appointments': appointments_data,
+        'counters': counters_data
+    })
+
+
+@login_required
+def mark_no_shows(request):
+    """API endpoint to mark appointments as no-shows"""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
+
+    try:
+        today = timezone.now().date()
+        current_time = timezone.now().time()
+
+        # Find appointments that are scheduled for today, not checked in, and the time has passed
+        no_show_appointments = QueueAppointment.objects.filter(
+            slot_date=today,
+            status='confirmed',
+            checked_in=False,
+            slot_time__lt=current_time
+        )
+
+        count = no_show_appointments.count()
+
+        # Mark them as no_show
+        no_show_appointments.update(status='no_show')
+
+        # Get total no-shows count
+        total_no_shows = QueueAppointment.objects.filter(
+            slot_date=today,
+            status='no_show'
+        ).count()
+
+        return JsonResponse({
+            'success': True,
+            'count': count,
+            'total_no_shows': total_no_shows
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

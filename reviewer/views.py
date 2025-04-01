@@ -2,8 +2,8 @@
 import os
 from datetime import timezone
 from django.views.decorators.http import require_POST
-from documents.models import Document, DocumentVerificationResult
-from documents.services.document_workflow import DocumentWorkflow
+from documents.models import Document, VerificationResult
+from documents.services.document_workflow import DocumentWorkflowService
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import user_passes_test, login_required
@@ -335,7 +335,7 @@ def document_analysis(request, requirement_id):
             )
 
             # Get verification results
-            verification_result = DocumentVerificationResult.objects.get(document=document)
+            verification_result = VerificationResult.objects.get(document=document)
 
             # Prepare results for frontend
             validation_results = {
@@ -364,7 +364,7 @@ def document_analysis(request, requirement_id):
                 }
             })
 
-        except (Document.DoesNotExist, DocumentVerificationResult.DoesNotExist):
+        except (Document.DoesNotExist, VerificationResult.DoesNotExist):
             # No AI analysis yet - run basic analysis
             logger.warning(f"No AI analysis found for document. Generating basic analysis.")
 
@@ -404,13 +404,13 @@ def quarantined_documents(request):
     documents_with_results = []
     for doc in quarantined_docs:
         try:
-            verification = DocumentVerificationResult.objects.get(document=doc)
+            verification = VerificationResult.objects.get(document=doc)
             documents_with_results.append({
                 'document': doc,
                 'verification': verification,
                 'application': doc.application
             })
-        except DocumentVerificationResult.DoesNotExist:
+        except VerificationResult.DoesNotExist:
             documents_with_results.append({
                 'document': doc,
                 'verification': None,
@@ -433,7 +433,7 @@ def document_ai_analysis(request, document_id):
 
         # Get verification results
         try:
-            verification_result = DocumentVerificationResult.objects.get(document=document)
+            verification_result = VerificationResult.objects.get(document=document)
 
             # Prepare results for frontend
             validation_results = {
@@ -460,7 +460,7 @@ def document_ai_analysis(request, document_id):
                 }
             })
 
-        except DocumentVerificationResult.DoesNotExist:
+        except VerificationResult.DoesNotExist:
             return JsonResponse({
                 'success': False,
                 'error': 'No verification results found for this document.'

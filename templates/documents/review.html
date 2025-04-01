@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Document Review{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'documents:document_list' %}">Documents</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'documents:document_detail' document.id %}">{{ document.get_document_type_display }}</a></li>
+                    <li class="breadcrumb-item active">Review</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Review Form -->
+        <div class="col-md-5">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Manual Document Review</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="form-group mb-3">
+                            <label for="verification_status"><strong>Document Status</strong></label>
+                            <select name="verification_status" id="verification_status" class="form-control" required>
+                                <option value="">-- Select Status --</option>
+                                <option value="verified" {% if document.verification_status == 'verified' %}selected{% endif %}>Verified</option>
+                                <option value="fraud" {% if document.verification_status == 'fraud' %}selected{% endif %}>Potential Fraud</option>
+                                <option value="rejected" {% if document.verification_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="notes"><strong>Review Notes</strong></label>
+                            <textarea name="notes" id="notes" class="form-control" rows="5" placeholder="Enter notes about your decision"></textarea>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fa fa-info-circle"></i> This is an administrative action. The applicant will be notified of your decision.
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-save"></i> Save Review
+                            </button>
+                            <a href="{% url 'documents:document_detail' document.id %}" class="btn btn-secondary">
+                                <i class="fa fa-arrow-left"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Document Information -->
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">Document Information</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-md-5"><strong>Document Type:</strong></div>
+                        <div class="col-md-7">{{ document.get_document_type_display }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-5"><strong>Original Filename:</strong></div>
+                        <div class="col-md-7">{{ document.original_filename }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-5"><strong>Uploaded:</strong></div>
+                        <div class="col-md-7">{{ document.uploaded_at|date:"F d, Y H:i" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-5"><strong>Current Status:</strong></div>
+                        <div class="col-md-7">
+                            {% if document.verification_status == 'pending' %}
+                                <span class="badge badge-warning">Pending</span>
+                            {% elif document.verification_status == 'verified' %}
+                                <span class="badge badge-success">Verified</span>
+                            {% elif document.verification_status == 'fraud' %}
+                                <span class="badge badge-danger">Potential Fraud</span>
+                            {% elif document.verification_status == 'rejected' %}
+                                <span class="badge badge-danger">Rejected</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-5"><strong>User:</strong></div>
+                        <div class="col-md-7">{{ document.user.get_full_name }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-5"><strong>Application:</strong></div>
+                        <div class="col-md-7">
+                            <a href="{% url 'applications:application_detail' document.application.id %}">
+                                #{{ document.application.id }} - {{ document.application.get_application_type_display }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Preview and AI Verification -->
+        <div class="col-md-7">
+            <!-- Document Preview -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Document Preview</h4>
+                </div>
+                <div class="card-body text-center">
+                    {% if document.file.url|lower|slice:"-4:" == ".pdf" %}
+                        <div class="embed-responsive embed-responsive-1by1">
+                            <iframe class="embed-responsive-item" src="{{ document.file.url }}"></iframe>
+                        </div>
+                    {% elif document.file.url|lower|slice:"-4:" in ".jpg,.png,.gif,.jpeg,.webp" %}
+                        <img src="{{ document.file.url }}" class="img-fluid document-preview" alt="Document Preview">
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fa fa-info-circle"></i> Preview not available for this file type.
+                            <a href="{{ document.file.url }}" class="alert-link" target="_blank">Click here to view</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- AI Verification Results -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">AI Verification Results</h4>
+                </div>
+                <div class="card-body">
+                    {% if document.verification_details %}
+                        <div class="alert {% if document.verification_status == 'verified' %}alert-success{% elif document.verification_status == 'fraud' %}alert-danger{% else %}alert-warning{% endif %}">
+                            <i class="fa {% if document.verification_status == 'verified' %}fa-check-circle{% elif document.verification_status == 'fraud' %}fa-exclamation-triangle{% else %}fa-clock{% endif %} fa-2x float-left mr-3"></i>
+                            <div>
+                                <h5>
+                                    {% if document.verification_status == 'verified' %}
+                                        Document Verified
+                                    {% elif document.verification_status == 'fraud' %}
+                                        Potential Fraud Detected
+                                    {% else %}
+                                        Pending Verification
+                                    {% endif %}
+                                </h5>
+                                <p>
+                                    {% if document.verification_status == 'verified' %}
+                                        AI system verified this document with {{ document.verification_details.fraud_detection.confidence_score|floatformat:2 }}% confidence.
+                                    {% elif document.verification_status == 'fraud' %}
+                                        AI system flagged this document with {{ document.verification_details.fraud_detection.fraud_probability|floatformat:2 }}% fraud probability.
+                                    {% else %}
+                                        Document is awaiting verification.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card bg-light mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">OCR Results</h5>
+                                        <p>{{ document.verification_details.ocr.text }}</p>
+                                        {% if document.verification_details.ocr.extracted_fields %}
+                                            <h6>Extracted Information:</h6>
+                                            <ul>
+                                                {% for key, value in document.verification_details.ocr.extracted_fields.items %}
+                                                    <li><strong>{{ key }}:</strong> {{ value }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Verification Metrics</h5>
+                                        <div class="mb-3">
+                                            <label>Confidence Score:</label>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-success" role="progressbar" 
+                                                    style="width: {{ document.verification_details.fraud_detection.confidence_score|floatformat:0 }}%" 
+                                                    aria-valuenow="{{ document.verification_details.fraud_detection.confidence_score|floatformat:0 }}" 
+                                                    aria-valuemin="0" 
+                                                    aria-valuemax="100">
+                                                    {{ document.verification_details.fraud_detection.confidence_score|floatformat:0 }}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label>Fraud Probability:</label>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-danger" role="progressbar" 
+                                                    style="width: {{ document.verification_details.fraud_detection.fraud_probability|floatformat:0 }}%" 
+                                                    aria-valuenow="{{ document.verification_details.fraud_detection.fraud_probability|floatformat:0 }}" 
+                                                    aria-valuemin="0" 
+                                                    aria-valuemax="100">
+                                                    {{ document.verification_details.fraud_detection.fraud_probability|floatformat:0 }}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if document.verification_details.fraud_detection.fraud_indicators %}
+                            <div class="card bg-light mt-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Detected Issues</h5>
+                                    <ul>
+                                        {% for indicator in document.verification_details.fraud_detection.fraud_indicators %}
+                                            <li>{{ indicator }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        {% if document.verification_details.fraud_detection.fraud_areas %}
+                            <div class="card bg-light mt-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Areas of Concern</h5>
+                                    <p class="text-muted">The AI has identified suspicious areas in the document (highlighted in red).</p>
+                                    
+                                    <div class="document-container position-relative mt-3">
+                                        {% if document.file.url|lower|slice:"-4:" in ".jpg,.png,.gif,.jpeg,.webp" %}
+                                            <img src="{{ document.file.url }}" class="img-fluid" alt="Document with highlighted fraud areas">
+                                            
+                                            {% for area in document.verification_details.fraud_detection.fraud_areas %}
+                                                <div class="fraud-highlight" style="
+                                                    position: absolute;
+                                                    left: {{ area.x }}%;
+                                                    top: {{ area.y }}%;
+                                                    width: {{ area.width }}%;
+                                                    height: {{ area.height }}%;
+                                                    border: 2px solid red;
+                                                    background-color: rgba(255, 0, 0, 0.2);
+                                                    pointer-events: none;
+                                                "></div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="alert alert-warning">
+                                                <i class="fa fa-info-circle"></i> Fraud area highlighting is only available for image files.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fa fa-clock"></i> Document is pending verification.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add custom styling to status badges
+        const badges = document.querySelectorAll('.badge');
+        badges.forEach(badge => {
+            if (badge.classList.contains('badge-warning')) {
+                badge.style.backgroundColor = '#ffc107';
+            } else if (badge.classList.contains('badge-success')) {
+                badge.style.backgroundColor = '#28a745';
+            } else if (badge.classList.contains('badge-danger')) {
+                badge.style.backgroundColor = '#dc3545';
+            }
+            badge.style.color = '#fff';
+            badge.style.padding = '5px 8px';
+            badge.style.borderRadius = '4px';
+        });
+        
+        // Add validation for form submission
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(event) {
+            const statusSelect = document.getElementById('verification_status');
+            const notesField = document.getElementById('notes');
+            
+            if (statusSelect.value === '') {
+                event.preventDefault();
+                alert('Please select a verification status');
+                return false;
+            }
+            
+            if (notesField.value.trim() === '' && (statusSelect.value === 'rejected' || statusSelect.value === 'fraud')) {
+                event.preventDefault();
+                alert('Please provide notes explaining why this document is being rejected or marked as fraud');
+                return false;
+            }
+            
+            return true;
+        });
+    });
+</script>
+{% endblock %}

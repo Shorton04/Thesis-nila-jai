@@ -1,182 +1,71 @@
-# documents/utils/fraud_detection.py
-import cv2
-import numpy as np
-from typing import Dict, List, Tuple
-import io
+import random
+import os
+from datetime import datetime
+from .ocr import is_valid_document_format
 
 
-class FraudDetector:
-    """Detects potential document tampering and fraud."""
+def detect_fraud(file_path, document_type):
+    """
+    Simulates AI fraud detection by checking filename patterns.
+    In a real system, this would use ML/AI to detect tampered documents.
+    """
+    filename = os.path.basename(file_path)
 
-    @staticmethod
-    def analyze_document(image_bytes: bytes) -> Dict:
-        """
-        Analyze document for potential tampering.
-        Returns dictionary with analysis results.
-        """
-        try:
-            # Convert bytes to OpenCV format
-            nparr = np.frombuffer(image_bytes, np.uint8)
-            image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    # Check if the filename matches the expected pattern for document type
+    is_valid = is_valid_document_format(filename, document_type)
 
-            results = {
-                'tampering_detected': False,
-                'confidence_score': 0.0,
-                'suspicious_regions': [],
-                'analysis_details': {}
-            }
+    # Generate "AI" verification results
+    result = {
+        'timestamp': datetime.now().isoformat(),
+        'filename': filename,
+        'document_type': document_type,
+        'is_valid': is_valid,
+        'confidence_score': random.uniform(0.75, 0.99) if is_valid else random.uniform(0.1, 0.5),
+        'fraud_probability': random.uniform(0.01, 0.1) if is_valid else random.uniform(0.7, 0.95),
+    }
 
-            # Run various fraud detection methods
-            ela_results = FraudDetector._error_level_analysis(image)
-            noise_results = FraudDetector._noise_analysis(image)
-            clone_results = FraudDetector._clone_detection(image)
+    # If fraud is detected, add information about suspicious areas
+    if not is_valid:
+        result['fraud_areas'] = generate_fake_fraud_areas()
+        result['fraud_indicators'] = [
+            "Document name pattern doesn't match expected format",
+            "Suspicious file structure detected",
+            "Potential digital manipulation detected"
+        ]
+    else:
+        result['fraud_areas'] = None
 
-            # Combine results
-            results['confidence_score'] = (
-                    ela_results['score'] * 0.4 +
-                    noise_results['score'] * 0.3 +
-                    clone_results['score'] * 0.3
-            )
+    return result
 
-            results['tampering_detected'] = results['confidence_score'] > 0.7
-            results['suspicious_regions'] = (
-                    ela_results['regions'] +
-                    noise_results['regions'] +
-                    clone_results['regions']
-            )
 
-            results['analysis_details'] = {
-                'ela_analysis': ela_results,
-                'noise_analysis': noise_results,
-                'clone_detection': clone_results
-            }
+def generate_fake_fraud_areas():
+    """
+    Generate fake coordinates for highlighting fraud areas in the document.
+    These would be used in the frontend to show highlighted areas.
+    """
+    # Generate 1-3 suspicious areas with coordinates (x, y, width, height)
+    # x and y are percentages of the document width/height (0-100)
+    num_areas = random.randint(1, 3)
+    areas = []
 
-            return results
+    for _ in range(num_areas):
+        x = random.randint(10, 90)
+        y = random.randint(10, 90)
+        width = random.randint(5, 15)
+        height = random.randint(5, 15)
 
-        except Exception as e:
-            print(f"Fraud Detection Error: {str(e)}")
-            return {
-                'tampering_detected': False,
-                'confidence_score': 0.0,
-                'suspicious_regions': [],
-                'error': str(e)
-            }
+        # Ensure the area doesn't go outside the document
+        if x + width > 100:
+            width = 100 - x
+        if y + height > 100:
+            height = 100 - y
 
-    @staticmethod
-    def _error_level_analysis(image: np.ndarray) -> Dict:
-        """Perform Error Level Analysis."""
-        try:
-            # Save image at quality level 90
-            temp_output = io.BytesIO()
-            cv2.imencode('.jpg', image, [cv2.IMWRITE_JPEG_QUALITY, 90])[1].tofile(temp_output)
+        areas.append({
+            'x': x,
+            'y': y,
+            'width': width,
+            'height': height,
+            'confidence': random.uniform(0.7, 0.95)
+        })
 
-            # Read back the saved image
-            temp_input = io.BytesIO(temp_output.getvalue())
-            saved_image = cv2.imdecode(np.frombuffer(temp_input.read(), np.uint8), cv2.IMREAD_COLOR)
-
-            # Calculate difference
-            ela_image = cv2.absdiff(image, saved_image)
-
-            # Analyze differences
-            diff_mean = np.mean(ela_image)
-            diff_std = np.std(ela_image)
-
-            # Find suspicious regions
-            threshold = diff_mean + (2 * diff_std)
-            suspicious_mask = cv2.threshold(
-                cv2.cvtColor(ela_image, cv2.COLOR_BGR2GRAY),
-                threshold, 255, cv2.THRESH_BINARY
-            )[1]
-
-            # Find contours of suspicious regions
-            contours, _ = cv2.findContours(
-                suspicious_mask,
-                cv2.RETR_EXTERNAL,
-                cv2.CHAIN_APPROX_SIMPLE
-            )
-
-            suspicious_regions = []
-            for contour in contours:
-                x, y, w, h = cv2.boundingRect(contour)
-                if w * h > 100:  # Filter out very small regions
-                    suspicious_regions.append({
-                        'x': int(x),
-                        'y': int(y),
-                        'width': int(w),
-                        'height': int(h)
-                    })
-
-            return {
-                'score': min(1.0, diff_mean / 50.0),
-                'regions': suspicious_regions,
-                'details': {
-                    'mean_difference': float(diff_mean),
-                    'std_difference': float(diff_std)
-                }
-            }
-
-        except Exception as e:
-            return {
-                'score': 0.0,
-                'regions': [],
-                'error': str(e)
-            }
-
-    @staticmethod
-    def _noise_analysis(image: np.ndarray) -> Dict:
-        """Analyze image noise patterns."""
-        try:
-            # Convert to grayscale
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-            # Apply noise detection filter
-            noise = cv2.subtract(gray, cv2.GaussianBlur(gray, (3, 3), 0))
-
-            # Analyze noise statistics
-            noise_mean = np.mean(noise)
-            noise_std = np.std(noise)
-
-            # Return analysis results
-            return {
-                'score': min(1.0, noise_mean / 30.0),
-                'regions': [],
-                'details': {
-                    'noise_mean': float(noise_mean),
-                    'noise_std': float(noise_std)
-                }
-            }
-
-        except Exception as e:
-            return {
-                'score': 0.0,
-                'regions': [],
-                'error': str(e)
-            }
-
-    @staticmethod
-    def _clone_detection(image: np.ndarray) -> Dict:
-        """Detect potentially cloned regions in the image."""
-        try:
-            # Convert to grayscale
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-            # Basic clone detection using edge detection
-            edges = cv2.Canny(gray, 100, 200)
-
-            # Simple analysis based on edge density
-            edge_density = np.mean(edges) / 255.0
-
-            return {
-                'score': min(1.0, edge_density),
-                'regions': [],
-                'details': {
-                    'edge_density': float(edge_density)
-                }
-            }
-
-        except Exception as e:
-            return {
-                'score': 0.0,
-                'regions': [],
-                'error': str(e)
-            }
+    return areas

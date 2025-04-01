@@ -2,7 +2,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from applications.models import BusinessApplication, ApplicationActivity
-from documents.models import Document, DocumentVerificationResult
+from documents.models import Document, VerificationResult
 from .utils import send_application_notification, send_document_notification
 
 
@@ -39,7 +39,7 @@ def application_activity_saved(sender, instance, created, **kwargs):
         )
 
 
-@receiver(post_save, sender=DocumentVerificationResult)
+@receiver(post_save, sender=VerificationResult)
 def document_verified(sender, instance, created, **kwargs):
     """Create notification when document is verified or rejected"""
     if created or instance.tracker.has_changed('is_authentic'):

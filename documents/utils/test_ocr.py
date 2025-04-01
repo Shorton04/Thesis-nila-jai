@@ -1,4 +1,4 @@
-try:
+'''try:
     # Test Tesseract
     import pytesseract
 
@@ -20,4 +20,4 @@ try:
 except ImportError as e:
     print(f"⨯ Import Error: {str(e)}")
 except Exception as e:
-    print(f"⨯ Error: {str(e)}")
+    print(f"⨯ Error: {str(e)}")'''

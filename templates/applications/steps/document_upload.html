@@ -196,8 +196,368 @@
                             </div>
                         </div>
                     </li>
+                    
+                    <!-- Fire Safety Inspection Certificate -->
+<li>
+    <div class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">Fire Safety Inspection Certificate</p>
+                    <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                </div>
+            </div>
+            <div class="flex">
+                <button type="button" onclick="openCamera('fire_safety')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Camera
+                </button>
+                <div class="relative">
+                    <input type="file" id="fire_safety" name="fire_safety" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                    <label for="fire_safety" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        Upload
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="fire_safety_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-gray-900 document-name"></span>
+                <button type="button" onclick="removeFile('fire_safety')" class="text-red-600 hover:text-red-800">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
+
+<!-- Zoning Clearance -->
+<li>
+    <div class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">Zoning Clearance</p>
+                    <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                </div>
+            </div>
+            <div class="flex">
+                <button type="button" onclick="openCamera('zoning_clearance')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Camera
+                </button>
+                <div class="relative">
+                    <input type="file" id="zoning_clearance" name="zoning_clearance" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                    <label for="zoning_clearance" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        Upload
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="zoning_clearance_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-gray-900 document-name"></span>
+                <button type="button" onclick="removeFile('zoning_clearance')" class="text-red-600 hover:text-red-800">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
+
+<!-- HOA Permit -->
+<li>
+    <div class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">HOA Permit (if inside a subdivision)</p>
+                    <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                </div>
+            </div>
+            <div class="flex">
+                <button type="button" onclick="openCamera('hoa_permit')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Camera
+                </button>
+                <div class="relative">
+                    <input type="file" id="hoa_permit" name="hoa_permit" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                    <label for="hoa_permit" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        Upload
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="hoa_permit_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-gray-900 document-name"></span>
+                <button type="button" onclick="removeFile('hoa_permit')" class="text-red-600 hover:text-red-800">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
+
+<!-- Occupancy Permit/Engineering Clearance -->
+<li>
+    <div class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">Occupancy Permit/Engineering Clearance</p>
+                    <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                </div>
+            </div>
+            <div class="flex">
+                <button type="button" onclick="openCamera('occupancy_permit')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Camera
+                </button>
+                <div class="relative">
+                    <input type="file" id="occupancy_permit" name="occupancy_permit" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                    <label for="occupancy_permit" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        Upload
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="occupancy_permit_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-gray-900 document-name"></span>
+                <button type="button" onclick="removeFile('occupancy_permit')" class="text-red-600 hover:text-red-800">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
+
+<!-- CNC/ECC (if applicable) -->
+<li>
+    <div class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">CNC/ECC (if applicable)</p>
+                    <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                </div>
+            </div>
+            <div class="flex">
+                <button type="button" onclick="openCamera('cnc_ecc')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Camera
+                </button>
+                <div class="relative">
+                    <input type="file" id="cnc_ecc" name="cnc_ecc" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                    <label for="cnc_ecc" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        Upload
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="cnc_ecc_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-gray-900 document-name"></span>
+                <button type="button" onclick="removeFile('cnc_ecc')" class="text-red-600 hover:text-red-800">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
+
+<!-- Sanitary Permit -->
+<li>
+    <div class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">Sanitary Permit</p>
+                    <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                </div>
+            </div>
+            <div class="flex">
+                <button type="button" onclick="openCamera('sanitary_permit')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Camera
+                </button>
+                <div class="relative">
+                    <input type="file" id="sanitary_permit" name="sanitary_permit" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                    <label for="sanitary_permit" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        Upload
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="sanitary_permit_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-gray-900 document-name"></span>
+                <button type="button" onclick="removeFile('sanitary_permit')" class="text-red-600 hover:text-red-800">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
+
+<!-- Written Authority of Representative -->
+<li>
+    <div class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">Written Authority of Representative with IDs (if applicable)</p>
+                    <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                </div>
+            </div>
+            <div class="flex">
+                <button type="button" onclick="openCamera('representative_authority')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Camera
+                </button>
+                <div class="relative">
+                    <input type="file" id="representative_authority" name="representative_authority" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                    <label for="representative_authority" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        Upload
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="representative_authority_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-gray-900 document-name"></span>
+                <button type="button" onclick="removeFile('representative_authority')" class="text-red-600 hover:text-red-800">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
                 </ul>
             </div>
+        </div>
+        
+                <!-- Document Requirements Information Box -->
+        <div class="mt-4 mb-6 rounded-md bg-gray-50 p-4 border border-gray-200">
+            <h4 class="text-sm font-medium text-gray-900 mb-2">Required Documents Checklist:</h4>
+            <ul class="list-disc list-inside space-y-1 text-xs text-gray-700">
+                <li>Proof of Registration (DTI, SEC, or CDA)</li>
+                <li>Proof of Legal Ownership or Possession</li>
+                <li>Owned:
+                    <ul class="list-disc list-inside ml-4 space-y-1">
+                        <li>Transfer Certificate of Title or Tax Declaration</li>
+                    </ul>
+                </li>
+                <li>Not Owned:
+                    <ul class="list-disc list-inside ml-4 space-y-1">
+                        <li>Contract of Lease</li>
+                        <li>Memorandum of Agreement</li>
+                        <li>or Notarized Consent of Property Owner</li>
+                    </ul>
+                </li>
+                <li>Picture with Signage</li>
+                <li>Fire Safety Inspection Certificate</li>
+                <li>Zoning Clearance</li>
+                <li>HOA Permit (if inside a subdivision))</li>
+                <li>Occupancy Permit/Engineering Clearance</li>
+                <li>CNC/ECC (if applicable)</li>
+                <li>Sanitary Permit</li>
+                <li>Barangay Clearance</li>
+                <li>Written Authority of Representative with Government Issued IDs (if applicable)</li>
+            </ul>
+            <p class="text-xs text-gray-500 mt-2">All documents must be clear, complete, and in PDF, JPG, or PNG format.</p>
         </div>
 
         <!-- AI Assisted Scanning Information -->

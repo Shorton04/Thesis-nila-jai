@@ -448,46 +448,57 @@
             saveToSessionStorage(details, timeString);
         }
         
-        // Process check-in
+ // Process check-in
 function processCheckin(appointmentId) {
     console.log('Processing check-in for appointment ID:', appointmentId);
+    
+    // Show processing message
+    showStatusMessage('info', 'Processing check-in...');
     
     // Create form data instead of JSON for better compatibility
     const formData = new FormData();
     formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
     
-    // Send check-in request to server
+    // Send check-in request to server using standard form submission
     fetch(`{% url 'queuing:check_in' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', appointmentId), {
         method: 'POST',
         headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}'
         },
+        credentials: 'same-origin',
         body: formData
     })
     .then(response => {
         console.log('Server response status:', response.status);
         
-        // Try to parse as JSON, but handle HTML responses
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            return response.json().then(data => {
+        if (response.status === 500) {
+            // Handle 500 Internal Server Error
+            console.error("Server error 500 occurred");
+            throw new Error("Internal server error. Please try again later.");
+        }
+        
+        // Try to parse as JSON, but handle non-JSON responses
+        return response.text().then(text => {
+            try {
+                // Try to parse as JSON
+                const data = JSON.parse(text);
                 return { 
                     ok: response.ok,
                     data: data,
                     status: response.status
                 };
-            });
-        } else {
-            // Handle non-JSON response
-            return response.text().then(text => {
-                console.warn('Received non-JSON response:', text.substring(0, 100) + '...');
+            } catch (e) {
+                // If not valid JSON, return the error
+                console.warn('Received non-JSON response:', text.substring(0, 150) + '...');
                 return { 
                     ok: false,
-                    error: 'Server returned non-JSON response',
-                    status: response.status
+                    error: 'Server returned invalid response',
+                    status: response.status,
+                    text: text.substring(0, 150) + '...'
                 };
-            });
-        }
+            }
+        });
     })
     .then(result => {
         if (result.ok && result.data && result.data.success) {
@@ -519,8 +530,18 @@ function processCheckin(appointmentId) {
             // Play info sound
             playSound('info');
         } else {
-            // Error
-            const errorMsg = result.data?.error || `Server error (${result.status})`;
+            // Error handling
+            let errorMsg = "Unknown error occurred";
+            
+            if (result.data && result.data.error) {
+                errorMsg = result.data.error;
+            } else if (result.error) {
+                errorMsg = result.error;
+            } else if (result.status) {
+                errorMsg = `Server error (${result.status})`;
+            }
+            
+            console.error('Check-in error:', errorMsg);
             showStatusMessage('error', errorMsg);
             
             // Play error sound
@@ -531,11 +552,11 @@ function processCheckin(appointmentId) {
         setTimeout(() => {
             hideStatusMessage();
             startScanner();
-        }, 2000);
+        }, 3000); // slightly longer delay to read error messages
     })
     .catch(error => {
         console.error('Error during check-in:', error);
-        showStatusMessage('error', 'Connection error: ' + error.message);
+        showStatusMessage('error', error.message || 'Connection failed');
         
         // Play error sound
         playSound('error');
@@ -544,11 +565,11 @@ function processCheckin(appointmentId) {
         setTimeout(() => {
             hideStatusMessage();
             startScanner();
-        }, 2000);
+        }, 3000);
     });
 }
         
-        // Process manual check-in
+ // Process manual check-in
 function processManualCheckin(queueNumber) {
     console.log('Processing manual check-in for queue number:', queueNumber);
     
@@ -559,7 +580,7 @@ function processManualCheckin(queueNumber) {
     // Show processing message
     showManualCheckinResult('info', 'Processing check-in...');
     
-    // Create form data instead of JSON
+    // Create form data
     const formData = new FormData();
     formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
     formData.append('queue_number', queueNumber);
@@ -568,34 +589,41 @@ function processManualCheckin(queueNumber) {
     fetch(`{% url 'queuing:check_in_by_queue' %}`, {
         method: 'POST',
         headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}'
         },
+        credentials: 'same-origin', 
         body: formData
     })
     .then(response => {
         console.log('Manual check-in response status:', response.status);
         
-        // Try to parse as JSON, but handle HTML responses
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            return response.json().then(data => {
-                return { 
+        if (response.status === 500) {
+            // Handle 500 Internal Server Error
+            throw new Error("Internal server error. Please try again later.");
+        }
+        
+        // Try to parse as JSON, but handle non-JSON responses
+        return response.text().then(text => {
+            try {
+                // Try to parse as JSON
+                const data = JSON.parse(text);
+                return {
                     ok: response.ok,
                     data: data,
                     status: response.status
                 };
-            });
-        } else {
-            // Handle non-JSON response
-            return response.text().then(text => {
-                console.warn('Received non-JSON response:', text.substring(0, 100) + '...');
-                return { 
+            } catch (e) {
+                // If not valid JSON, return the error
+                console.warn('Received non-JSON response:', text.substring(0, 150) + '...');
+                return {
                     ok: false,
-                    error: 'Server returned non-JSON response',
-                    status: response.status
+                    error: 'Server returned invalid response',
+                    status: response.status,
+                    text: text.substring(0, 150) + '...'
                 };
-            });
-        }
+            }
+        });
     })
     .then(result => {
         // Reset button state
@@ -637,7 +665,16 @@ function processManualCheckin(queueNumber) {
             playSound('info');
         } else {
             // Error
-            const errorMsg = result.data?.error || `Server error (${result.status})`;
+            let errorMsg = "Unknown error occurred";
+            
+            if (result.data && result.data.error) {
+                errorMsg = result.data.error;
+            } else if (result.error) {
+                errorMsg = result.error;
+            } else if (result.status) {
+                errorMsg = `Server error (${result.status})`;
+            }
+            
             showManualCheckinResult('error', errorMsg);
             
             // Play error sound
@@ -651,7 +688,7 @@ function processManualCheckin(queueNumber) {
         manualCheckinBtn.innerHTML = '<i class="fas fa-user-check mr-2"></i> Check In';
         manualCheckinBtn.disabled = false;
         
-        showManualCheckinResult('error', 'Connection error: ' + error.message);
+        showManualCheckinResult('error', error.message || 'Connection failed');
         
         // Play error sound
         playSound('error');
