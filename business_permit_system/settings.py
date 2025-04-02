@@ -2,14 +2,15 @@ import os
 import sys
 from pathlib import Path
 from decouple import config
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY', default='your-secret-key-here')
 
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.herokuapp.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -31,6 +32,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add whitenoise for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -60,16 +62,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'business_permit_system.wsgi.application'
 
+# Database for local development
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'bplo_db',
-        'USER': 'postgres',
-        'PASSWORD': 'Admin123',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': config('DB_NAME', default='bplo_db'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='Admin123'),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
     }
 }
+
+# Configure Heroku database if DATABASE_URL is available
+DATABASE_URL = config('DATABASE_URL', default=None)
+if DATABASE_URL:
+    DATABASES['default'] = dj_database_url.config(
+        default=DATABASE_URL,
+        conn_max_age=600
+    )
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -85,25 +96,17 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-'''
-# Email Settings
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'rmarcdexter@gmail.com'  # Replace with your Gmail
-EMAIL_HOST_PASSWORD = 'Admin123'  # Replace with the App Password you generated
-DEFAULT_FROM_EMAIL = 'rmarcdexter@gmail.com'  # Replace with your Gmail
-'''
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+# Static files configuration
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -176,13 +179,17 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.CustomUser'
-LOGIN_REDIRECT_URL = 'applications:dashboard', 'reviewer:dashboard'
+LOGIN_REDIRECT_URL = 'applications:dashboard'  # Fixed tuple issue
 
 # Add this to your settings.py if not already present
 MAX_LOGIN_ATTEMPTS = 3  # or whatever number you prefer
 
 LOGIN_URL = 'accounts:login'
 
+# For handling file uploads on Heroku
+if not DEBUG:
+    # Consider using S3 for a production environment
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 if 'test' in sys.argv:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -192,7 +199,8 @@ if 'test' in sys.argv:
     ]
     TEST_RUNNER = 'tests.test_settings.TestRunner'
 
-ASGI_APPLICATION = 'your_project.asgi.application'
+# Fix ASGI application path (update with your actual project name)
+ASGI_APPLICATION = 'business_permit_system.asgi.application'
 
 # Maximum file upload size (10 MB)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
@@ -203,3 +211,15 @@ ALLOWED_UPLOAD_EXTENSIONS = [
     '.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx'
 ]
 
+# Security settings for production
+if not DEBUG:
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
