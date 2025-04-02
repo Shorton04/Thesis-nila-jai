@@ -1,0 +1,1 @@
+web: gunicorn permit_system.wsgi --log-file -

@@ -13,4 +13,6 @@ urlpatterns = [
     path('documents/', include('documents.urls')),
     path('notifications/', include('notifications.urls', namespace='notifications')),
     path('queue/', include('queuing.urls', namespace='queuing')),
+    path('', include('pwa.urls')),
+    path('offline/', views.offline, name='offline'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

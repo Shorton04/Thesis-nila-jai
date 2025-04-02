@@ -1,13 +1,18 @@
 {# templates/base.html #}
 {% load static %}
+{% load pwa %}
 <link rel="stylesheet" href="{% static 'css/queue.css' %}">
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Business Permit System">
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" src="{% static 'images/icons/splash-640x1136.png' %}" alt="Logo">
     <title>{% block title %}Business Permit System{% endblock %}</title>
-    
+    {% progressive_web_app_meta %} 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -662,6 +667,34 @@
     {% endif %}
         
     <script>
+      let deferredPrompt;
+  const installButton = document.getElementById('install-button');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    e.preventDefault();
+    // Stash the event so it can be triggered later
+    deferredPrompt = e;
+    // Update UI to notify the user they can add to home screen
+    installButton.classList.remove('d-none');
+
+    installButton.addEventListener('click', (e) => {
+      // Hide our user interface that shows our install button
+      installButton.classList.add('d-none');
+      // Show the prompt
+      deferredPrompt.prompt();
+      // Wait for the user to respond to the prompt
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+        } else {
+          console.log('User dismissed the install prompt');
+        }
+        deferredPrompt = null;
+      });
+    });
+  });
+  
     // Toggle mobile menu
     function toggleMobileMenu() {
         const mobileMenu = document.getElementById('mobileMenu');

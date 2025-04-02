@@ -21,3 +21,6 @@ def home(request):
             pass
 
     return render(request, 'Home.html', context)
+
+def offline(request):
+    return render(request, 'offline.html')

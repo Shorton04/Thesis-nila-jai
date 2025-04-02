@@ -122,8 +122,38 @@ PWA_APP_START_URL = '/'
 PWA_APP_STATUS_BAR_COLOR = 'default'
 PWA_APP_ICONS = [
     {
-        'src': '/static/images/icon-160x160.png',
-        'sizes': '160x160'
+        'src': '/static/images/icons/android-launchericon-96-96.png',
+        'sizes': '96x96'
+    },
+    {
+        'src': '/static/images/icons/android-launchericon-144-144.png',
+        'sizes': '144x144'
+    },
+    {
+        'src': '/static/images/icons/android-launchericon-192-192.png',
+        'sizes': '192x192'
+    },
+    {
+        'src': '/static/images/icons/android-launchericon-512-512.png',
+        'sizes': '512x512'
+    }
+]
+PWA_APP_ICONS_APPLE = [
+    {
+        'src': '/static/images/icons/120.png',
+        'sizes': '120x120'
+    },
+    {
+        'src': '/static/images/icons/152.png',
+        'sizes': '152x152'
+    },
+    {
+        'src': '/static/images/icons/167.png',
+        'sizes': '167x167'
+    },
+    {
+        'src': '/static/images/icons/180.png',
+        'sizes': '180x180'
     }
 ]
 PWA_APP_SPLASH_SCREEN = [
@@ -132,6 +162,8 @@ PWA_APP_SPLASH_SCREEN = [
         'media': '(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)'
     }
 ]
+PWA_APP_DIR = 'ltr'
+PWA_APP_LANG = 'en-US'
 PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'static/js', 'serviceworker.js')
 
 # Email Configuration
