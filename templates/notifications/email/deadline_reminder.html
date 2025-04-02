@@ -1,0 +1,113 @@
+<!-- templates/notifications/email/deadline_reminder.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadline Reminder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #eeeeee;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .deadline-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .action-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 20px 0;
+            background-color: #1976d2;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            color: #777777;
+            font-size: 12px;
+            border-top: 1px solid #eeeeee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Business Permit System</h2>
+            <h3>Important Deadline Reminder</h3>
+        </div>
+
+        <div class="content">
+            <p>Dear {{ user.get_full_name|default:user.email }},</p>
+
+            <p>This is a friendly reminder about an upcoming deadline for your business permit application.</p>
+
+            <div class="deadline-box">
+                <h3>⚠️ Deadline Tomorrow: {{ deadline|date:"F j, Y" }}</h3>
+                <p><strong>Application Number:</strong> {{ application.application_number }}</p>
+                <p><strong>Business Name:</strong> {{ application.business_name }}</p>
+                {% if revision %}
+                <p><strong>Required Action:</strong> Submit revisions for your application</p>
+                <p><strong>Revision Details:</strong> {{ revision.description }}</p>
+                {% elif assessment %}
+                <p><strong>Required Action:</strong> Complete payment for your business permit</p>
+                <p><strong>Amount Due:</strong> ₱{{ assessment.total_amount }}</p>
+                {% endif %}
+            </div>
+
+            <div class="action-box">
+                <h4>What to Do:</h4>
+                {% if revision %}
+                <p>Please log in to your account and submit the requested revisions before the deadline to avoid delays in processing your application.</p>
+                {% elif assessment %}
+                <p>Please complete the payment before the deadline to finalize your business permit approval.</p>
+                {% else %}
+                <p>Please log in to your account and take the necessary action before the deadline.</p>
+                {% endif %}
+            </div>
+
+            <a href="{{ site_url }}{% url 'applications:application_detail' application.id %}" class="button">View Application</a>
+
+            <p>If you have already completed this action or have questions, please contact our support team at support@businesspermitsystem.gov.ph or call us at (123) 456-7890.</p>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated email reminder. Please do not reply to this message.</p>
+            <p>&copy; 2025 Business Permit System. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

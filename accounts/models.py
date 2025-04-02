@@ -12,7 +12,7 @@ class CustomUser(AbstractUser):
     email = models.EmailField(_('email address'), unique=True)
     phone_number = models.CharField(max_length=15, blank=True)
     is_email_verified = models.BooleanField(default=False)
-    verification_token = models.UUIDField(default=uuid.uuid4, editable=False)
+    verification_token = models.UUIDField(default=uuid.uuid4, null=True, blank=True)
     verification_token_created = models.DateTimeField(auto_now_add=True)
     password_changed_at = models.DateTimeField(null=True, blank=True)
 

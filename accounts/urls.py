@@ -26,8 +26,8 @@ urlpatterns = [
 
     # Password Management
     path('password/change/', views.change_password, name='change_password'),
-    path('password/reset/', views.password_reset_request, name='password_reset_request'),
-    path('password/reset/confirm/<uuid:token>/',
+    path('password-reset/confirm/', views.password_reset_request, name='password_reset_request'),
+    path('password-reset/confirm/<uuid:token>/',
          views.password_reset_confirm, name='password_reset_confirm'),
 
     # Admin routes

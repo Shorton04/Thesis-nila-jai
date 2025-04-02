@@ -1,0 +1,41 @@
+<!-- templates/notifications/email/application_status_update.txt -->
+Application Status Update
+
+Dear {{ application.applicant.get_full_name|default:application.applicant.email }},
+
+This is to inform you that the status of your business permit application has been updated.
+
+Status: {{ application.get_status_display }}
+Application Number: {{ application.application_number }}
+Business Name: {{ application.business_name }}
+Last Updated: {{ application.updated_at|date:"F j, Y, g:i a" }}
+
+{% if application.status == 'under_review' %}
+Your application is currently being reviewed by our team. We will notify you of any updates or if additional information is required.
+{% elif application.status == 'requires_revision' %}
+ACTION REQUIRED:
+Your application requires revisions. Please login to your account to view the specific items that need to be addressed.
+{% if revision %}
+Revision Details: {{ revision.description }}
+Deadline: {{ revision.deadline|date:"F j, Y" }}
+{% endif %}
+{% elif application.status == 'approved' %}
+Congratulations! Your business permit application has been approved.
+{% if assessment %}
+NEXT STEPS:
+Book an Appointment and Please complete the payment of ₱{{ assessment.total_amount }} until by {{ assessment.payment_deadline|date:"F j, Y" }} to finalize your permit.
+{% endif %}
+{% elif application.status == 'rejected' %}
+We regret to inform you that your application has been rejected for the following reason:
+{{ application.remarks }}
+If you have any questions or wish to reapply, please contact our support team.
+{% endif %}
+
+To view your application details, please visit:
+{{ site_url }}{% url 'applications:application_detail' application.id %}
+
+If you have any questions or need assistance, please contact our support team at support@businesspermitsystem.gov.ph or call us at (123) 456-7890.
+
+---
+This is an automated email. Please do not reply to this message.
+© 2025 Business Permit System. All rights reserved.

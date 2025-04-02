@@ -13,4 +13,5 @@ urlpatterns = [
     re_path(r'^(?P<notification_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d+)/delete/$', views.delete_notification, name='delete'),
     path('api/count/', views.get_notification_count, name='api_count'),
     path('api/recent/', views.get_recent_notifications, name='api_recent'),
+    path('test-email/<uuid:application_id>/', views.test_application_email, name='test_application_email'),
 ]

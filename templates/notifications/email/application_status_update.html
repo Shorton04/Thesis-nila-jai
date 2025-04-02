@@ -1,0 +1,149 @@
+<!-- templates/notifications/email/application_status_update.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Status Update</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #eeeeee;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .status-container {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .status-submitted {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            border-left: 4px solid #1976d2;
+        }
+        .status-under_review {
+            background-color: #fff8e1;
+            color: #ff6f00;
+            border-left: 4px solid #ffa000;
+        }
+        .status-requires_revision {
+            background-color: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #ef5350;
+        }
+        .status-approved {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+            border-left: 4px solid #4caf50;
+        }
+        .status-rejected {
+            background-color: #ffebee;
+            color: #b71c1c;
+            border-left: 4px solid #e53935;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 20px 0;
+            background-color: #1976d2;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .next-steps {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            color: #777777;
+            font-size: 12px;
+            border-top: 1px solid #eeeeee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Business Permit System</h2>
+            <h3>Application Status Update</h3>
+        </div>
+
+        <div class="content">
+            <p>Dear {{ application.applicant.get_full_name|default:application.applicant.email }},</p>
+            
+            <p>This is to inform you that the status of your business permit application has been updated.</p>
+            
+            <div class="status-container status-{{ application.status }}">
+                <h3>Status: {{ application.get_status_display }}</h3>
+                <p>Application Number: <strong>{{ application.application_number }}</strong></p>
+                <p>Business Name: <strong>{{ application.business_name }}</strong></p>
+                <p>Last Updated: {{ application.updated_at|date:"F j, Y, g:i a" }}</p>
+            </div>
+
+            {% if application.status == 'under_review' %}
+            <p>Your application is currently being reviewed by our team. We will notify you of any updates or if additional information is required.</p>
+            {% elif application.status == 'requires_revision' %}
+            <div class="next-steps">
+                <h4>Action Required:</h4>
+                <p>Your application requires revisions. Please login to your account to view the specific items that need to be addressed.</p>
+                
+                {% if revision %}
+                <p><strong>Revision Details:</strong> {{ revision.description }}</p>
+                <p><strong>Deadline:</strong> {{ revision.deadline|date:"F j, Y" }}</p>
+                {% endif %}
+            </div>
+            {% elif application.status == 'approved' %}
+            <p>Congratulations! Your business permit application has been approved.</p>
+            
+            {% if assessment %}
+            <div class="next-steps">
+                <h4>Next Steps:</h4>
+                <p>Make an Appointment and Please complete the payment of ₱{{ assessment.total_amount }} by {{ assessment.payment_deadline|date:"F j, Y" }} to finalize your permit.</p>
+            </div>
+            {% endif %}
+            
+            {% elif application.status == 'rejected' %}
+            <p>We regret to inform you that your application has been rejected for the following reason:</p>
+            <div class="next-steps">
+                <p>{{ application.remarks }}</p>
+                <p>If you have any questions or wish to reapply, please contact our support team.</p>
+            </div>
+            {% endif %}
+
+            <a href="{{ site_url }}{% url 'applications:application_detail' application.id %}" class="button">View Application Details</a>
+            
+            <p>If you have any questions or need assistance, please contact our support team at support@businesspermitsystem.gov.ph or call us at (123) 456-7890.</p>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated email. Please do not reply to this message.</p>
+            <p>&copy; 2025 Business Permit System. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

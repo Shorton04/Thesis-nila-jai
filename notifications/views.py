@@ -4,11 +4,107 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.conf import settings
 from django.urls import reverse
+from applications.models import ApplicationRevision, ApplicationAssessment
 from django.utils import timezone
-
+from documents.models import Document
+from notifications.services.email_service import EmailService
 from .models import Notification
+from .utils import create_notification
+from .utils import send_application_notification
+from django.http import HttpResponse
+from applications.models import BusinessApplication
 
+@login_required
+def test_application_email(request, application_id):
+    """Test view to send an application status email"""
+    try:
+        application = BusinessApplication.objects.get(id=application_id)
+        success = send_application_notification(
+            request=request,
+            user=request.user,
+            application=application,
+            status=application.status,
+            message="This is a test email for application status update."
+        )
+        if success:
+            return HttpResponse(f"Test email sent successfully to {request.user.email}")
+        else:
+            return HttpResponse("Failed to send test email. Check logs for details.")
+    except BusinessApplication.DoesNotExist:
+        return HttpResponse("Application not found")
+
+
+def send_application_notification(user, application, status, message=None):
+    """
+    Send email notification about application status update
+    """
+    context = {
+        'application': application,
+        'user': user,
+        'site_url': settings.SITE_URL,
+        'message': message,
+    }
+
+    # Add additional context based on status
+    if status == 'requires_revision':
+        # Get latest revision
+        revision = ApplicationRevision.objects.filter(
+            application=application,
+            is_resolved=False
+        ).order_by('-requested_date').first()
+        context['revision'] = revision
+
+    elif status == 'approved':
+        # Get assessment if exists
+        assessment = ApplicationAssessment.objects.filter(
+            application=application,
+            is_paid=False
+        ).order_by('-assessment_date').first()
+        context['assessment'] = assessment
+
+    # Render email templates
+    html_message = render_to_string('notifications/email/application_status_update.html', context)
+    text_message = render_to_string('notifications/email/application_status_update.txt', context)
+
+    # Send email
+    subject = f"Business Permit Application Update - {application.application_number}"
+
+    send_mail(
+        subject,
+        text_message,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        html_message=html_message,
+        fail_silently=False,
+    )
+
+    # Also create a notification in the system
+    create_notification(
+        user=user,
+        title=f"Application Status: {application.get_status_display()}",
+        message=message or f"Your application #{application.application_number} status has been updated to {application.get_status_display()}.",
+        notification_type='application',
+        link=reverse('applications:application_detail', kwargs={'application_id': application.id})
+    )
+
+    return True
+
+def approve_document(request, document_id):
+    document = get_object_or_404(Document, id=document_id)
+    document.status = 'approved'
+    document.save()
+
+    # Send email notification
+    EmailService.send_verification_success(
+        user=document.application.user,
+        document_name=document.name
+    )
+
+    return redirect('document_detail', document_id=document_id)
 
 @login_required
 def notification_list(request):

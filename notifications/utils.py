@@ -1,126 +1,254 @@
 # notifications/utils.py
-from .models import Notification
-from django.utils import timezone
+import logging
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.conf import settings
+from django.urls import reverse
+from applications.models import ApplicationRevision, ApplicationAssessment
+
+logger = logging.getLogger(__name__)
 
 
 def create_notification(user, title, message, notification_type='info', link=None):
     """
-    Create a new notification for a user
-
-    Args:
-        user: The recipient user
-        title: Notification title
-        message: Notification message
-        notification_type: Type of notification (info, success, warning, error, application, document, system)
-        link: Optional URL to redirect to when clicked
-
-    Returns:
-        The created notification object
+    Create an in-app notification
     """
-    notification = Notification.objects.create(
-        recipient=user,
-        title=title,
-        message=message,
-        notification_type=notification_type,
-        link=link,
-        created_at=timezone.now()
-    )
-    return notification
+    # If you have a Notification model, create it here
+    from notifications.models import Notification
+
+    try:
+        notification = Notification.objects.create(
+            user=user,
+            title=title,
+            message=message,
+            notification_type=notification_type,
+            link=link
+        )
+        return notification
+    except Exception as e:
+        logger.error(f"Error creating notification: {str(e)}")
+        return None
 
 
-def send_application_notification(user, application, status, message=None):
+def send_application_notification(user, application, status, message=None, request=None):
     """
-    Send a notification about an application status change
-
-    Args:
-        user: The recipient user
-        application: The BusinessApplication instance
-        status: New status of the application
-        message: Optional custom message
-
-    Returns:
-        The created notification object
+    Send email notification about application status update
     """
-    # Set title based on status
-    title_map = {
-        'submitted': 'Application Submitted',
-        'under_review': 'Application Under Review',
-        'requires_revision': 'Application Requires Revision',
-        'approved': 'Application Approved',
-        'rejected': 'Application Rejected',
-        'cancelled': 'Application Cancelled',
-    }
+    try:
+        # Build absolute URL for the site
+        if request and hasattr(request, 'build_absolute_uri'):
+            site_url = request.build_absolute_uri('/').rstrip('/')
+        else:
+            # Fallback to settings if request is not available
+            site_url = settings.SITE_URL if hasattr(settings, 'SITE_URL') else 'http://localhost:8000'
 
-    title = title_map.get(status, f'Application Status: {status.title()}')
-
-    # Set default message if none provided
-    if message is None:
-        message_map = {
-            'submitted': f'Your application #{application.application_number} has been submitted successfully and is pending review.',
-            'under_review': f'Your application #{application.application_number} is now under review.',
-            'requires_revision': f'Your application #{application.application_number} requires revision. Please check the details and make the necessary changes.',
-            'approved': f'Congratulations! Your application #{application.application_number} has been approved.',
-            'rejected': f'Your application #{application.application_number} has been rejected. Please check the details for more information.',
-            'cancelled': f'Your application #{application.application_number} has been cancelled.',
+        context = {
+            'application': application,
+            'user': user,
+            'site_url': site_url,
+            'message': message,
         }
-        message = message_map.get(status,
-                                  f'Your application #{application.application_number} status has been updated to {status.title()}.')
 
-    # Generate link to the application
-    from django.urls import reverse
-    link = reverse('applications:application_detail', kwargs={'application_id': application.id})
+        # Add additional context based on status
+        if status == 'requires_revision':
+            # Get latest revision
+            revision = ApplicationRevision.objects.filter(
+                application=application,
+                is_resolved=False
+            ).order_by('-requested_date').first()
+            context['revision'] = revision
 
-    return create_notification(
-        user=user,
-        title=title,
-        message=message,
-        notification_type='application',
-        link=link
-    )
+        elif status == 'approved':
+            # Get assessment if exists
+            assessment = ApplicationAssessment.objects.filter(
+                application=application,
+                is_paid=False
+            ).order_by('-assessment_date').first()
+            context['assessment'] = assessment
+
+        # Log what we're about to do
+        logger.info(f"Sending status update email to {user.email} for application {application.application_number}")
+
+        # Render email templates
+        html_message = render_to_string('notifications/email/application_status_update.html', context)
+        text_message = render_to_string('notifications/email/application_status_update.txt', context)
+
+        # Send email
+        subject = f"Business Permit Application Update - {application.application_number}"
+
+        send_mail(
+            subject,
+            text_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+
+        logger.info(f"Email sent successfully to {user.email}")
+
+        # Also create a notification in the system
+        notification_message = message or f"Your application #{application.application_number} status has been updated to {application.get_status_display()}."
+        create_notification(
+            user=user,
+            title=f"Application Status: {application.get_status_display()}",
+            message=notification_message,
+            notification_type='application',
+            link=reverse('applications:application_detail', kwargs={'application_id': application.id})
+        )
+
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send email notification: {str(e)}")
+        # Still create the notification even if email fails
+        try:
+            notification_message = message or f"Your application #{application.application_number} status has been updated to {application.get_status_display()}."
+            create_notification(
+                user=user,
+                title=f"Application Status: {application.get_status_display()}",
+                message=notification_message,
+                notification_type='application',
+                link=reverse('applications:application_detail', kwargs={'application_id': application.id})
+            )
+        except Exception as inner_e:
+            logger.error(f"Failed to create notification: {str(inner_e)}")
+
+        return False
 
 
-def send_document_notification(user, document, status, message=None):
+def send_document_notification(request, user, document, status, message=None):
     """
-    Send a notification about a document status change
-
-    Args:
-        user: The recipient user
-        document: The Document instance
-        status: Status of the document (verified, rejected, etc)
-        message: Optional custom message
-
-    Returns:
-        The created notification object
+    Send email notification about document status update
     """
-    title_map = {
-        'verified': 'Document Verified',
-        'rejected': 'Document Rejected',
-        'quarantined': 'Document Quarantined',
-        'submitted': 'Document Submitted',
-    }
+    try:
+        # Build absolute URL for the site
+        if hasattr(request, 'build_absolute_uri'):
+            site_url = request.build_absolute_uri('/').rstrip('/')
+        else:
+            # Fallback to settings if request is not available
+            site_url = settings.SITE_URL if hasattr(settings, 'SITE_URL') else 'http://localhost:8000'
 
-    title = title_map.get(status, f'Document Status: {status.title()}')
-
-    if message is None:
-        message_map = {
-            'verified': f'Your document "{document.filename}" has been verified successfully.',
-            'rejected': f'Your document "{document.filename}" has been rejected. Please upload a new document.',
-            'quarantined': f'Your document "{document.filename}" has been flagged for review. This may delay the processing of your application.',
-            'submitted': f'Your document "{document.filename}" has been submitted successfully and is pending review.',
+        context = {
+            'document': document,
+            'user': user,
+            'site_url': site_url,
+            'message': message,
+            'status': status
         }
-        message = message_map.get(status,
-                                  f'Your document "{document.filename}" status has been updated to {status.title()}.')
 
-    # For now, link to the application detail page
-    link = None
-    if hasattr(document, 'application') and document.application:
-        from django.urls import reverse
-        link = reverse('applications:application_detail', kwargs={'application_id': document.application.id})
+        # Log what we're about to do
+        logger.info(f"Sending document status update email to {user.email} for document {document.filename}")
 
-    return create_notification(
-        user=user,
-        title=title,
-        message=message,
-        notification_type='document',
-        link=link
-    )
+        # Render email templates
+        html_message = render_to_string('notifications/email/document_status_update.html', context)
+        text_message = render_to_string('notifications/email/document_status_update.txt', context)
+
+        # Send email
+        subject = f"Document Status Update - {document.filename}"
+
+        send_mail(
+            subject,
+            text_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+
+        logger.info(f"Document email sent successfully to {user.email}")
+
+        # Also create a notification in the system
+        notification_message = message or f"Your document '{document.filename}' status has been updated to {status}."
+        create_notification(
+            user=user,
+            title=f"Document Status: {status}",
+            message=notification_message,
+            notification_type='document',
+            link=reverse('applications:application_detail',
+                         kwargs={'application_id': document.application.id}) if hasattr(document,
+                                                                                        'application') else None
+        )
+
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send document email notification: {str(e)}")
+        # Still create the notification even if email fails
+        try:
+            notification_message = message or f"Your document '{document.filename}' status has been updated to {status}."
+            create_notification(
+                user=user,
+                title=f"Document Status: {status}",
+                message=notification_message,
+                notification_type='document',
+                link=reverse('applications:application_detail',
+                             kwargs={'application_id': document.application.id}) if hasattr(document,
+                                                                                            'application') else None
+            )
+        except Exception as inner_e:
+            logger.error(f"Failed to create document notification: {str(inner_e)}")
+
+        return False
+
+
+def send_deadline_reminder(user, application, deadline, revision=None, assessment=None, request=None):
+    """
+    Send a reminder email about an upcoming deadline
+    """
+    try:
+        # Build absolute URL for the site
+        if request and hasattr(request, 'build_absolute_uri'):
+            site_url = request.build_absolute_uri('/').rstrip('/')
+        else:
+            # Fallback to settings if request is not available
+            site_url = settings.SITE_URL if hasattr(settings, 'SITE_URL') else 'http://localhost:8000'
+
+        context = {
+            'application': application,
+            'user': user,
+            'site_url': site_url,
+            'deadline': deadline,
+            'revision': revision,
+            'assessment': assessment
+        }
+
+        # Log what we're about to do
+        logger.info(f"Sending deadline reminder email to {user.email} for application {application.application_number}")
+
+        # Render email templates
+        html_message = render_to_string('notifications/email/deadline_reminder.html', context)
+        text_message = render_to_string('notifications/email/deadline_reminder.txt', context)
+
+        # Send email
+        subject = f"REMINDER: Deadline Tomorrow - Application #{application.application_number}"
+
+        send_mail(
+            subject,
+            text_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+
+        logger.info(f"Deadline reminder email sent successfully to {user.email}")
+
+        # Create an in-app notification as well
+        if revision:
+            notification_message = f"Reminder: Your application revision deadline is tomorrow ({deadline.strftime('%B %d, %Y')})."
+        elif assessment:
+            notification_message = f"Reminder: Your payment deadline is tomorrow ({deadline.strftime('%B %d, %Y')})."
+        else:
+            notification_message = f"Reminder: You have an application deadline tomorrow ({deadline.strftime('%B %d, %Y')})."
+
+        create_notification(
+            user=user,
+            title="Deadline Reminder",
+            message=notification_message,
+            notification_type='deadline',
+            link=reverse('applications:application_detail', kwargs={'application_id': application.id})
+        )
+
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send deadline reminder email: {str(e)}")
+        return False

@@ -1,6 +1,6 @@
 # reviewer/views.py
 import os
-from datetime import timezone
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 from documents.models import Document, VerificationResult
 from documents.services.document_workflow import DocumentWorkflowService
@@ -19,6 +19,7 @@ from queuing.models import QueueAppointment
 from .forms import AssessmentForm, RevisionRequestForm
 from notifications.utils import send_application_notification, create_notification
 from django.urls import reverse
+from .models import ReviewerProfile, ReviewAssignment
 
 
 def is_reviewer(user):
@@ -28,26 +29,48 @@ def is_reviewer(user):
 @login_required
 @user_passes_test(is_reviewer, login_url='accounts:login')
 def dashboard(request):
-    pending_applications = BusinessApplication.objects.filter(status='submitted').count()
-    under_review = BusinessApplication.objects.filter(status='under_review').count()
-    requires_revision = BusinessApplication.objects.filter(status='requires_revision').count()
+    # Use the exact same queries that work in the application_list view
+    applications = BusinessApplication.objects.all()
 
-    recent_applications = BusinessApplication.objects.filter(
-        status__in=['submitted', 'under_review']
-    ).order_by('-submission_date')[:5]
+    # Counting specific statuses
+    pending_applications = applications.filter(status='submitted').count()
+    under_review = applications.filter(status='under_review').count()
+    requires_revision = applications.filter(status='requires_revision').count()
 
-    recent_activities = ApplicationActivity.objects.filter(
-        application__status__in=['submitted', 'under_review', 'requires_revision']
-    ).order_by('-performed_at')[:10]
+    # Recent applications (using the same query that works in application_list)
+    recent_applications = applications.filter(
+        status__in=['submitted', 'under_review', 'requires_revision']
+    ).order_by('-created_at')[:5]  # Use created_at instead of submission_date
+
+    # Applications assigned to this reviewer
+    reviewer_applications = applications.filter(
+        reviewed_by=request.user
+    ).order_by('-created_at')[:5]  # Use created_at instead of updated_at
+
+    # Recent activities
+    recent_activities = ApplicationActivity.objects.all().order_by('-performed_at')[:10]
 
     context = {
         'pending_applications': pending_applications,
         'under_review': under_review,
         'requires_revision': requires_revision,
         'recent_applications': recent_applications,
-        'recent_activities': recent_activities
+        'reviewer_applications': reviewer_applications,
+        'recent_activities': recent_activities,
+        'today': timezone.now().date().isoformat()
     }
     return render(request, 'reviewer/dashboard.html', context)
+
+
+@login_required
+@user_passes_test(is_reviewer)
+def dashboard_counts(request):
+    """API endpoint to get updated counts for dashboard"""
+    return JsonResponse({
+        'pending_applications': BusinessApplication.objects.filter(status='submitted').count(),
+        'under_review': BusinessApplication.objects.filter(status='under_review').count(),
+        'requires_revision': BusinessApplication.objects.filter(status='requires_revision').count(),
+    })
 
 
 @user_passes_test(is_reviewer)
@@ -126,6 +149,7 @@ def application_detail(request, application_id):
             )
 
             send_application_notification(
+                request=request,
                 user=application.applicant,
                 application=application,
                 status='under_review',
@@ -147,6 +171,7 @@ def application_detail(request, application_id):
 
                 # Send notification to applicant
                 send_application_notification(
+                    request=request,
                     user=application.applicant,
                     application=application,
                     status='requires_revision',
@@ -173,6 +198,7 @@ def application_detail(request, application_id):
 
             # Send notification to applicant
             send_application_notification(
+                request=request,
                 user=application.applicant,
                 application=application,
                 status='approved',
@@ -207,6 +233,7 @@ def application_detail(request, application_id):
 
             # Send notification to applicant
             send_application_notification(
+                request=request,
                 user=application.applicant,
                 application=application,
                 status='rejected',

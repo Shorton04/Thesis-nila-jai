@@ -1,0 +1,35 @@
+<!-- templates/notifications/email/deadline_reminder.txt -->
+DEADLINE REMINDER - Business Permit System
+
+Dear {{ user.get_full_name|default:user.email }},
+
+This is a friendly reminder about an upcoming deadline for your business permit application.
+
+⚠️ DEADLINE TOMORROW: {{ deadline|date:"F j, Y" }}
+Application Number: {{ application.application_number }}
+Business Name: {{ application.business_name }}
+{% if revision %}
+Required Action: Submit revisions for your application
+Revision Details: {{ revision.description }}
+{% elif assessment %}
+Required Action: Complete payment for your business permit
+Amount Due: ₱{{ assessment.total_amount }}
+{% endif %}
+
+WHAT TO DO:
+{% if revision %}
+Please log in to your account and submit the requested revisions before the deadline to avoid delays in processing your application.
+{% elif assessment %}
+Please complete the payment before the deadline to finalize your business permit approval.
+{% else %}
+Please log in to your account and take the necessary action before the deadline.
+{% endif %}
+
+To view your application, please visit:
+{{ site_url }}{% url 'applications:application_detail' application.id %}
+
+If you have already completed this action or have questions, please contact our support team at support@businesspermitsystem.gov.ph or call us at (123) 456-7890.
+
+---
+This is an automated email reminder. Please do not reply to this message.
+© 2025 Business Permit System. All rights reserved.

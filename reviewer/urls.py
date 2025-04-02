@@ -6,6 +6,7 @@ app_name = 'reviewer'
 
 urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('dashboard/counts/', views.dashboard_counts, name='dashboard_counts'),
     path('applications/', views.application_list, name='application_list'),
     path('applications/<uuid:application_id>/',
          views.application_detail, name='application_detail'),
