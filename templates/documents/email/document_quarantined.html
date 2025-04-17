@@ -1,0 +1,31 @@
+<!-- documents/templates/documents/email/document_quarantined.html -->
+<div>
+    <h2>Document Quarantined</h2>
+    <p>Your document has been placed in quarantine for the following reason:</p>
+    <p><strong>{{ reason }}</strong></p>
+    {% if notes %}
+    <p>Additional notes: {{ notes }}</p>
+    {% endif %}
+    <p>Please contact the admin team for more information.</p>
+</div>
+
+<!-- documents/templates/documents/email/admin_quarantine_notification.html -->
+<div>
+    <h2>New Document in Quarantine</h2>
+    <p>A document has been quarantined and requires review:</p>
+    <ul>
+        <li>Document Type: {{ document.get_document_type_display }}</li>
+        <li>Uploaded By: {{ uploader.get_full_name }}</li>
+        <li>Reason: {{ reason }}</li>
+        <li>Date: {{ date }}</li>
+    </ul>
+    <p>Please review this document in the admin panel.</p>
+</div>
+
+<!-- documents/templates/documents/email/document_released.html -->
+<div>
+    <h2>Document Released from Quarantine</h2>
+    <p>Your document has been reviewed and released from quarantine.</p>
+    <p>Released by: {{ released_by.get_full_name }}</p>
+    <p>Release date: {{ release_date }}</p>
+</div>

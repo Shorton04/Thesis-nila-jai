@@ -1,0 +1,238 @@
+{# templates/applications/steps/amendment_details.html #}
+<div class="px-4 py-5 sm:p-6">
+    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Amendment Details</h3>
+    <p class="mb-4 text-sm text-gray-500">Please provide details for the selected amendments.</p>
+
+    {% if not amendment_types %}
+    <div class="rounded-md bg-yellow-50 p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-yellow-800">No amendment types selected</h3>
+                <div class="mt-2 text-sm text-yellow-700">
+                    <p>Please go back to the previous step and select at least one type of amendment.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+        {% for amendment_type in amendment_types %}
+            {% if amendment_type == "Business Name Change" or amendment_type == "business_name" %}
+                <div class="mt-6 border-t border-gray-200 pt-6">
+                    <h4 class="text-md font-medium text-gray-900 mb-4">Business Name Change</h4>
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div class="sm:col-span-6">
+                            <label for="new_business_name" class="block text-sm font-medium text-gray-700">
+                                New Business Name
+                            </label>
+                            <div class="mt-1">
+                                <input type="text" name="new_business_name" id="new_business_name" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-6">
+                            <label for="new_trade_name" class="block text-sm font-medium text-gray-700">
+                                New Trade Name/Franchise (if applicable)
+                            </label>
+                            <div class="mt-1">
+                                <input type="text" name="new_trade_name" id="new_trade_name" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% if amendment_type == "Change of Ownership" or amendment_type == "ownership" %}
+                <div class="mt-6 border-t border-gray-200 pt-6">
+                    <h4 class="text-md font-medium text-gray-900 mb-4">Transfer of Ownership</h4>
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div class="sm:col-span-6">
+                            <label for="previous_owner" class="block text-sm font-medium text-gray-700">
+                                Previous Owner's Name
+                            </label>
+                            <div class="mt-1">
+                                <input type="text" name="previous_owner" id="previous_owner" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-6">
+                            <label for="new_owner" class="block text-sm font-medium text-gray-700">
+                                New Owner's Name
+                            </label>
+                            <div class="mt-1">
+                                <input type="text" name="new_owner" id="new_owner" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label for="new_owner_contact" class="block text-sm font-medium text-gray-700">
+                                New Owner's Contact Number
+                            </label>
+                            <div class="mt-1">
+                                <input type="text" name="new_owner_contact" id="new_owner_contact" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label for="new_owner_email" class="block text-sm font-medium text-gray-700">
+                                New Owner's Email
+                            </label>
+                            <div class="mt-1">
+                                <input type="email" name="new_owner_email" id="new_owner_email" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% if amendment_type == "Change of Address" or amendment_type == "address" %}
+                <div class="mt-6 border-t border-gray-200 pt-6">
+                    <h4 class="text-md font-medium text-gray-900 mb-4">Change of Address</h4>
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div class="sm:col-span-6">
+                            <label for="{{ form.business_address.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                New Business Address
+                            </label>
+                            <div class="mt-1">
+                                {{ form.business_address }}
+                            </div>
+                            {% if form.business_address.errors %}
+                            <p class="mt-2 text-sm text-red-600">
+                                {{ form.business_address.errors.0 }}
+                            </p>
+                            {% endif %}
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label for="{{ form.postal_code.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                New Postal Code
+                            </label>
+                            <div class="mt-1">
+                                {{ form.postal_code }}
+                            </div>
+                            {% if form.postal_code.errors %}
+                            <p class="mt-2 text-sm text-red-600">
+                                {{ form.postal_code.errors.0 }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% if amendment_type == "Change of Business Type" or amendment_type == "business_type" %}
+                <div class="mt-6 border-t border-gray-200 pt-6">
+                    <h4 class="text-md font-medium text-gray-900 mb-4">Change of Business Type</h4>
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div class="sm:col-span-3">
+                            <label for="current_business_type" class="block text-sm font-medium text-gray-700">
+                                Current Business Type
+                            </label>
+                            <div class="mt-1">
+                                <select id="current_business_type" name="current_business_type" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <option value="single">Single Proprietorship</option>
+                                    <option value="partnership">Partnership</option>
+                                    <option value="corporation">Corporation</option>
+                                    <option value="cooperative">Cooperative</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label for="{{ form.business_type.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                New Business Type
+                            </label>
+                            <div class="mt-1">
+                                {{ form.business_type }}
+                            </div>
+                            {% if form.business_type.errors %}
+                            <p class="mt-2 text-sm text-red-600">
+                                {{ form.business_type.errors.0 }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% if amendment_type == "Add/Remove Line of Business" or amendment_type == "line_of_business" %}
+                <div class="mt-6 border-t border-gray-200 pt-6">
+                    <h4 class="text-md font-medium text-gray-900 mb-4">Line of Business Change</h4>
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div class="sm:col-span-6">
+                            <label for="current_line_of_business" class="block text-sm font-medium text-gray-700">
+                                Current Line of Business
+                            </label>
+                            <div class="mt-1">
+                                <input type="text" name="current_line_of_business" id="current_line_of_business" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-6">
+                            <label for="new_line_of_business" class="block text-sm font-medium text-gray-700">
+                                New Line of Business
+                            </label>
+                            <div class="mt-1">
+                                <input type="text" name="new_line_of_business" id="new_line_of_business" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% if amendment_type == "Other Changes" or amendment_type == "other" %}
+                <div class="mt-6 border-t border-gray-200 pt-6">
+                    <h4 class="text-md font-medium text-gray-900 mb-4">Other Changes</h4>
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div class="sm:col-span-6">
+                            <label for="other_changes_description" class="block text-sm font-medium text-gray-700">
+                                Description of Other Changes
+                            </label>
+                            <div class="mt-1">
+                                <textarea id="other_changes_description" name="other_changes_description" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <!-- Contact Information -->
+    <div class="mt-6 border-t border-gray-200 pt-6">
+        <h4 class="text-md font-medium text-gray-900 mb-4">Updated Contact Information</h4>
+        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div class="sm:col-span-3">
+                <label for="{{ form.telephone.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Telephone
+                </label>
+                <div class="mt-1">
+                    {{ form.telephone }}
+                </div>
+                {% if form.telephone.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.telephone.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-3">
+                <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Email
+                </label>
+                <div class="mt-1">
+                    {{ form.email }}
+                </div>
+                {% if form.email.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.email.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

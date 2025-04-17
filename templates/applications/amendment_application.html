@@ -1,0 +1,1229 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Amendment Application{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header Section -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg p-6 mb-6 shadow-md">
+        <h1 class="text-3xl font-bold">Business Permit Amendment</h1>
+        <p class="mt-2">Complete the form below to amend your existing business permit details</p>
+        {% if application_id %}
+        <div class="mt-4 flex items-center">
+            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 text-blue-600">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <span class="text-sm opacity-75">Application ID:</span>
+                <span class="text-base font-semibold">{{ application_id }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Messages/Alerts -->
+    {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="p-4 mb-2 rounded-md flex items-center {% if message.tags == 'success' %}bg-green-100 text-green-800 border-l-4 border-green-600{% elif message.tags == 'error' %}bg-red-100 text-red-800 border-l-4 border-red-600{% else %}bg-blue-100 text-blue-800 border-l-4 border-blue-600{% endif %}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {% if message.tags == 'success' %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                {% elif message.tags == 'error' %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {% else %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {% endif %}
+            </svg>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- No steps indicator, single form approach -->
+
+    <!-- Main Form -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="p-6 bg-gray-50 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-800">Amendment Application Form</h2>
+            <p class="text-gray-600">Fields marked with <span class="text-red-500">*</span> are required</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="p-6" id="amendmentForm">
+            {% csrf_token %}
+
+            <!-- Amendment Information Section -->
+            <div class="mb-8">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800">Amendment Information</h3>
+                </div>
+                
+                <div class="bg-white p-4 rounded-md border border-gray-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label for="{{ form.previous_permit_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Current Permit Number <span class="text-red-500">*</span></label>
+                            {{ form.previous_permit_number }}
+                            {% if form.previous_permit_number.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.previous_permit_number.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.business_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Business Name <span class="text-red-500">*</span></label>
+                            {{ form.business_name }}
+                            {% if form.business_name.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.business_name.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.business_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Business Type</label>
+                            {{ form.business_type }}
+                            {% if form.business_type.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.business_type.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Updated Business Details Section -->
+            <div class="mb-8">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800">Updated Business Details</h3>
+                </div>
+                
+                <div class="bg-white p-4 rounded-md border border-gray-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group col-span-1 md:col-span-2">
+                            <label for="{{ form.business_address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Business Address</label>
+                            {{ form.business_address }}
+                            {% if form.business_address.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.business_address.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.postal_code.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
+                            {{ form.postal_code }}
+                            {% if form.postal_code.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.postal_code.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.telephone.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Telephone Number</label>
+                            {{ form.telephone }}
+                            {% if form.telephone.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.telephone.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Amendment Reason Section -->
+            <div class="mb-8">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800">Amendment Reason</h3>
+                </div>
+                
+                <div class="bg-white p-4 rounded-md border border-gray-200">
+                    <div class="grid grid-cols-1 gap-6">
+                        <div class="form-group">
+                            <label for="{{ form.amendment_reason.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Reason for Amendment <span class="text-red-500">*</span></label>
+                            {{ form.amendment_reason }}
+                            {% if form.amendment_reason.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.amendment_reason.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+<!-- Document Upload Section -->
+<div class="mb-8">
+    <div class="flex items-center mb-4">
+        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800">Required Documents</h3>
+    </div>
+    
+    <div class="bg-white p-4 rounded-md border border-gray-200">
+        <div class="mb-6">
+            <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                <ul role="list" class="divide-y divide-gray-200">
+                    <!-- Board Resolution -->
+                    <li>
+                        <div class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">Board Resolution (for Corporations or Cooperatives)</p>
+                                        <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                                    </div>
+                                </div>
+                                <div class="flex">
+                                    <button type="button" onclick="openCamera('board_resolution')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Camera
+                                    </button>
+                                    <div class="relative">
+                                        <input type="file" id="board_resolution" name="board_resolution" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                                        <label for="board_resolution" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                            <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                            </svg>
+                                            Upload
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="board_resolution_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-medium text-gray-900 document-name"></span>
+                                    <button type="button" onclick="removeFile('board_resolution')" class="text-red-600 hover:text-red-800">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Updated DTI/SEC/CDA Registration -->
+                    <li>
+                        <div class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">Updated DTI/SEC/CDA Registration</p>
+                                        <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 10MB)</p>
+                                    </div>
+                                </div>
+                                <div class="flex">
+                                    <button type="button" onclick="openCamera('updated_registration')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Camera
+                                    </button>
+                                    <div class="relative">
+                                        <input type="file" id="updated_registration" name="updated_registration" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                                        <label for="updated_registration" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                            <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                            </svg>
+                                            Upload
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="updated_registration_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-medium text-gray-900 document-name"></span>
+                                    <button type="button" onclick="removeFile('updated_registration')" class="text-red-600 hover:text-red-800">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Deed of Absolute Sale or Extra Judicial Settlement -->
+                    <li>
+                        <div class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">Deed of Absolute Sale or Extra Judicial Settlement</p>
+                                        <p class="text-xs text-gray-500">For transfer of ownership (PDF, JPG or PNG, Max 10MB)</p>
+                                    </div>
+                                </div>
+                                <div class="flex">
+                                    <button type="button" onclick="openCamera('deed_of_sale')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Camera
+                                    </button>
+                                    <div class="relative">
+                                        <input type="file" id="deed_of_sale" name="deed_of_sale" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                                        <label for="deed_of_sale" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                            <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                            </svg>
+                                            Upload
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="deed_of_sale_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-medium text-gray-900 document-name"></span>
+                                    <button type="button" onclick="removeFile('deed_of_sale')" class="text-red-600 hover:text-red-800">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Deed of Assignment/Transfer of Rights -->
+                    <li>
+                        <div class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">Deed of Assignment/Transfer of Rights</p>
+                                        <p class="text-xs text-gray-500">For transfer of ownership (PDF, JPG or PNG, Max 10MB)</p>
+                                    </div>
+                                </div>
+                                <div class="flex">
+                                    <button type="button" onclick="openCamera('deed_of_assignment')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Camera
+                                    </button>
+                                    <div class="relative">
+                                        <input type="file" id="deed_of_assignment" name="deed_of_assignment" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                                        <label for="deed_of_assignment" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                            <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                            </svg>
+                                            Upload
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="deed_of_assignment_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-medium text-gray-900 document-name"></span>
+                                    <button type="button" onclick="removeFile('deed_of_assignment')" class="text-red-600 hover:text-red-800">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Proof of Legal Ownership for New Address -->
+                    <li>
+                        <div class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">Proof of Legal Ownership for New Address</p>
+                                        <p class="text-xs text-gray-500">If address is changing (PDF, JPG or PNG, Max 10MB)</p>
+                                    </div>
+                                </div>
+                                <div class="flex">
+                                    <button type="button" onclick="openCamera('ownership_proof')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Camera
+                                    </button>
+                                    <div class="relative">
+                                        <input type="file" id="ownership_proof" name="ownership_proof" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                                        <label for="ownership_proof" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                            <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                            </svg>
+                                            Upload
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="ownership_proof_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-medium text-gray-900 document-name"></span>
+                                    <button type="button" onclick="removeFile('ownership_proof')" class="text-red-600 hover:text-red-800">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+  <!-- Updated Contract of Lease -->
+<li>
+    <div class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">Updated Contract of Lease</p>
+                    <p class="text-xs text-gray-500">If business location is leased (PDF, JPG or PNG, Max 10MB)</p>
+                </div>
+            </div>
+            <div class="flex">
+                <button type="button" onclick="openCamera('lease_contract')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Camera
+                </button>
+                <div class="relative">
+                    <input type="file" id="lease_contract" name="lease_contract" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                    <label for="lease_contract" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        Upload
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="lease_contract_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-gray-900 document-name"></span>
+                <button type="button" onclick="removeFile('lease_contract')" class="text-red-600 hover:text-red-800">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
+
+<!-- Photo of Business Establishment with Signage -->
+<li>
+    <div class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">Photo of Business Establishment with Signage</p>
+                    <p class="text-xs text-gray-500">JPG or PNG (Max 10MB)</p>
+                </div>
+            </div>
+            <div class="flex">
+                <button type="button" onclick="openCamera('business_photo')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Camera
+                </button>
+                <div class="relative">
+                    <input type="file" id="business_photo" name="business_photo" accept=".jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                    <label for="business_photo" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        Upload
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="business_photo_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-gray-900 document-name"></span>
+                <button type="button" onclick="removeFile('business_photo')" class="text-red-600 hover:text-red-800">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
+
+<!-- Written Authority of Representative with Government Issued IDs -->
+<li>
+    <div class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">Written Authority of Representative with IDs</p>
+                    <p class="text-xs text-gray-500">If applicable (PDF, JPG or PNG, Max 10MB)</p>
+                </div>
+            </div>
+            <div class="flex">
+                <button type="button" onclick="openCamera('representative_authority')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Camera
+                </button>
+                <div class="relative">
+                    <input type="file" id="representative_authority" name="representative_authority" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                    <label for="representative_authority" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        Upload
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="representative_authority_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-gray-900 document-name"></span>
+                <button type="button" onclick="removeFile('representative_authority')" class="text-red-600 hover:text-red-800">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
+
+<!-- Other necessary documents -->
+<li>
+    <div class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">Other Supporting Documents</p>
+                    <p class="text-xs text-gray-500">Any additional required documents (PDF, JPG or PNG, Max 10MB)</p>
+                </div>
+            </div>
+            <div class="flex">
+                <button type="button" onclick="openCamera('other_documents')" class="mr-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Camera
+                </button>
+                <div class="relative">
+                    <input type="file" id="other_documents" name="other_documents" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)">
+                    <label for="other_documents" class="cursor-pointer inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        Upload
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="other_documents_preview" class="hidden mt-3 p-2 border rounded-md bg-gray-50">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-gray-900 document-name"></span>
+                <button type="button" onclick="removeFile('other_documents')" class="text-red-600 hover:text-red-800">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Document Requirements Information Box -->
+        <div class="mt-4 mb-6 rounded-md bg-gray-50 p-4 border border-gray-200">
+            <h4 class="text-sm font-medium text-gray-900 mb-2">Required Documents Checklist:</h4>
+            <ul class="list-disc list-inside space-y-1 text-xs text-gray-700">
+                <li>Board Resolution (for Corporations or Cooperatives)</li>
+                <li>Updated DTI/SEC/CDA Registration</li>
+                <li>For Transfer of Ownership:
+                    <ul class="list-disc list-inside ml-4 space-y-1">
+                        <li>Deed of Absolute Sale or Extra Judicial Settlement</li>
+                        <li>Deed of Assignment/Transfer of Rights</li>
+                    </ul>
+                </li>
+                <li>Proof of Legal Ownership for New Address (if applicable)</li>
+                <li>Updated Contract of Lease (if applicable)</li>
+                <li>Photo of Business Establishment with Signage</li>
+                <li>Written Authority of Representative with Government Issued IDs (if applicable)</li>
+            </ul>
+            <p class="text-xs text-gray-500 mt-2">All documents must be clear, complete, and in PDF, JPG, or PNG format.</p>
+        </div>
+
+        <!-- AI Assisted Scanning Information -->
+        <div class="rounded-md bg-blue-50 p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="ml-3 flex-1 md:flex md:justify-between">
+                    <p class="text-sm text-blue-700">
+                        Our AI-powered system will scan your documents for authenticity and extract information automatically.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+            <!-- Terms and Declaration -->
+            <div class="mb-8">
+                <div class="bg-yellow-50 p-4 rounded-md border border-yellow-200">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-yellow-800">Declaration</h3>
+                            <div class="mt-2 text-sm text-yellow-700">
+                                <p>I declare under penalty of perjury that the information provided in this form is true and accurate. I understand that providing false information may result in rejection of my application and possible legal consequences.</p>
+                            </div>
+                            <div class="mt-4">
+                                <div class="flex items-center">
+                                    <input id="declaration_agree" name="declaration_agree" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                    <label for="declaration_agree" class="ml-2 block text-sm text-yellow-800">I agree to the declaration statement</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row justify-end items-center gap-4 mt-8 pt-6 border-t border-gray-200">
+                <div class="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
+                    <button type="submit" name="action" value="save_draft" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                        </svg>
+                        Save as Draft
+                    </button>
+                    
+                    <button type="submit" name="action" value="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Submit Application
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Form control styling */
+    input[type="text"], 
+    input[type="number"], 
+    input[type="email"], 
+    input[type="date"], 
+    input[type="tel"], 
+    select, 
+    textarea {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #D1D5DB;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        color: #1F2937;
+        background-color: #F9FAFB;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    input[type="text"]:focus, 
+    input[type="number"]:focus, 
+    input[type="email"]:focus, 
+    input[type="date"]:focus, 
+    input[type="tel"]:focus, 
+    select:focus, 
+    textarea:focus {
+        outline: none;
+        ring: 2px;
+        ring-color: #3B82F6;
+        border-color: #3B82F6;
+    }
+
+    /* File upload area hover effects */
+    .drag-active {
+        border-color: #3B82F6;
+        background-color: #EFF6FF;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // File upload UI enhancements
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        fileInputs.forEach(input => {
+            const dropArea = input.closest('.flex.justify-center') || input.parentElement.closest('div');
+            
+            if (dropArea) {
+                // Highlight drop area when dragging files over it
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.classList.add('drag-active');
+                    });
+                });
+                
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.classList.remove('drag-active');
+                    });
+                });
+                
+                // Handle file drop
+                dropArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    
+                    if (files.length) {
+                        input.files = files;
+                        
+                        // Update UI to show selected file
+                        const fieldName = input.id;
+                        const previewDiv = document.getElementById(`${fieldName}_preview`);
+                        
+                        if (previewDiv) {
+                            const nameSpan = previewDiv.querySelector('.document-name');
+                            if (nameSpan) {
+                                nameSpan.textContent = files[0].name;
+                                previewDiv.classList.remove('hidden');
+                                validateDocument(files[0], fieldName);
+                            }
+                        } else {
+                            const fileNameElement = document.createElement('p');
+                            fileNameElement.className = 'text-xs text-green-600 mt-1';
+                            fileNameElement.textContent = files[0].name;
+                            
+                            // Remove any previous file name display
+                            const existingFileName = dropArea.querySelector('.text-green-600');
+                            if (existingFileName) {
+                                existingFileName.remove();
+                            }
+                            
+                            dropArea.appendChild(fileNameElement);
+                        }
+                    }
+                });
+            }
+            
+            // Show selected file name when picked via file dialog
+            input.addEventListener('change', function() {
+                if (this.files.length) {
+                    const fieldName = this.id;
+                    const previewDiv = document.getElementById(`${fieldName}_preview`);
+                    
+                    if (previewDiv) {
+                        const nameSpan = previewDiv.querySelector('.document-name');
+                        if (nameSpan) {
+                            nameSpan.textContent = this.files[0].name;
+                            previewDiv.classList.remove('hidden');
+                            validateDocument(this.files[0], fieldName);
+                        }
+                    } else {
+                        const dropArea = this.closest('.flex.justify-center') || this.parentElement.closest('div');
+                        if (dropArea) {
+                            const fileNameElement = document.createElement('p');
+                            fileNameElement.className = 'text-xs text-green-600 mt-1';
+                            fileNameElement.textContent = this.files[0].name;
+                            
+                            // Remove any previous file name display
+                            const existingFileName = dropArea.querySelector('.text-green-600');
+                            if (existingFileName) {
+                                existingFileName.remove();
+                            }
+                            
+                            dropArea.appendChild(fileNameElement);
+                        }
+                    }
+                }
+            });
+        });
+        
+        // Form validation before submission
+        const amendmentForm = document.getElementById('amendmentForm');
+        const declarationCheckbox = document.getElementById('declaration_agree');
+        const submitButton = document.querySelector('button[value="submit"]');
+        
+        if (amendmentForm) {
+            amendmentForm.addEventListener('submit', function(e) {
+                if (e.submitter && e.submitter.value === 'submit') {
+                    if (!declarationCheckbox.checked) {
+                        e.preventDefault();
+                        alert('Please agree to the declaration statement before submitting.');
+                        return false;
+                    }
+                    
+                    // Check for required fields
+                    const requiredFields = [
+                        '{{ form.previous_permit_number.id_for_label }}',
+                        '{{ form.business_name.id_for_label }}',
+                        '{{ form.amendment_reason.id_for_label }}'
+                    ];
+                    
+                    for (const fieldId of requiredFields) {
+                        const field = document.getElementById(fieldId);
+                        if (field && !field.value.trim()) {
+                            e.preventDefault();
+                            field.classList.add('border-blue-500');
+                            field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            alert('Please fill in all required fields before submitting.');
+                            return false;
+                        }
+                    }
+                    
+                    // Check for amendment type specific required documents
+                    let requiredDocuments = [];
+                    
+                    // Check business type change
+                    const businessType = document.getElementById('{{ form.business_type.id_for_label }}');
+                    if (businessType && businessType.value) {
+                        if (['Corporation', 'Cooperative'].includes(businessType.value)) {
+                            requiredDocuments.push('board_resolution');
+                        }
+                        requiredDocuments.push('updated_registration');
+                    }
+                    
+                    // Check address change
+                    const businessAddress = document.getElementById('{{ form.business_address.id_for_label }}');
+                    if (businessAddress && businessAddress.value.trim() !== '') {
+                        requiredDocuments.push('ownership_proof');
+                        requiredDocuments.push('lease_contract');
+                        requiredDocuments.push('business_photo');
+                    }
+                    
+                    let documentsMissing = false;
+                    let missingDocumentsList = [];
+                    
+                    for (const docId of requiredDocuments) {
+                        const docInput = document.getElementById(docId);
+                        if (docInput && (!docInput.files || docInput.files.length === 0)) {
+                            documentsMissing = true;
+                            const docElement = document.querySelector(`[for="${docId}"]`).closest('div.px-4');
+                            if (docElement) {
+                                const docLabel = docElement.querySelector('.text-sm.font-medium').textContent;
+                                missingDocumentsList.push(docLabel);
+                            } else {
+                                missingDocumentsList.push(`Document: ${docId}`);
+                            }
+                        }
+                    }
+                    
+                    if (documentsMissing) {
+                        e.preventDefault();
+                        alert(`Please upload the following required documents before submitting: \n- ${missingDocumentsList.join('\n- ')}`);
+                        return false;
+                    }
+                }
+            });
+        }
+        
+        // Remove highlighting when user starts typing in a field marked as error
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('input', function() {
+                this.classList.remove('border-blue-500');
+                this.classList.remove('border-red-500');
+            });
+        });
+        
+        // Camera related global variables
+        let currentCameraField = null;
+        let mediaStream = null;
+        
+        // Handle camera operations
+        window.openCamera = function(fieldName) {
+            currentCameraField = fieldName;
+            const cameraModal = document.getElementById('cameraModal');
+            
+            if (!cameraModal) {
+                console.error("Camera modal not found in the DOM");
+                return;
+            }
+            
+            const cameraStream = document.getElementById('camera-stream');
+            const cameraCanvas = document.getElementById('camera-canvas');
+            const captureUI = document.getElementById('capture-ui');
+            const retakeUI = document.getElementById('retake-ui');
+            
+            if (!cameraStream || !cameraCanvas || !captureUI || !retakeUI) {
+                console.error("Camera elements not found");
+                return;
+            }
+            
+            cameraModal.classList.remove('hidden');
+            captureUI.classList.remove('hidden');
+            retakeUI.classList.add('hidden');
+            cameraStream.classList.remove('hidden');
+            cameraCanvas.classList.add('hidden');
+            
+            // Request camera access
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(function(stream) {
+                    mediaStream = stream;
+                    cameraStream.srcObject = stream;
+                })
+                .catch(function(err) {
+                    console.error('Camera error:', err);
+                    alert('Unable to access camera. Please use the upload option instead.');
+                    closeCameraModal();
+                });
+        };
+        
+        // Close camera modal and clean up
+        function closeCameraModal() {
+            const cameraModal = document.getElementById('cameraModal');
+            
+            if (cameraModal) {
+                cameraModal.classList.add('hidden');
+            }
+            
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+        }
+        
+        // Setup camera button handlers if camera modal exists
+        const captureButton = document.getElementById('capture-button');
+        const retakeButton = document.getElementById('retake-button');
+        const usePhotoButton = document.getElementById('use-photo-button');
+        const closeCameraButton = document.getElementById('close-camera-button');
+        
+        if (captureButton) {
+            captureButton.addEventListener('click', function() {
+                const cameraStream = document.getElementById('camera-stream');
+                const cameraCanvas = document.getElementById('camera-canvas');
+                const captureUI = document.getElementById('capture-ui');
+                const retakeUI = document.getElementById('retake-ui');
+                
+                if (!cameraStream || !cameraCanvas || !captureUI || !retakeUI) {
+                    console.error("Camera elements not found for capture");
+                    return;
+                }
+                
+                const context = cameraCanvas.getContext('2d');
+                cameraCanvas.width = cameraStream.videoWidth;
+                cameraCanvas.height = cameraStream.videoHeight;
+                
+                context.drawImage(cameraStream, 0, 0, cameraCanvas.width, cameraCanvas.height);
+                
+                captureUI.classList.add('hidden');
+                retakeUI.classList.remove('hidden');
+                cameraStream.classList.add('hidden');
+                cameraCanvas.classList.remove('hidden');
+            });
+        }
+        
+        if (retakeButton) {
+            retakeButton.addEventListener('click', function() {
+                const captureUI = document.getElementById('capture-ui');
+                const retakeUI = document.getElementById('retake-ui');
+                const cameraStream = document.getElementById('camera-stream');
+                const cameraCanvas = document.getElementById('camera-canvas');
+                
+                if (captureUI && retakeUI && cameraStream && cameraCanvas) {
+                    captureUI.classList.remove('hidden');
+                    retakeUI.classList.add('hidden');
+                    cameraStream.classList.remove('hidden');
+                    cameraCanvas.classList.add('hidden');
+                }
+            });
+        }
+        
+        if (usePhotoButton) {
+            usePhotoButton.addEventListener('click', function() {
+                if (currentCameraField) {
+                    const cameraCanvas = document.getElementById('camera-canvas');
+                    
+                    if (!cameraCanvas) {
+                        console.error("Camera canvas not found");
+                        return;
+                    }
+                    
+                    cameraCanvas.toBlob(function(blob) {
+                        const fileName = `camera_capture_${Date.now()}.jpg`;
+                        const file = new File([blob], fileName, { type: 'image/jpeg' });
+                        
+                        // Create a DataTransfer object (browser's way to handle files)
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        
+                        // Set file input value
+                        const fileInput = document.getElementById(currentCameraField);
+                        
+                        if (fileInput) {
+                            fileInput.files = dataTransfer.files;
+                            
+                            // Update preview
+                            const previewDiv = document.getElementById(`${currentCameraField}_preview`);
+                            if (previewDiv) {
+                                const nameSpan = previewDiv.querySelector('.document-name');
+                                if (nameSpan) {
+                                    nameSpan.textContent = fileName;
+                                    previewDiv.classList.remove('hidden');
+                                    validateDocument(file, currentCameraField);
+                                }
+                            }
+                        } else {
+                            console.error("File input not found:", currentCameraField);
+                        }
+                        
+                        // Close modal
+                        closeCameraModal();
+                    }, 'image/jpeg', 0.95);
+                }
+            });
+        }
+        
+        if (closeCameraButton) {
+            closeCameraButton.addEventListener('click', closeCameraModal);
+        }
+        
+        // Handle file selection
+        window.handleFileSelect = function(input) {
+            if (input && input.files && input.files[0]) {
+                const file = input.files[0];
+                const fieldName = input.id;
+                const previewDiv = document.getElementById(`${fieldName}_preview`);
+                
+                if (!previewDiv) {
+                    console.error(`Preview div not found for ${fieldName}`);
+                    return;
+                }
+                
+                const nameSpan = previewDiv.querySelector('.document-name');
+                
+                if (nameSpan) {
+                    // Update preview with file name
+                    nameSpan.textContent = file.name;
+                    previewDiv.classList.remove('hidden');
+                    
+                    // Call AI validation service
+                    validateDocument(file, fieldName);
+                } else {
+                    console.error(`Name span not found in preview div for ${fieldName}`);
+                }
+            }
+        };
+        
+        // Remove file
+        window.removeFile = function(fieldName) {
+            const input = document.getElementById(fieldName);
+            const previewDiv = document.getElementById(`${fieldName}_preview`);
+            
+            if (input && previewDiv) {
+                // Clear file input
+                input.value = '';
+                
+                // Hide preview
+                previewDiv.classList.add('hidden');
+                
+                // Remove any validation indicators
+                const indicator = previewDiv.querySelector('.validation-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
+        };
+        
+        // Simulate AI document validation
+        window.validateDocument = function(file, fieldName) {
+            // In a real implementation, you would send the file to the server for AI validation
+            console.log(`Validating ${file.name} for ${fieldName}...`);
+            
+            // Simulate server processing time
+            setTimeout(function() {
+                const previewDiv = document.getElementById(`${fieldName}_preview`);
+                
+                if (!previewDiv) {
+                    console.error(`Preview div not found for ${fieldName} during validation`);
+                    return;
+                }
+                
+                const documentNameElement = previewDiv.querySelector('.document-name');
+                
+                if (!documentNameElement) {
+                    console.error(`Document name element not found in preview for ${fieldName}`);
+                    return;
+                }
+                
+                // Remove any existing validation indicator
+                const existingIndicator = documentNameElement.querySelector('.validation-indicator');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+                
+                // Add validation indicator (green checkmark)
+                const validationSpan = document.createElement('span');
+                validationSpan.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-2 validation-indicator';
+                validationSpan.innerHTML = `
+                    <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Validated
+                `;
+                
+                documentNameElement.appendChild(validationSpan);
+                console.log(`Document ${file.name} validated successfully`);
+            }, 1500);
+        };
+        
+        // Dynamic document requirements based on amendment type
+        const businessTypeField = document.getElementById('{{ form.business_type.id_for_label }}');
+        if (businessTypeField) {
+            businessTypeField.addEventListener('change', function() {
+                const boardResolutionSection = document.querySelector('[for="board_resolution"]').closest('li');
+                if (this.value === 'Corporation' || this.value === 'Cooperative') {
+                    boardResolutionSection.classList.remove('hidden');
+                    // Add required marker
+                    const label = boardResolutionSection.querySelector('.text-sm.font-medium');
+                    if (label && !label.innerHTML.includes('<span class="text-red-500">*</span>')) {
+                        label.innerHTML += ' <span class="text-red-500">*</span>';
+                    }
+                } else {
+                    boardResolutionSection.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Handle dynamic fields for ownership transfer
+        const amendmentReasonField = document.getElementById('{{ form.amendment_reason.id_for_label }}');
+        if (amendmentReasonField) {
+            amendmentReasonField.addEventListener('input', function() {
+                const text = this.value.toLowerCase();
+                const deedOfSaleSection = document.querySelector('[for="deed_of_sale"]').closest('li');
+                const deedOfAssignmentSection = document.querySelector('[for="deed_of_assignment"]').closest('li');
+                
+                if (text.includes('ownership') || text.includes('transfer') || text.includes('sale')) {
+                    deedOfSaleSection.classList.remove('hidden');
+                    deedOfAssignmentSection.classList.remove('hidden');
+                    
+                    // Add required marker
+                    const saleLabel = deedOfSaleSection.querySelector('.text-sm.font-medium');
+                    if (saleLabel && !saleLabel.innerHTML.includes('<span class="text-red-500">*</span>')) {
+                        saleLabel.innerHTML += ' <span class="text-red-500">*</span>';
+                    }
+                } else {
+                    deedOfSaleSection.classList.add('hidden');
+                    deedOfAssignmentSection.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Handle address change detection
+        const businessAddressField = document.getElementById('{{ form.business_address.id_for_label }}');
+        if (businessAddressField) {
+            businessAddressField.addEventListener('input', function() {
+                const ownershipProofSection = document.querySelector('[for="ownership_proof"]').closest('li');
+                const leaseContractSection = document.querySelector('[for="lease_contract"]').closest('li');
+                const businessPhotoSection = document.querySelector('[for="business_photo"]').closest('li');
+                
+                if (this.value.trim() !== '') {
+                    ownershipProofSection.classList.remove('hidden');
+                    leaseContractSection.classList.remove('hidden');
+                    businessPhotoSection.classList.remove('hidden');
+                    
+                    // Add required marker
+                    const photoLabel = businessPhotoSection.querySelector('.text-sm.font-medium');
+                    if (photoLabel && !photoLabel.innerHTML.includes('<span class="text-red-500">*</span>')) {
+                        photoLabel.innerHTML += ' <span class="text-red-500">*</span>';
+                    }
+                } else {
+                    ownershipProofSection.classList.add('hidden');
+                    leaseContractSection.classList.add('hidden');
+                    businessPhotoSection.classList.add('hidden');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

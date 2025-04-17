@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Terms and Conditions - Business Permit System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .terms-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+        line-height: 1.6;
+        background-color: #f9fafb;
+    }
+    .terms-container h1 {
+        color: #2c3e50;
+        border-bottom: 2px solid #6c63ff;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .terms-container h2 {
+        color: #34495e;
+        margin-top: 1.5rem;
+    }
+    .terms-container p {
+        margin-bottom: 1rem;
+        color: #2c3e50;
+    }
+    .terms-container ul {
+        padding-left: 2rem;
+        margin-bottom: 1rem;
+    }
+    .last-updated {
+        font-style: italic;
+        color: #7f8c8d;
+        margin-top: 2rem;
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="terms-container">
+    <h1>Terms and Conditions</h1>
+
+    <h2>1. Acceptance of Terms</h2>
+    <p>By accessing and using the Business Permit System, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our service.</p>
+
+    <h2>2. User Account</h2>
+    <p>When creating an account, you agree to:</p>
+    <ul>
+        <li>Provide accurate and complete information</li>
+        <li>Maintain the confidentiality of your account credentials</li>
+        <li>Accept responsibility for all activities under your account</li>
+    </ul>
+
+    <h2>3. Document Submission</h2>
+    <p>Users are responsible for:</p>
+    <ul>
+        <li>Submitting genuine and accurate documents</li>
+        <li>Ensuring all uploaded documents meet the system's requirements</li>
+        <li>Understanding that fraudulent submissions may result in account suspension</li>
+    </ul>
+
+    <h2>4. Privacy</h2>
+    <p>Your personal and business information will be handled according to our Privacy Policy. We are committed to protecting your data and maintaining confidentiality.</p>
+
+    <h2>5. Intellectual Property</h2>
+    <p>All content, features, and functionality of the Business Permit System are owned by our organization and are protected by intellectual property laws.</p>
+
+    <h2>6. Limitation of Liability</h2>
+    <p>Our system provides a platform for business permit applications. We are not liable for:</p>
+    <ul>
+        <li>Delays in permit processing</li>
+        <li>Rejection of applications</li>
+        <li>Any direct or indirect damages arising from use of the system</li>
+    </ul>
+
+    <h2>7. Modifications</h2>
+    <p>We reserve the right to modify these Terms and Conditions at any time. Continued use of the system after changes constitutes acceptance of the new terms.</p>
+
+    <h2>8. Governing Law</h2>
+    <p>These terms are governed by the laws of the jurisdiction where the local government unit operates.</p>
+
+    <div class="last-updated">
+        Last Updated: March 31, 2025
+    </div>
+</div>
+{% endblock %}

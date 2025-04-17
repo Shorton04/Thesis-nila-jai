@@ -1,225 +1,277 @@
-{# templates/documents/document_detail.html #}
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Document Details{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="mb-8">
-        <h1 class="text-2xl font-bold mb-2">Document Details</h1>
-        <p class="text-gray-600">{{ document.get_document_type_display }}</p>
+<div class="container my-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'documents:document_list' %}">Documents</a></li>
+                    <li class="breadcrumb-item active">{{ document.get_document_type_display }}</li>
+                </ol>
+            </nav>
+        </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Document Preview -->
-        <div class="lg:col-span-2">
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-semibold mb-4">Document Preview</h2>
-                <div id="documentPreview" class="border rounded-lg overflow-hidden">
-                    <img src="{% url 'documents:document_preview' document.id %}" 
-                         alt="Document Preview" 
-                         class="w-full h-auto">
-                </div>
-
-                <!-- Document Actions -->
-                <div class="mt-4 flex space-x-4">
-                    <a href="{% url 'documents:document_download' document.id %}"
-                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
-                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                        </svg>
-                        Download Original
-                    </a>
-                    <button type="button" id="updateDocumentBtn"
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12"/>
-                        </svg>
-                        Upload New Version
-                    </button>
-                </div>
-            </div>
-        </div>
-
+    <div class="row">
         <!-- Document Information -->
-        <div class="space-y-8">
-            <!-- Status and Validation -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-semibold mb-4">Document Status</h2>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-sm font-medium text-gray-500">Verification Status</label>
-                        <div class="mt-1">
-                            <span class="px-2 py-1 text-sm font-semibold rounded-full 
-                                {% if document.is_verified %}bg-green-100 text-green-800
-                                {% elif document.is_flagged %}bg-red-100 text-red-800
-                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
-                                {% if document.is_verified %}Verified
-                                {% elif document.is_flagged %}Flagged
-                                {% else %}Pending Review{% endif %}
-                            </span>
-                        </div>
+        <div class="col-md-5">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Document Information</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-5"><strong>Document Type:</strong></div>
+                        <div class="col-md-7">{{ document.get_document_type_display }}</div>
                     </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-gray-500">Validation Score</label>
-                        <div class="mt-1 flex items-center">
-                            <div class="flex-1 bg-gray-200 rounded-full h-2">
-                                <div class="bg-blue-600 h-2 rounded-full"
-                                     style="width: {{ document.confidence_score|floatformat:0 }}%"></div>
-                            </div>
-                            <span class="ml-2 text-sm text-gray-600">
-                                {{ document.confidence_score|floatformat:0 }}%
-                            </span>
-                        </div>
+                    <div class="row mb-3">
+                        <div class="col-md-5"><strong>Original Filename:</strong></div>
+                        <div class="col-md-7">{{ document.original_filename }}</div>
                     </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-gray-500">Fraud Detection</label>
-                        <div class="mt-1">
-                            {% if document.fraud_score > 0.7 %}
-                                <div class="text-red-600 flex items-center">
-                                    <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    High Risk ({{ document.fraud_score|floatformat:2 }})
-                                </div>
-                                {% if document.fraud_flags %}
-                                    <ul class="mt-2 text-sm text-red-600 list-disc list-inside">
-                                        {% for flag in document.fraud_flags %}
-                                            <li>{{ flag }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                {% endif %}
-                            {% else %}
-                                <div class="text-green-600 flex items-center">
-                                    <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Low Risk ({{ document.fraud_score|floatformat:2 }})
-                                </div>
+                    <div class="row mb-3">
+                        <div class="col-md-5"><strong>Uploaded:</strong></div>
+                        <div class="col-md-7">{{ document.uploaded_at|date:"F d, Y H:i" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-5"><strong>Status:</strong></div>
+                        <div class="col-md-7">
+                            {% if document.verification_status == 'pending' %}
+                                <span class="badge badge-warning">Pending</span>
+                            {% elif document.verification_status == 'verified' %}
+                                <span class="badge badge-success">Verified</span>
+                            {% elif document.verification_status == 'fraud' %}
+                                <span class="badge badge-danger">Potential Fraud</span>
+                            {% elif document.verification_status == 'rejected' %}
+                                <span class="badge badge-danger">Rejected</span>
                             {% endif %}
                         </div>
                     </div>
+                    <div class="row mb-3">
+                        <div class="col-md-5"><strong>Verification Date:</strong></div>
+                        <div class="col-md-7">
+                            {% if document.verification_timestamp %}
+                                {{ document.verification_timestamp|date:"F d, Y H:i" }}
+                            {% else %}
+                                Not verified yet
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-5"><strong>Application:</strong></div>
+                        <div class="col-md-7">
+                            <a href="{% url 'applications:application_detail' document.application.id %}">
+                                #{{ document.application.id }} - {{ document.application.get_application_type_display }}
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="mt-4">
+                        <a href="{{ document.file.url }}" class="btn btn-primary" target="_blank">
+                            <i class="fa fa-download"></i> Download Document
+                        </a>
+                        
+                        {% if document.verification_status == 'fraud' or document.verification_status == 'rejected' %}
+                            <a href="{% url 'documents:resubmit_document' document.id %}" class="btn btn-warning">
+                                <i class="fa fa-redo"></i> Resubmit Document
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-
-            <!-- OCR Results -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-semibold mb-4">Extracted Information</h2>
-                <div class="space-y-4">
-                    {% if document.extracted_text %}
-                        <div class="prose max-w-none">
-                            <details>
-                                <summary class="text-sm font-medium text-gray-500 cursor-pointer">
-                                    View Extracted Text
-                                </summary>
-                                <div class="mt-2 p-4 bg-gray-50 rounded-md text-sm">
-                                    {{ document.extracted_text|linebreaks }}
-                                </div>
-                            </details>
+        </div>
+        
+        <!-- Document Preview and Verification -->
+        <div class="col-md-7">
+            <!-- Document Preview -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Document Preview</h4>
+                </div>
+                <div class="card-body text-center">
+                    {% if document.file.url|lower|slice:"-4:" == ".pdf" %}
+                        <div class="embed-responsive embed-responsive-1by1">
+                            <iframe class="embed-responsive-item" src="{{ document.file.url }}"></iframe>
+                        </div>
+                    {% elif document.file.url|lower|slice:"-4:" in ".jpg,.png,.gif,.jpeg,.webp" %}
+                        <img src="{{ document.file.url }}" class="img-fluid document-preview" alt="Document Preview">
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fa fa-info-circle"></i> Preview not available for this file type.
+                            <a href="{{ document.file.url }}" class="alert-link" target="_blank">Click here to view</a>
                         </div>
                     {% endif %}
-
-                    {% if document.validation_results %}
-                        <div class="mt-4">
-                            <h3 class="text-sm font-medium text-gray-500 mb-2">Field Validation</h3>
-                            {% for field, validation in document.validation_results.items %}
-                                <div class="mb-3 p-3 bg-gray-50 rounded-md">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-sm font-medium">{{ field|title }}</span>
-                                        {% if validation.is_valid %}
-                                            <span class="text-green-600 text-sm">✓ Valid</span>
-                                        {% else %}
-                                            <span class="text-red-600 text-sm">✗ Invalid</span>
-                                        {% endif %}
+                </div>
+            </div>
+            
+            <!-- AI Verification Results -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">AI Verification Results</h4>
+                </div>
+                <div class="card-body">
+                    {% if document.verification_details %}
+                        {% if document.verification_status == 'verified' %}
+                            <div class="alert alert-success">
+                                <i class="fa fa-check-circle fa-2x float-left mr-3"></i>
+                                <div>
+                                    <h5>Document Verified</h5>
+                                    <p>Our AI system has verified this document as authentic with 
+                                    {{ document.verification_details.fraud_detection.confidence_score|floatformat:2 }}% confidence.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-light mb-3">
+                                        <div class="card-body">
+                                            <h5 class="card-title">OCR Results</h5>
+                                            <p>{{ document.verification_details.ocr.text }}</p>
+                                            {% if document.verification_details.ocr.extracted_fields %}
+                                                <h6>Extracted Information:</h6>
+                                                <ul>
+                                                    {% for key, value in document.verification_details.ocr.extracted_fields.items %}
+                                                        <li><strong>{{ key }}:</strong> {{ value }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endif %}
+                                        </div>
                                     </div>
-                                    {% if validation.issues %}
-                                        <ul class="mt-2 text-sm text-red-600 list-disc list-inside">
-                                            {% for issue in validation.issues %}
-                                                <li>{{ issue }}</li>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Verification Metrics</h5>
+                                            <div class="mb-3">
+                                                <label>Confidence Score:</label>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-success" role="progressbar" 
+                                                        style="width: {{ document.verification_details.fraud_detection.confidence_score|floatformat:0 }}%" 
+                                                        aria-valuenow="{{ document.verification_details.fraud_detection.confidence_score|floatformat:0 }}" 
+                                                        aria-valuemin="0" 
+                                                        aria-valuemax="100">
+                                                        {{ document.verification_details.fraud_detection.confidence_score|floatformat:0 }}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label>Fraud Probability:</label>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-danger" role="progressbar" 
+                                                        style="width: {{ document.verification_details.fraud_detection.fraud_probability|floatformat:0 }}%" 
+                                                        aria-valuenow="{{ document.verification_details.fraud_detection.fraud_probability|floatformat:0 }}" 
+                                                        aria-valuemin="0" 
+                                                        aria-valuemax="100">
+                                                        {{ document.verification_details.fraud_detection.fraud_probability|floatformat:0 }}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% elif document.verification_status == 'fraud' %}
+                            <div class="alert alert-danger">
+                                <i class="fa fa-exclamation-triangle fa-2x float-left mr-3"></i>
+                                <div>
+                                    <h5>Potential Fraud Detected</h5>
+                                    <p>Our AI system has flagged this document as potentially fraudulent with 
+                                    {{ document.verification_details.fraud_detection.fraud_probability|floatformat:2 }}% confidence.</p>
+                                </div>
+                            </div>
+                            
+                            {% if document.verification_details.fraud_detection.fraud_indicators %}
+                                <div class="card bg-light mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Detected Issues</h5>
+                                        <ul>
+                                            {% for indicator in document.verification_details.fraud_detection.fraud_indicators %}
+                                                <li>{{ indicator }}</li>
                                             {% endfor %}
                                         </ul>
-                                    {% endif %}
-                                    {% if validation.suggestions %}
-                                        <div class="mt-2 text-sm text-gray-600">
-                                            <p class="font-medium">Suggestions:</p>
-                                            <ul class="list-disc list-inside">
-                                                {% for suggestion in validation.suggestions %}
-                                                    <li>{{ suggestion }}</li>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if document.verification_details.fraud_detection.fraud_areas %}
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Areas of Concern</h5>
+                                        <p class="text-muted">The AI has identified suspicious areas in the document (highlighted in red).</p>
+                                        
+                                        <div class="document-container position-relative mt-3">
+                                            {% if document.file.url|lower|slice:"-4:" in ".jpg,.png,.gif,.jpeg,.webp" %}
+                                                <img src="{{ document.file.url }}" class="img-fluid" alt="Document with highlighted fraud areas">
+                                                
+                                                {% for area in document.verification_details.fraud_detection.fraud_areas %}
+                                                    <div class="fraud-highlight" style="
+                                                        position: absolute;
+                                                        left: {{ area.x }}%;
+                                                        top: {{ area.y }}%;
+                                                        width: {{ area.width }}%;
+                                                        height: {{ area.height }}%;
+                                                        border: 2px solid red;
+                                                        background-color: rgba(255, 0, 0, 0.2);
+                                                        pointer-events: none;
+                                                    "></div>
                                                 {% endfor %}
-                                            </ul>
+                                            {% else %}
+                                                <div class="alert alert-warning">
+                                                    <i class="fa fa-info-circle"></i> Fraud area highlighting is only available for image files.
+                                                </div>
+                                            {% endif %}
                                         </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                        
+                        {% if document.verification_details.manual_review %}
+                            <div class="card bg-light mt-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Manual Review Results</h5>
+                                    <p><strong>Reviewed by:</strong> {{ document.verification_details.manual_review.reviewer }}</p>
+                                    <p><strong>Date:</strong> {{ document.verification_details.manual_review.timestamp }}</p>
+                                    <p><strong>Status:</strong> {{ document.verification_details.manual_review.status }}</p>
+                                    {% if document.verification_details.manual_review.notes %}
+                                        <p><strong>Notes:</strong> {{ document.verification_details.manual_review.notes }}</p>
                                     {% endif %}
                                 </div>
-                            {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fa fa-clock"></i> Document is pending verification.
                         </div>
                     {% endif %}
                 </div>
             </div>
-
-            <!-- Version History -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-semibold mb-4">Version History</h2>
-                <div class="space-y-4">
-                    {% for version in versions %}
-                        <div class="p-4 border rounded-md {% if forloop.first %}border-indigo-200 bg-indigo-50{% else %}border-gray-200{% endif %}">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="text-sm font-medium">Version {{ version.version_number }}</h3>
-                                    <p class="text-sm text-gray-500">{{ version.uploaded_at|date:"M d, Y H:i" }}</p>
-                                </div>
-                                <a href="{% url 'documents:document_version_download' document.id version.version_number %}"
-                                   class="text-indigo-600 hover:text-indigo-900 text-sm">Download</a>
-                            </div>
-                            {% if version.notes %}
-                                <p class="mt-2 text-sm text-gray-600">{{ version.notes }}</p>
-                            {% endif %}
-                        </div>
-                    {% empty %}
-                        <p class="text-sm text-gray-500">No previous versions</p>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Upload New Version Modal -->
-<div id="uploadModal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div class="p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Upload New Version</h3>
-            <form id="updateVersionForm" class="space-y-4">
-                {% csrf_token %}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Document File</label>
-                    <div class="mt-1">
-                        <input type="file" name="document" required
-                               class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Notes</label>
-                    <textarea name="notes" rows="3" 
-                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
-                </div>
-                <div class="mt-5 flex justify-end space-x-3">
-                    <button type="button" id="closeModalBtn"
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                        Cancel
-                    </button>
-                    <button type="submit"
-                            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700">
-                        Upload Version
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/document-detail.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add custom styling to status badges
+        const badges = document.querySelectorAll('.badge');
+        badges.forEach(badge => {
+            if (badge.classList.contains('badge-warning')) {
+                badge.style.backgroundColor = '#ffc107';
+            } else if (badge.classList.contains('badge-success')) {
+                badge.style.backgroundColor = '#28a745';
+            } else if (badge.classList.contains('badge-danger')) {
+                badge.style.backgroundColor = '#dc3545';
+            }
+            badge.style.color = '#fff';
+            badge.style.padding = '5px 8px';
+            badge.style.borderRadius = '4px';
+        });
+    });
+</script>
 {% endblock %}

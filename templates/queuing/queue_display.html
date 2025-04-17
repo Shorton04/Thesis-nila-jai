@@ -1,0 +1,421 @@
+<!-- queuing/templates/queuing/queue_display.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Queue Display{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f0f4f8;
+        overflow: hidden;
+    }
+    
+    .display-container {
+        padding: 2rem;
+    }
+    
+    .header-section {
+        background-color: #1e40af;
+        color: white;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .current-time {
+        font-size: 1.25rem;
+        font-weight: 500;
+    }
+    
+    .queue-section {
+        background-color: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-header {
+        background-color: #3b82f6;
+        color: white;
+        padding: 1rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+    
+    .now-serving {
+        background-color: #10b981;
+    }
+    
+    .queue-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .queue-table th {
+        background-color: #f8fafc;
+        text-align: left;
+        padding: 1rem;
+        font-weight: 600;
+        color: #475569;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .queue-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        color: #1e293b;
+    }
+    
+    .queue-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .queue-number {
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: #1e40af;
+    }
+    
+    .counter-badge {
+        display: inline-block;
+        background-color: #3b82f6;
+        color: white;
+        padding: 0.35rem 0.75rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        text-align: center;
+        min-width: 2.5rem;
+    }
+    
+    .announcement-box {
+        background-color: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border-radius: 0.25rem;
+    }
+    
+    .blink {
+        animation: blink-animation 1s steps(5, start) infinite;
+    }
+    
+    @keyframes blink-animation {
+        to {
+            visibility: hidden;
+        }
+    }
+    
+    .footer-section {
+        text-align: center;
+        padding: 1rem;
+        color: #475569;
+    }
+    
+    /* For scrolling effect in the next-in-line table */
+    .next-in-line-container {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    /* Highlight the newly called number */
+    .highlight-row {
+        background-color: #fef3c7;
+        animation: highlight-fade 5s forwards;
+    }
+    
+    @keyframes highlight-fade {
+        from { background-color: #fef3c7; }
+        to { background-color: transparent; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="display-container">
+    <div class="header-section">
+        <div>
+            <h1 class="text-3xl font-bold">Business Permit System - Queue Status</h1>
+            <p class="mt-2">Please check your queue number below</p>
+        </div>
+        <div class="current-time" id="current-time">
+            <div class="text-xl">{{ current_date|date:"l, F j, Y" }}</div>
+            <div class="text-2xl font-bold" id="clock"></div>
+        </div>
+    </div>
+    
+    <!-- Now Serving Section -->
+    <div class="queue-section">
+        <div class="section-header now-serving">
+            <div class="flex justify-between items-center">
+                <span>🔊 NOW SERVING</span>
+                <span class="text-sm">Last updated: <span id="last-updated">Just now</span></span>
+            </div>
+        </div>
+        <table class="queue-table" id="now-serving-table">
+            <thead>
+                <tr>
+                    <th width="20%">Queue Number</th>
+                    <th width="20%">Counter</th>
+                    <th width="60%">Business Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for counter in active_counters %}
+                    {% if counter.current_queue %}
+                    <tr>
+                        <td class="queue-number {% if counter.current_queue.recently_called %}blink{% endif %}">
+                            {{ counter.current_queue.queue_number }}
+                        </td>
+                        <td>
+                            <span class="counter-badge">Counter {{ counter.counter_number }}</span>
+                        </td>
+                        <td>{{ counter.current_queue.application.business_name }}</td>
+                    </tr>
+                    {% endif %}
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center py-8 text-gray-500">
+                            No appointments currently being served
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Announcements Box -->
+    <div class="announcement-box">
+        <div class="flex items-start">
+            <div class="flex-shrink-0 mt-1">
+                <i class="fas fa-bullhorn text-amber-500 text-lg mr-3"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-medium text-amber-800">Important Announcements</h3>
+                <div class="mt-1 text-amber-700" id="announcements">
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Please be ready with your documents when your queue number is called.</li>
+                        <li>Ensure you have checked in at the reception desk upon arrival.</li>
+                        <li>Payment counters accept cash, checks, and bank transfers.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Next In Line Section -->
+    <div class="queue-section">
+        <div class="section-header">
+            <span>⏱️ NEXT IN LINE</span>
+        </div>
+        <div class="next-in-line-container">
+            <table class="queue-table" id="next-in-line-table">
+                <thead>
+                    <tr>
+                        <th width="20%">Queue Number</th>
+                        <th width="20%">Type</th>
+                        <th width="40%">Business Name</th>
+                        <th width="20%">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in next_in_line %}
+                    <tr id="queue-{{ appointment.queue_number }}">
+                        <td class="queue-number">{{ appointment.queue_number }}</td>
+                        <td>
+                            {% if appointment.appointment_type == 'payment' %}
+                                <span class="counter-badge" style="background-color: #0891b2;">Payment</span>
+                            {% else %}
+                                <span class="counter-badge" style="background-color: #8b5cf6;">Release</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ appointment.application.business_name }}</td>
+                        <td>
+                            {% if appointment.checked_in %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Checked In
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Waiting
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-8 text-gray-500">
+                            No appointments in the waiting queue
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="footer-section">
+        <p>For assistance, please approach the Information Desk or call extension 123</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Update the clock
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    }
+    
+    // Update the "last updated" timestamp
+    function updateLastUpdated() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        document.getElementById('last-updated').textContent = timeString;
+    }
+    
+    // Fetch and update the queue data
+    function updateQueueData() {
+        fetch('{% url "queuing:queue_display_data" %}', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update the "Now Serving" table
+            const nowServingTable = document.getElementById('now-serving-table').getElementsByTagName('tbody')[0];
+            
+            if (data.active_counters.length === 0 || !data.active_counters.some(counter => counter.current_queue)) {
+                nowServingTable.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center py-8 text-gray-500">
+                            No appointments currently being served
+                        </td>
+                    </tr>
+                `;
+            } else {
+                let nowServingHtml = '';
+                data.active_counters.forEach(counter => {
+                    if (counter.current_queue) {
+                        nowServingHtml += `
+                            <tr>
+                                <td class="queue-number ${counter.current_queue.recently_called ? 'blink' : ''}">
+                                    ${counter.current_queue.queue_number}
+                                </td>
+                                <td>
+                                    <span class="counter-badge">Counter ${counter.counter_number}</span>
+                                </td>
+                                <td>${counter.current_queue.business_name}</td>
+                            </tr>
+                        `;
+                    }
+                });
+                
+                if (nowServingHtml) {
+                    nowServingTable.innerHTML = nowServingHtml;
+                } else {
+                    nowServingTable.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="text-center py-8 text-gray-500">
+                                No appointments currently being served
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+            
+            // Update the "Next in Line" table
+            const nextInLineTable = document.getElementById('next-in-line-table').getElementsByTagName('tbody')[0];
+            
+            if (data.next_in_line.length === 0) {
+                nextInLineTable.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-8 text-gray-500">
+                            No appointments in the waiting queue
+                        </td>
+                    </tr>
+                `;
+            } else {
+                let nextInLineHtml = '';
+                data.next_in_line.forEach(appointment => {
+                    nextInLineHtml += `
+                        <tr id="queue-${appointment.queue_number}" ${appointment.recently_added ? 'class="highlight-row"' : ''}>
+                            <td class="queue-number">${appointment.queue_number}</td>
+                            <td>
+                                <span class="counter-badge" style="background-color: ${appointment.appointment_type === 'payment' ? '#0891b2' : '#8b5cf6'}">
+                                    ${appointment.appointment_type === 'payment' ? 'Payment' : 'Release'}
+                                </span>
+                            </td>
+                            <td>${appointment.business_name}</td>
+                            <td>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${appointment.checked_in ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                    ${appointment.checked_in ? 'Checked In' : 'Waiting'}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+                nextInLineTable.innerHTML = nextInLineHtml;
+            }
+            
+            // Update announcements if provided
+            if (data.announcements && data.announcements.length > 0) {
+                const announcementsElement = document.getElementById('announcements');
+                let announcementsHtml = '<ul class="list-disc pl-5 space-y-1">';
+                data.announcements.forEach(announcement => {
+                    announcementsHtml += `<li>${announcement}</li>`;
+                });
+                announcementsHtml += '</ul>';
+                announcementsElement.innerHTML = announcementsHtml;
+            }
+            
+            // Update the last updated timestamp
+            updateLastUpdated();
+            
+            // Play sound for newly called appointments if needed
+            if (data.active_counters.some(counter => counter.current_queue && counter.current_queue.recently_called)) {
+                playNotificationSound();
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching queue data:', error);
+        });
+    }
+    
+    // Play notification sound when new number is called
+    function playNotificationSound() {
+        try {
+            const audio = new Audio("{% static 'sounds/notification.mp3' %}");
+            audio.volume = 0.7;
+            audio.play();
+        } catch (e) {
+            console.error('Error playing notification sound:', e);
+        }
+    }
+    
+    // Initialize and start the updates
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update the clock every second
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        // Update queue data every 5 seconds
+        updateQueueData();
+        setInterval(updateQueueData, 5000);
+    });
+</script>
+{% endblock %}

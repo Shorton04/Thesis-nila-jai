@@ -1,0 +1,312 @@
+{% extends 'reviewer/base.html' %}
+
+{% block title %}Quarantined Documents{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            Quarantined Documents
+        </h3>
+    </div>
+    
+    <p style="margin-bottom: 1.5rem; color: var(--secondary);">
+        Documents that have been flagged by our AI system for potential issues.
+    </p>
+    
+    {% if documents %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Document Type</th>
+                    <th>Business</th>
+                    <th>Application</th>
+                    <th>Quarantine Date</th>
+                    <th>Reason</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in documents %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center;">
+                            <div style="width: 32px; height: 32px; background: var(--danger); opacity: 0.1; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 0.75rem;">
+                                <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+                            </div>
+                            {{ item.document.get_document_type_display }}
+                        </div>
+                    </td>
+                    <td>{{ item.application.business_name }}</td>
+                    <td>{{ item.application.application_number }}</td>
+                    <td>{{ item.document.quarantine_date|date:"M d, Y H:i" }}</td>
+                    <td>
+                        <span class="status-badge status-requires_revision">
+                            {{ item.document.get_quarantine_reason_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{{ item.document.file.url }}" target="_blank" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <button onclick="viewAnalysis('{{ item.document.id }}')" class="btn btn-info btn-sm">
+                                <i class="fas fa-robot"></i> AI Analysis
+                            </button>
+                            <button onclick="releaseDocument('{{ item.document.id }}')" class="btn btn-success btn-sm">
+                                <i class="fas fa-check"></i> Release
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="padding: 2rem; text-align: center; background: white; border-radius: 0.5rem; box-shadow: var(--shadow);">
+        <div style="margin-bottom: 1rem; color: var(--gray-300);">
+            <i class="fas fa-check-circle" style="font-size: 3rem;"></i>
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">No quarantined documents</h3>
+        <p style="color: var(--secondary);">
+            All documents have passed AI verification.
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Analysis Modal -->
+<div id="analysisModal" class="modal">
+    <div class="modal-content">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-robot mr-2"></i>
+                AI Document Analysis
+            </h3>
+        </div>
+        
+        <div id="analysisContent" style="padding: 1.5rem;">
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="height: 1rem; background: var(--gray-200); border-radius: 0.25rem; width: 75%;"></div>
+                <div style="height: 1rem; background: var(--gray-200); border-radius: 0.25rem; width: 50%;"></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
+                    <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
+                    <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="padding: 1rem; background: var(--gray-100); display: flex; justify-content: flex-end;">
+            <button type="button" onclick="closeModal('analysisModal')" class="btn btn-secondary btn-sm">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Release Confirmation Modal -->
+<div id="releaseModal" class="modal">
+    <div class="modal-content">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-check-circle mr-2"></i>
+                Release Document
+            </h3>
+        </div>
+        
+        <div style="padding: 1.5rem;">
+            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                <div style="width: 2.5rem; height: 2.5rem; background: var(--success); opacity: 0.1; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-check" style="color: var(--success);"></i>
+                </div>
+                <div>
+                    <p style="margin-bottom: 1rem;">
+                        Are you sure you want to release this document? It will be marked as verified.
+                    </p>
+                    
+                    <div style="margin-top: 1rem;">
+                        <label for="releaseNotes" style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">
+                            Notes (optional)
+                        </label>
+                        <textarea id="releaseNotes" rows="3" class="form-control"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="padding: 1rem; background: var(--gray-100); display: flex; justify-content: flex-end; gap: 0.5rem;">
+            <button type="button" onclick="closeModal('releaseModal')" class="btn btn-secondary btn-sm">
+                Cancel
+            </button>
+            <button type="button" id="confirmReleaseBtn" class="btn btn-success btn-sm">
+                <i class="fas fa-check"></i> Release
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentDocumentId = null;
+
+    function viewAnalysis(documentId) {
+        // Open the analysis modal
+        showModal('analysisModal');
+        document.getElementById('analysisContent').innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="height: 1rem; background: var(--gray-200); border-radius: 0.25rem; width: 75%;"></div>
+                <div style="height: 1rem; background: var(--gray-200); border-radius: 0.25rem; width: 50%;"></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
+                    <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
+                    <div style="height: 5rem; background: var(--gray-200); border-radius: 0.25rem;"></div>
+                </div>
+            </div>
+        `;
+        
+        // Fetch analysis data
+        fetch(`/reviewer/document-ai-analysis/${documentId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('analysisContent').innerHTML = renderAnalysisResults(data.results);
+                } else {
+                    document.getElementById('analysisContent').innerHTML = `
+                        <div style="padding: 1rem; background: var(--danger); opacity: 0.1; color: var(--danger); border-radius: 0.5rem;">
+                            <p>${data.error || 'Error loading analysis results'}</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('analysisContent').innerHTML = `
+                    <div style="padding: 1rem; background: var(--danger); opacity: 0.1; color: var(--danger); border-radius: 0.5rem;">
+                        <p>Failed to load analysis results. Please try again.</p>
+                    </div>
+                `;
+            });
+    }
+
+    function releaseDocument(documentId) {
+        currentDocumentId = documentId;
+        showModal('releaseModal');
+        
+        const confirmBtn = document.getElementById('confirmReleaseBtn');
+        confirmBtn.onclick = () => {
+            const notes = document.getElementById('releaseNotes').value;
+            
+            fetch(`/reviewer/release-document/${documentId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `notes=${encodeURIComponent(notes)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to show updated list
+                    window.location.reload();
+                } else {
+                    alert('Error releasing document: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while releasing the document');
+            });
+        };
+    }
+
+    function renderAnalysisResults(results) {
+        // Helper function to create a gauge with score
+        const createGauge = (title, score, maxScore, thresholdGood, color) => {
+            const percentage = Math.min(100, (score/maxScore) * 100);
+            const status = score >= thresholdGood ? 'color: var(--danger);' : 'color: var(--success);';
+            
+            return `
+                <div style="background: var(--gray-100); border-radius: 0.5rem; padding: 1rem;">
+                    <h4 style="font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">${title}</h4>
+                    <div style="display: flex; align-items: center; margin-bottom: 0.25rem;">
+                        <div style="width: 100%; background: var(--gray-200); border-radius: 9999px; height: 0.5rem;">
+                            <div style="background: var(--${color}); height: 0.5rem; border-radius: 9999px; width: ${percentage}%;"></div>
+                        </div>
+                        <span style="margin-left: 0.5rem; font-size: 0.875rem; font-weight: 500; ${status}">${score.toFixed(1)}</span>
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--gray-700);">
+                        ${score >= thresholdGood ? 'Suspicious' : 'Normal'}
+                    </p>
+                </div>
+            `;
+        };
+        
+        // Generate regions to highlight
+        const highlightRegions = results.suspicious_regions ? results.suspicious_regions.map(region => {
+            return `<div style="position: absolute; border: 2px solid var(--danger); background: var(--danger); opacity: 0.1; pointer-events: none;
+                        left: ${region.x}px; top: ${region.y}px; width: ${region.width}px; height: ${region.height}px;">
+                    </div>`;
+        }).join('') : '';
+        
+        // Render the complete analysis results
+        return `
+            <div style="padding: 1rem;">
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                        <h3 style="font-size: 1.125rem; font-weight: 600;">Document Status:</h3>
+                        <span class="status-badge status-requires_revision" style="margin-left: 0.5rem;">
+                            Quarantined
+                        </span>
+                    </div>
+                    ${results.quarantine_reason ? `
+                    <div style="padding: 0.75rem; background: var(--danger); opacity: 0.1; color: var(--danger); border-radius: 0.5rem; font-size: 0.875rem;">
+                        <strong>Quarantine Reason:</strong> ${results.quarantine_reason}
+                    </div>` : ''}
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    ${createGauge('Tampering Detection', results.validation_results.ela_score, 100, 50, 'danger')}
+                    ${createGauge('Noise Analysis', results.validation_results.noise_score, 50, 25, 'warning')}
+                    ${createGauge('Text Quality', results.validation_results.text_quality, 100, 50, 'info')}
+                    ${createGauge('Resolution', results.validation_results.resolution_score, 100, 50, 'primary')}
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">Document Preview</h4>
+                    <div style="border: 1px solid var(--gray-200); border-radius: 0.5rem; overflow: hidden; position: relative;">
+                        <img src="${results.document_url}" alt="Document" style="max-width: 100%; height: auto;">
+                        ${highlightRegions}
+                    </div>
+                </div>
+                
+                ${results.extracted_text ? `
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">Extracted Text</h4>
+                    <div style="padding: 0.75rem; background: var(--gray-100); border-radius: 0.5rem; font-size: 0.875rem; font-family: monospace; overflow: auto; max-height: 12rem;">
+                        ${results.extracted_text.replace(/\n/g, '<br>')}
+                    </div>
+                </div>` : ''}
+                
+                <div>
+                    <h4 style="font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">Document Assessment</h4>
+                    <p style="font-size: 0.875rem; color: var(--danger);">
+                        ${results.validation_message || 'No assessment available'}
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+</script>
+{% endblock %}

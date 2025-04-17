@@ -1,0 +1,137 @@
+<!-- notifications/templates/notifications/list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="container mx-auto py-6">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h1 class="text-2xl font-semibold text-gray-800">Notifications</h1>
+                <div class="flex space-x-2">
+                    {% if unread_count > 0 %}
+                    <a href="{% url 'notifications:mark_all_read' %}" class="text-sm text-indigo-600 hover:text-indigo-800 px-3 py-1 border border-indigo-200 rounded-md transition duration-200 hover:bg-indigo-50">
+                        Mark all as read
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="px-6 py-3 bg-gray-50 border-b border-gray-200">
+                <div class="flex space-x-2 overflow-x-auto pb-2">
+                    <a href="{% url 'notifications:list' %}" class="text-sm px-3 py-1 rounded-full {% if not current_type %}bg-indigo-100 text-indigo-800 font-medium{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        All
+                    </a>
+                    <a href="{% url 'notifications:list' %}?type=application" class="text-sm px-3 py-1 rounded-full {% if current_type == 'application' %}bg-indigo-100 text-indigo-800 font-medium{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        Applications
+                    </a>
+                    <a href="{% url 'notifications:list' %}?type=document" class="text-sm px-3 py-1 rounded-full {% if current_type == 'document' %}bg-indigo-100 text-indigo-800 font-medium{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        Documents
+                    </a>
+                    <a href="{% url 'notifications:list' %}?type=system" class="text-sm px-3 py-1 rounded-full {% if current_type == 'system' %}bg-indigo-100 text-indigo-800 font-medium{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        System
+                    </a>
+                </div>
+            </div>
+            
+            {% if notifications %}
+                <div class="divide-y divide-gray-200">
+                    {% for notification in notifications %}
+                        <div class="px-6 py-4 {% if not notification.is_read %}bg-blue-50{% endif %} hover:bg-gray-50 transition duration-150">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start space-x-3">
+                                    <div class="mt-0.5">
+                                        {% if notification.notification_type == 'info' %}
+                                            <i class="fas fa-info-circle text-blue-500"></i>
+                                        {% elif notification.notification_type == 'success' %}
+                                            <i class="fas fa-check-circle text-green-500"></i>
+                                        {% elif notification.notification_type == 'warning' %}
+                                            <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                                        {% elif notification.notification_type == 'error' %}
+                                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                                        {% elif notification.notification_type == 'application' %}
+                                            <i class="fas fa-file-alt text-indigo-500"></i>
+                                        {% elif notification.notification_type == 'document' %}
+                                            <i class="fas fa-file-pdf text-indigo-500"></i>
+                                        {% elif notification.notification_type == 'system' %}
+                                            <i class="fas fa-cog text-gray-500"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <a href="{% url 'notifications:detail' notification.id %}" class="block">
+                                            <h3 class="text-sm font-medium text-gray-900 hover:text-indigo-600">{{ notification.title }}</h3>
+                                            <p class="mt-1 text-sm text-gray-600">{{ notification.message }}</p>
+                                            <p class="mt-1 text-xs text-gray-500">{{ notification.created_at|timesince }} ago</p>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    {% if not notification.is_read %}
+                                        <a href="{% url 'notifications:mark_read' notification.id %}" class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200">
+                                            Mark read
+                                        </a>
+                                    {% endif %}
+                                    <a href="{% url 'notifications:delete' notification.id %}" class="text-xs px-2 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200" onclick="return confirm('Are you sure you want to delete this notification?')">
+                                        Delete
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if notifications.has_other_pages %}
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div class="flex justify-center">
+                        <nav class="inline-flex rounded-md shadow">
+                            {% if notifications.has_previous %}
+                                <a href="?page={{ notifications.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    Previous
+                                </a>
+                            {% else %}
+                                <span class="px-3 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-500">
+                                    Previous
+                                </span>
+                            {% endif %}
+                            
+                            {% for i in notifications.paginator.page_range %}
+                                {% if notifications.number == i %}
+                                    <span class="px-3 py-2 border-t border-b border-gray-300 bg-indigo-50 text-sm font-medium text-indigo-600">
+                                        {{ i }}
+                                    </span>
+                                {% else %}
+                                    <a href="?page={{ i }}{% if current_type %}&type={{ current_type }}{% endif %}" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                        {{ i }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if notifications.has_next %}
+                                <a href="?page={{ notifications.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    Next
+                                </a>
+                            {% else %}
+                                <span class="px-3 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-500">
+                                    Next
+                                </span>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="px-6 py-12 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No notifications</h3>
+                    <p class="mt-1 text-sm text-gray-500">You don't have any notifications at the moment.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

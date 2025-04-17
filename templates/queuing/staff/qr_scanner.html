@@ -1,0 +1,913 @@
+<!-- queuing/templates/queuing/staff/qr_scanner.html -->
+{% extends 'reviewer/base.html' %}
+
+{% block title %}QR Code Scanner{% endblock %}
+
+{% block content %}
+<div class="container mx-auto py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">QR Code Scanner</h1>
+        <a href="{% url 'queuing:staff_dashboard' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Queue Management
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Scan Appointment QR Code</h2>
+        </div>
+        
+        <div class="p-6">
+            <div class="mb-4 text-center">
+                <p class="text-gray-700">Position the QR code within the scanner frame. Appointments will be checked in automatically.</p>
+            </div>
+            
+            <div class="flex flex-col items-center">
+                <!-- Status Message -->
+                <div id="status-message" class="w-full mb-4 rounded-lg p-3 text-center hidden">
+                    <!-- Status will be displayed here -->
+                </div>
+                
+                <!-- Camera Feed Container -->
+                <div class="relative w-full max-w-lg mx-auto mb-4">
+                    <div id="scanner-container" class="bg-black rounded-lg overflow-hidden aspect-video">
+                        <video id="scanner-video" class="w-full h-full"></video>
+                        <div id="scanner-overlay" class="absolute inset-0 border-2 border-dashed border-white opacity-50 m-8 rounded-lg"></div>
+                    </div>
+                    <div class="absolute top-4 right-4">
+                        <button id="switch-camera" class="bg-white p-2 rounded-full shadow-md">
+                            <i class="fas fa-sync text-gray-700"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Scanner Controls -->
+                <div class="flex space-x-4 mb-6">
+                    <button id="start-scanner" class="btn btn-primary">
+                        <i class="fas fa-play mr-2"></i> Start Scanner
+                    </button>
+                    <button id="stop-scanner" class="btn btn-secondary" disabled>
+                        <i class="fas fa-stop mr-2"></i> Stop Scanner
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Manual Check-in Section -->
+    <div class="card mt-6">
+        <div class="card-header">
+            <h2 class="card-title">Manual Check-in</h2>
+        </div>
+        
+        <div class="p-6">
+            <div class="mb-4">
+                <p class="text-gray-700">If the QR code is not scanning properly, you can manually check in an appointment using the queue number.</p>
+            </div>
+            
+            <div class="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3">
+                <div class="flex-grow">
+                    <input type="text" id="queue-number-input" placeholder="Enter queue number (e.g., P0331001)" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
+                <button id="manual-checkin-btn" class="btn btn-primary">
+                    <i class="fas fa-user-check mr-2"></i> Check In
+                </button>
+            </div>
+            
+            <!-- Manual Check-in Result -->
+            <div id="manual-checkin-result" class="mt-4 p-3 rounded-lg hidden">
+                <!-- Result will be shown here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Scan History -->
+    <div class="card mt-6">
+        <div class="card-header">
+            <h2 class="card-title">Recent Check-ins</h2>
+            <button id="clear-history" class="btn btn-sm btn-secondary">
+                <i class="fas fa-trash-alt mr-1"></i> Clear
+            </button>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Queue Number</th>
+                        <th>Business Name</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="scan-history">
+                    <!-- Scan history will be populated here via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let scanner = null;
+        let currentStream = null;
+        let cameras = [];
+        let currentCameraIndex = 0;
+        let scannerActive = false;
+        let lastResult = '';
+        let lastResultTime = 0;
+        let scanCooldown = false;
+        let cooldownTime = 3000; // 3 seconds cooldown between scans
+        
+        const videoElement = document.getElementById('scanner-video');
+        const startButton = document.getElementById('start-scanner');
+        const stopButton = document.getElementById('stop-scanner');
+        const switchCameraButton = document.getElementById('switch-camera');
+        const statusMessage = document.getElementById('status-message');
+        const scanHistory = document.getElementById('scan-history');
+        const clearHistoryButton = document.getElementById('clear-history');
+        const queueNumberInput = document.getElementById('queue-number-input');
+        const manualCheckinBtn = document.getElementById('manual-checkin-btn');
+        const manualCheckinResult = document.getElementById('manual-checkin-result');
+        
+        // Load session storage history if available
+        loadScanHistory();
+        
+        // Check if browser supports camera access
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showStatusMessage('error', 'Your browser does not support camera access. Please use a modern browser like Chrome, Firefox, or Edge.');
+            startButton.disabled = true;
+            switchCameraButton.disabled = true;
+            return;
+        }
+        
+        // Get available cameras
+        async function getAvailableCameras() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                cameras = devices.filter(device => device.kind === 'videoinput');
+                console.log('Available cameras:', cameras.length);
+                
+                if (cameras.length === 0) {
+                    showStatusMessage('error', 'No cameras detected on your device.');
+                    startButton.disabled = true;
+                    switchCameraButton.disabled = true;
+                } else if (cameras.length === 1) {
+                    // Only one camera available
+                    switchCameraButton.disabled = true;
+                }
+            } catch (error) {
+                console.error('Error getting cameras:', error);
+                showStatusMessage('error', 'Failed to detect cameras: ' + error.message);
+            }
+        }
+        
+        // Start the QR scanner
+        async function startScanner() {
+            try {
+                if (currentStream) {
+                    stopScanner();
+                }
+                
+                // Clear status messages
+                hideStatusMessage();
+                
+                // Get selected camera or default to the first one
+                const camera = cameras[currentCameraIndex] || { deviceId: undefined };
+                
+                // Camera constraints - prioritize back camera for mobile devices
+                const constraints = {
+                    video: {
+                        deviceId: camera.deviceId ? {exact: camera.deviceId} : undefined,
+                        facingMode: {ideal: "environment"}, // Prefer back camera
+                        width: {ideal: 1280},
+                        height: {ideal: 720},
+                        aspectRatio: {ideal: 1.777778},
+                        frameRate: {min: 15}
+                    }
+                };
+                
+                console.log('Attempting to access camera with constraints:', constraints);
+                
+                // Get camera stream
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                videoElement.srcObject = currentStream;
+                
+                // Log video track settings
+                const videoTrack = currentStream.getVideoTracks()[0];
+                console.log('Using video device: ' + videoTrack.label);
+                console.log('Video track settings:', videoTrack.getSettings());
+                
+                // Wait for video to be ready
+                videoElement.onloadedmetadata = function() {
+                    videoElement.play().then(() => {
+                        console.log('Video playing, dimensions:', videoElement.videoWidth, 'x', videoElement.videoHeight);
+                        startQRScanning();
+                    }).catch(err => {
+                        console.error('Error playing video:', err);
+                        showStatusMessage('error', 'Could not start video: ' + err.message);
+                    });
+                };
+                
+            } catch (error) {
+                console.error('Error starting scanner:', error);
+                showStatusMessage('error', 'Failed to start scanner: ' + error.message);
+            }
+        }
+        
+        // Start actual QR scanning
+        function startQRScanning() {
+            // Setup QR scanner using jsQR library
+            scanner = window.setInterval(() => {
+                if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = videoElement.videoWidth;
+                    canvas.height = videoElement.videoHeight;
+                    
+                    try {
+                        context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        
+                        // Use jsQR to detect QR code
+                        if (window.jsQR) {
+                            const code = window.jsQR(imageData.data, imageData.width, imageData.height, {
+                                inversionAttempts: "dontInvert",
+                            });
+                            
+                            if (code && !scanCooldown) {
+                                console.log('QR Code detected:', code.data);
+                                // Handle detected QR code
+                                handleQRCode(code.data);
+                            }
+                        } else {
+                            console.error('jsQR library not loaded');
+                            showStatusMessage('error', 'QR scanning library not loaded. Please refresh the page.');
+                            stopScanner();
+                        }
+                    } catch (error) {
+                        console.error('Error processing video frame:', error);
+                    }
+                }
+            }, 100); // Scan 10 times per second
+            
+            scannerActive = true;
+            startButton.disabled = true;
+            stopButton.disabled = false;
+            
+            showStatusMessage('info', 'Scanner active. Position a QR code in the frame.');
+        }
+        
+        // Stop the QR scanner
+        function stopScanner() {
+            if (scanner) {
+                clearInterval(scanner);
+                scanner = null;
+            }
+            
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => {
+                    track.stop();
+                    console.log('Stopped track:', track.kind);
+                });
+                currentStream = null;
+                videoElement.srcObject = null;
+            }
+            
+            scannerActive = false;
+            startButton.disabled = false;
+            stopButton.disabled = true;
+        }
+        
+        // Switch camera
+        function switchCamera() {
+            if (cameras.length <= 1) return;
+            
+            currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
+            console.log('Switching to camera:', currentCameraIndex);
+            
+            if (scannerActive) {
+                // Restart scanner with new camera
+                startScanner();
+            }
+        }
+        
+        // Handle detected QR code
+        function handleQRCode(data) {
+            // Set cooldown to prevent multiple scans
+            scanCooldown = true;
+            setTimeout(() => { scanCooldown = false; }, cooldownTime);
+            
+            // Update last result
+            lastResult = data;
+            lastResultTime = new Date().getTime();
+            
+            console.log('Processing QR code data:', data);
+            
+            // Check if the QR code contains appointment data
+            if (data.startsWith('appointment:')) {
+                const appointmentId = data.replace('appointment:', '');
+                showStatusMessage('info', 'QR code detected! Processing check-in...');
+                
+                // Stop scanner while processing
+                stopScanner();
+                
+                // Process the check-in
+                processCheckin(appointmentId);
+            } else {
+                // Invalid QR code
+                showStatusMessage('error', 'Invalid QR code. Not a valid appointment QR code.');
+                playSound('error');
+                
+                // Resume scanning after a brief pause
+                setTimeout(() => {
+                    hideStatusMessage();
+                    showStatusMessage('info', 'Scanner active. Position a QR code in the frame.');
+                }, 2000);
+            }
+        }
+        
+        // Show status message
+        function showStatusMessage(type, message) {
+            statusMessage.innerHTML = '';
+            statusMessage.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'bg-blue-100', 'bg-yellow-100');
+            
+            let icon, bgColor, textColor;
+            
+            switch(type) {
+                case 'success':
+                    icon = 'check-circle';
+                    bgColor = 'bg-green-100';
+                    textColor = 'text-green-800';
+                    break;
+                case 'error':
+                    icon = 'exclamation-triangle';
+                    bgColor = 'bg-red-100';
+                    textColor = 'text-red-800';
+                    break;
+                case 'info':
+                    icon = 'info-circle';
+                    bgColor = 'bg-blue-100';
+                    textColor = 'text-blue-800';
+                    break;
+                case 'warning':
+                    icon = 'exclamation-circle';
+                    bgColor = 'bg-yellow-100';
+                    textColor = 'text-yellow-800';
+                    break;
+                default:
+                    icon = 'info-circle';
+                    bgColor = 'bg-gray-100';
+                    textColor = 'text-gray-800';
+            }
+            
+            statusMessage.classList.add(bgColor);
+            statusMessage.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${icon} ${textColor} mr-2"></i>
+                    <span class="${textColor} font-medium">${message}</span>
+                </div>
+            `;
+            statusMessage.classList.remove('hidden');
+        }
+        
+        // Show manual check-in result
+        function showManualCheckinResult(type, message) {
+            manualCheckinResult.innerHTML = '';
+            manualCheckinResult.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'bg-blue-100', 'bg-yellow-100');
+            
+            let icon, bgColor, textColor;
+            
+            switch(type) {
+                case 'success':
+                    icon = 'check-circle';
+                    bgColor = 'bg-green-100';
+                    textColor = 'text-green-800';
+                    break;
+                case 'error':
+                    icon = 'exclamation-triangle';
+                    bgColor = 'bg-red-100';
+                    textColor = 'text-red-800';
+                    break;
+                case 'info':
+                    icon = 'info-circle';
+                    bgColor = 'bg-blue-100';
+                    textColor = 'text-blue-800';
+                    break;
+                case 'warning':
+                    icon = 'exclamation-circle';
+                    bgColor = 'bg-yellow-100';
+                    textColor = 'text-yellow-800';
+                    break;
+                default:
+                    icon = 'info-circle';
+                    bgColor = 'bg-gray-100';
+                    textColor = 'text-gray-800';
+            }
+            
+            manualCheckinResult.classList.add(bgColor);
+            manualCheckinResult.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${icon} ${textColor} mr-2"></i>
+                    <span class="${textColor} font-medium">${message}</span>
+                </div>
+            `;
+            manualCheckinResult.classList.remove('hidden');
+        }
+        
+        // Hide status message
+        function hideStatusMessage() {
+            statusMessage.classList.add('hidden');
+        }
+        
+        // Hide manual check-in result
+        function hideManualCheckinResult() {
+            manualCheckinResult.classList.add('hidden');
+        }
+        
+        // Add scan to history
+        function addToScanHistory(details) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            
+            // Create row for history
+            const row = document.createElement('tr');
+            row.id = `history-${details.id || 'manual-' + Date.now()}`;
+            row.innerHTML = `
+                <td>${timeString}</td>
+                <td><strong>${details.queue_number}</strong></td>
+                <td>${details.business_name}</td>
+                <td><span class="status-badge status-approved">Checked In</span></td>
+            `;
+            
+            // Add to history
+            scanHistory.prepend(row);
+            
+            // Save history to session storage
+            saveToSessionStorage(details, timeString);
+        }
+        
+ // Process check-in
+function processCheckin(appointmentId) {
+    console.log('Processing check-in for appointment ID:', appointmentId);
+    
+    // Show processing message
+    showStatusMessage('info', 'Processing check-in...');
+    
+    // Create form data instead of JSON for better compatibility
+    const formData = new FormData();
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    // Send check-in request to server using standard form submission
+    fetch(`{% url 'queuing:check_in' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', appointmentId), {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        credentials: 'same-origin',
+        body: formData
+    })
+    .then(response => {
+        console.log('Server response status:', response.status);
+        
+        if (response.status === 500) {
+            // Handle 500 Internal Server Error
+            console.error("Server error 500 occurred");
+            throw new Error("Internal server error. Please try again later.");
+        }
+        
+        // Try to parse as JSON, but handle non-JSON responses
+        return response.text().then(text => {
+            try {
+                // Try to parse as JSON
+                const data = JSON.parse(text);
+                return { 
+                    ok: response.ok,
+                    data: data,
+                    status: response.status
+                };
+            } catch (e) {
+                // If not valid JSON, return the error
+                console.warn('Received non-JSON response:', text.substring(0, 150) + '...');
+                return { 
+                    ok: false,
+                    error: 'Server returned invalid response',
+                    status: response.status,
+                    text: text.substring(0, 150) + '...'
+                };
+            }
+        });
+    })
+    .then(result => {
+        if (result.ok && result.data && result.data.success) {
+            // Show success message
+            showStatusMessage('success', 'Check-in successful! Ready for the next scan.');
+            
+            // Add to scan history
+            addToScanHistory({
+                id: appointmentId,
+                queue_number: result.data.appointment.queue_number,
+                business_name: result.data.appointment.business_name,
+                checked_in: true
+            });
+            
+            // Play success sound
+            playSound('success');
+        } else if (result.data && result.data.error === 'Already checked in') {
+            // Already checked in
+            showStatusMessage('warning', 'This appointment is already checked in.');
+            
+            // Add to scan history anyway
+            addToScanHistory({
+                id: appointmentId,
+                queue_number: result.data.appointment.queue_number,
+                business_name: result.data.appointment.business_name,
+                checked_in: true
+            });
+            
+            // Play info sound
+            playSound('info');
+        } else {
+            // Error handling
+            let errorMsg = "Unknown error occurred";
+            
+            if (result.data && result.data.error) {
+                errorMsg = result.data.error;
+            } else if (result.error) {
+                errorMsg = result.error;
+            } else if (result.status) {
+                errorMsg = `Server error (${result.status})`;
+            }
+            
+            console.error('Check-in error:', errorMsg);
+            showStatusMessage('error', errorMsg);
+            
+            // Play error sound
+            playSound('error');
+        }
+        
+        // Resume scanning after a brief message
+        setTimeout(() => {
+            hideStatusMessage();
+            startScanner();
+        }, 3000); // slightly longer delay to read error messages
+    })
+    .catch(error => {
+        console.error('Error during check-in:', error);
+        showStatusMessage('error', error.message || 'Connection failed');
+        
+        // Play error sound
+        playSound('error');
+        
+        // Resume scanning after a brief error message
+        setTimeout(() => {
+            hideStatusMessage();
+            startScanner();
+        }, 3000);
+    });
+}
+        
+ // Process manual check-in
+function processManualCheckin(queueNumber) {
+    console.log('Processing manual check-in for queue number:', queueNumber);
+    
+    // Show loading state
+    manualCheckinBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+    manualCheckinBtn.disabled = true;
+    
+    // Show processing message
+    showManualCheckinResult('info', 'Processing check-in...');
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    formData.append('queue_number', queueNumber);
+    
+    // Send check-in request to server based on queue number
+    fetch(`{% url 'queuing:check_in_by_queue' %}`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        credentials: 'same-origin', 
+        body: formData
+    })
+    .then(response => {
+        console.log('Manual check-in response status:', response.status);
+        
+        if (response.status === 500) {
+            // Handle 500 Internal Server Error
+            throw new Error("Internal server error. Please try again later.");
+        }
+        
+        // Try to parse as JSON, but handle non-JSON responses
+        return response.text().then(text => {
+            try {
+                // Try to parse as JSON
+                const data = JSON.parse(text);
+                return {
+                    ok: response.ok,
+                    data: data,
+                    status: response.status
+                };
+            } catch (e) {
+                // If not valid JSON, return the error
+                console.warn('Received non-JSON response:', text.substring(0, 150) + '...');
+                return {
+                    ok: false,
+                    error: 'Server returned invalid response',
+                    status: response.status,
+                    text: text.substring(0, 150) + '...'
+                };
+            }
+        });
+    })
+    .then(result => {
+        // Reset button state
+        manualCheckinBtn.innerHTML = '<i class="fas fa-user-check mr-2"></i> Check In';
+        manualCheckinBtn.disabled = false;
+        
+        if (result.ok && result.data && result.data.success) {
+            // Show success message
+            showManualCheckinResult('success', 'Check-in successful!');
+            
+            // Clear input
+            queueNumberInput.value = '';
+            
+            // Add to scan history
+            addToScanHistory({
+                id: result.data.appointment.id,
+                queue_number: result.data.appointment.queue_number,
+                business_name: result.data.appointment.business_name,
+                checked_in: true
+            });
+            
+            // Play success sound
+            playSound('success');
+        } else if (result.data && result.data.error === 'Already checked in') {
+            // Already checked in
+            showManualCheckinResult('warning', 'This appointment is already checked in.');
+            
+            // Add to scan history anyway if we have appointment data
+            if (result.data.appointment) {
+                addToScanHistory({
+                    id: result.data.appointment.id,
+                    queue_number: result.data.appointment.queue_number,
+                    business_name: result.data.appointment.business_name,
+                    checked_in: true
+                });
+            }
+            
+            // Play info sound
+            playSound('info');
+        } else {
+            // Error
+            let errorMsg = "Unknown error occurred";
+            
+            if (result.data && result.data.error) {
+                errorMsg = result.data.error;
+            } else if (result.error) {
+                errorMsg = result.error;
+            } else if (result.status) {
+                errorMsg = `Server error (${result.status})`;
+            }
+            
+            showManualCheckinResult('error', errorMsg);
+            
+            // Play error sound
+            playSound('error');
+        }
+    })
+    .catch(error => {
+        console.error('Error during manual check-in:', error);
+        
+        // Reset button state
+        manualCheckinBtn.innerHTML = '<i class="fas fa-user-check mr-2"></i> Check In';
+        manualCheckinBtn.disabled = false;
+        
+        showManualCheckinResult('error', error.message || 'Connection failed');
+        
+        // Play error sound
+        playSound('error');
+    });
+}
+        
+        // Save scan history to session storage
+        function saveToSessionStorage(details, timeString) {
+            let history = JSON.parse(sessionStorage.getItem('scanHistory') || '[]');
+            
+            // Add new scan to history
+            history.unshift({
+                id: details.id || 'manual-' + Date.now(),
+                time: timeString,
+                queue_number: details.queue_number,
+                business_name: details.business_name,
+                checked_in: true
+            });
+            
+            // Limit history to last 20 scans
+            if (history.length > 20) {
+                history = history.slice(0, 20);
+            }
+            
+            // Save to session storage
+            sessionStorage.setItem('scanHistory', JSON.stringify(history));
+        }
+        
+        // Load scan history from session storage
+        function loadScanHistory() {
+            const history = JSON.parse(sessionStorage.getItem('scanHistory') || '[]');
+            
+            // Clear current history
+            scanHistory.innerHTML = '';
+            
+            // Add each item to history
+            history.forEach(item => {
+                const row = document.createElement('tr');
+                row.id = `history-${item.id}`;
+                row.innerHTML = `
+                    <td>${item.time}</td>
+                    <td><strong>${item.queue_number}</strong></td>
+                    <td>${item.business_name}</td>
+                    <td><span class="status-badge status-approved">Checked In</span></td>
+                `;
+                
+                scanHistory.appendChild(row);
+            });
+        }
+        
+        // Clear scan history
+        function clearScanHistory() {
+            // Clear UI
+            scanHistory.innerHTML = '';
+            
+            // Clear session storage
+            sessionStorage.removeItem('scanHistory');
+        }
+        
+        // Play sound effect
+        function playSound(type) {
+            const audio = new Audio();
+            audio.volume = 0.5;
+            
+            if (type === 'success') {
+                audio.src = "#' %}";
+            } else if (type === 'info') {
+                audio.src = "#' %}";
+            } else {
+                audio.src = "#' %}";
+            }
+            
+            audio.play().catch(error => {
+                console.log('Could not play sound:', error);
+            });
+        }
+        
+        // Event listeners
+        startButton.addEventListener('click', startScanner);
+        stopButton.addEventListener('click', stopScanner);
+        switchCameraButton.addEventListener('click', switchCamera);
+        clearHistoryButton.addEventListener('click', clearScanHistory);
+        
+        // Manual check-in event listeners
+        manualCheckinBtn.addEventListener('click', function() {
+            const queueNumber = queueNumberInput.value.trim();
+            if (queueNumber) {
+                processManualCheckin(queueNumber);
+            } else {
+                showManualCheckinResult('error', 'Please enter a queue number.');
+            }
+        });
+        
+        queueNumberInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const queueNumber = queueNumberInput.value.trim();
+                if (queueNumber) {
+                    processManualCheckin(queueNumber);
+                } else {
+                    showManualCheckinResult('error', 'Please enter a queue number.');
+                }
+            }
+        });
+        
+        queueNumberInput.addEventListener('input', function() {
+            // Hide result message when typing
+            hideManualCheckinResult();
+        });
+        
+        // Initialize cameras on page load
+        getAvailableCameras();
+        
+        // Auto-start scanner when page loads
+        setTimeout(() => {
+            startButton.click();
+        }, 1000);
+        // Process check-in
+function processCheckin(appointmentId) {
+    console.log('Processing check-in for appointment ID:', appointmentId);
+    
+    // Create form data instead of JSON for better compatibility
+    const formData = new FormData();
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    // Send check-in request to server
+    fetch(`{% url 'queuing:check_in' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', appointmentId), {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => {
+        console.log('Server response status:', response.status);
+        
+        // Try to parse as JSON, but handle HTML responses
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json().then(data => {
+                return { 
+                    ok: response.ok,
+                    data: data,
+                    status: response.status
+                };
+            });
+        } else {
+            // Handle non-JSON response
+            return response.text().then(text => {
+                console.warn('Received non-JSON response:', text.substring(0, 100) + '...');
+                return { 
+                    ok: false,
+                    error: 'Server returned non-JSON response',
+                    status: response.status
+                };
+            });
+        }
+    })
+    .then(result => {
+        if (result.ok && result.data && result.data.success) {
+            // Show success message
+            showStatusMessage('success', 'Check-in successful! Ready for the next scan.');
+            
+            // Add to scan history
+            addToScanHistory({
+                id: appointmentId,
+                queue_number: result.data.appointment.queue_number,
+                business_name: result.data.appointment.business_name,
+                checked_in: true
+            });
+            
+            // Play success sound
+            playSound('success');
+        } else if (result.data && result.data.error === 'Already checked in') {
+            // Already checked in
+            showStatusMessage('warning', 'This appointment is already checked in.');
+            
+            // Add to scan history anyway
+            addToScanHistory({
+                id: appointmentId,
+                queue_number: result.data.appointment.queue_number,
+                business_name: result.data.appointment.business_name,
+                checked_in: true
+            });
+            
+            // Play info sound
+            playSound('info');
+        } else {
+            // Error
+            const errorMsg = result.data?.error || `Server error (${result.status})`;
+            showStatusMessage('error', errorMsg);
+            
+            // Play error sound
+            playSound('error');
+        }
+        
+        // Resume scanning after a brief message
+        setTimeout(() => {
+            hideStatusMessage();
+            startScanner();
+        }, 2000);
+    })
+    .catch(error => {
+        console.error('Error during check-in:', error);
+        showStatusMessage('error', 'Connection error: ' + error.message);
+        
+        // Play error sound
+        playSound('error');
+        
+        // Resume scanning after a brief error message
+        setTimeout(() => {
+            hideStatusMessage();
+            startScanner();
+        }, 2000);
+    });
+}
+    });
+</script>
+
+<!-- Include jsQR library for QR scanning -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+{% endblock %}

@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Queue Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .booking-card {
+        transition: all 0.2s ease-in-out;
+    }
+    .booking-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    .card-header {
+        background-color: #4F46E5;
+        padding: 1rem 1.5rem;
+        border-top-left-radius: 0.375rem;
+        border-top-right-radius: 0.375rem;
+    }
+    .card-header h2 {
+        color: white;
+        margin: 0;
+        font-size: 1.125rem;
+        font-weight: 500;
+    }
+    .section-card {
+        background-color: white;
+        border-radius: 0.375rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+    }
+    .empty-icon {
+        background-color: #EBF5FF;
+        color: #3B82F6;
+        height: 3rem;
+        width: 3rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        margin-bottom: 1rem;
+    }
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-primary {
+        background-color: #EEF2FF;
+        color: #4F46E5;
+    }
+    .btn-primary:hover {
+        background-color: #E0E7FF;
+    }
+    .btn-warning {
+        background-color: #FEF3C7;
+        color: #D97706;
+    }
+    .btn-warning:hover {
+        background-color: #FDE68A;
+    }
+    .btn-danger {
+        background-color: #FEE2E2;
+        color: #DC2626;
+    }
+    .btn-danger:hover {
+        background-color: #FECACA;
+    }
+    .btn-success {
+        background-color: #D1FAE5;
+        color: #059669;
+    }
+    .btn-success:hover {
+        background-color: #A7F3D0;
+    }
+    .btn-purple {
+        background-color: #F3E8FF;
+        color: #7E22CE;
+    }
+    .btn-purple:hover {
+        background-color: #E9D5FF;
+    }
+    .appointment-item {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #E5E7EB;
+    }
+    .appointment-item:last-child {
+        border-bottom: none;
+    }
+    .appointment-item:hover {
+        background-color: #F9FAFB;
+    }
+    .flex-between {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .flex-start {
+        display: flex;
+        align-items: flex-start;
+    }
+    .flex-center {
+        display: flex;
+        align-items: center;
+    }
+    .ml-2 {
+        margin-left: 0.5rem;
+    }
+    .mt-2 {
+        margin-top: 0.5rem;
+    }
+    .mt-4 {
+        margin-top: 1rem;
+    }
+    .mb-1 {
+        margin-bottom: 0.25rem;
+    }
+    .mr-2 {
+        margin-right: 0.5rem;
+    }
+    .space-x-2 > * + * {
+        margin-left: 0.5rem;
+    }
+    .text-sm {
+        font-size: 0.875rem;
+    }
+    .text-xs {
+        font-size: 0.75rem;
+    }
+    .font-medium {
+        font-weight: 500;
+    }
+    .text-gray-500 {
+        color: #6B7280;
+    }
+    .text-gray-900 {
+        color: #111827;
+    }
+    .full-width-btn {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-top: 1rem;
+    }
+    .payment-btn {
+        background-color: #059669;
+        color: white;
+    }
+    .payment-btn:hover {
+        background-color: #047857;
+    }
+    .release-btn {
+        background-color: #7C3AED;
+        color: white;
+    }
+    .release-btn:hover {
+        background-color: #6D28D9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto py-6 px-4">
+    <div class="flex-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Queue Management</h1>
+        <a href="{% url 'applications:dashboard' %}" class="action-btn btn-primary">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Upcoming Appointments -->
+    <div class="section-card">
+        <div class="card-header" style="background-color: #4F46E5;">
+            <h2>Upcoming Appointments</h2>
+        </div>
+        
+        {% if upcoming_appointments %}
+            <div>
+                {% for appointment in upcoming_appointments %}
+                    <div class="appointment-item">
+                        <div class="flex-between">
+                            <div class="flex-center">
+                                <span class="status-badge" style="background-color: #DBEAFE; color: #1E40AF;">
+                                    {{ appointment.queue_number }}
+                                </span>
+                                <span class="ml-2 text-sm font-medium text-gray-900">{{ appointment.application.business_name }}</span>
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                {{ appointment.slot_date|date:"l, F j, Y" }} at {{ appointment.slot_time|time:"g:i A" }}
+                            </div>
+                        </div>
+                        <div class="mt-2 flex-between">
+                            <div class="flex-center">
+                                <span class="text-sm font-medium text-gray-500">{{ appointment.get_appointment_type_display }}</span>
+                                {% if appointment.checked_in %}
+                                    <span class="ml-2 status-badge" style="background-color: #D1FAE5; color: #065F46;">
+                                        <i class="fas fa-check-circle mr-2"></i> Checked In
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="{% url 'queuing:appointment_detail' appointment.id %}" class="action-btn btn-primary">
+                                    <i class="fas fa-eye mr-2"></i> View Details
+                                </a>
+                                {% if not appointment.checked_in %}
+                                    <a href="{% url 'queuing:check_in' appointment.id %}" class="action-btn btn-success">
+                                        <i class="fas fa-sign-in-alt mr-2"></i> Check-in
+                                    </a>
+                                    <a href="{% url 'queuing:reschedule_appointment' appointment.id %}" class="action-btn btn-warning">
+                                        <i class="fas fa-calendar-alt mr-2"></i> Reschedule
+                                    </a>
+                                    <form method="post" action="{% url 'queuing:cancel_appointment' appointment.id %}" onsubmit="return confirm('Are you sure you want to cancel this appointment?');" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="action-btn btn-danger">
+                                            <i class="fas fa-times mr-2"></i> Cancel
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-calendar-day text-xl"></i>
+                </div>
+                <h3 class="text-sm font-medium text-gray-900 mb-1">No upcoming appointments</h3>
+                <p class="text-sm text-gray-500">You don't have any scheduled appointments at this time.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Applications Needing Action -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Pending Payment -->
+        <div class="section-card">
+            <div class="card-header" style="background-color: #059669;">
+                <h2>Pending Payment</h2>
+            </div>
+            
+            {% if pending_payment %}
+                <div>
+                    {% for application in pending_payment %}
+                        <div class="appointment-item booking-card">
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">{{ application.business_name }}</h3>
+                            <p class="text-sm text-gray-500">Application #{{ application.application_number }}</p>
+                            
+                            {% if application.assessment %}
+                                <div class="mt-2">
+                                    <p class="text-sm font-medium text-gray-900">Total: ₱{{ application.assessment.total_amount|floatformat:2 }}</p>
+                                </div>
+                            {% endif %}
+                            
+                            <a href="{% url 'queuing:book_appointment' application.id 'payment' %}" class="full-width-btn payment-btn">
+                                <i class="fas fa-calendar-plus mr-2"></i> Book Payment Appointment
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon" style="background-color: #ECFDF5; color: #059669;">
+                        <i class="fas fa-check-circle text-xl"></i>
+                    </div>
+                    <h3 class="text-sm font-medium text-gray-900 mb-1">No pending payments</h3>
+                    <p class="text-sm text-gray-500">You don't have any applications that need payment.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Pending Release -->
+        <div class="section-card">
+            <div class="card-header" style="background-color: #7C3AED;">
+                <h2>Permit Ready for Release</h2>
+            </div>
+            
+            {% if pending_release %}
+                <div>
+                    {% for application in pending_release %}
+                        <div class="appointment-item booking-card">
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">{{ application.business_name }}</h3>
+                            <p class="text-sm text-gray-500">Application #{{ application.application_number }}</p>
+                            <p class="text-sm text-gray-500 mt-2">Approved on {{ application.updated_at|date:"F j, Y" }}</p>
+                            
+                            <a href="{% url 'queuing:book_appointment' application.id 'release' %}" class="full-width-btn release-btn">
+                                <i class="fas fa-calendar-plus mr-2"></i> Book Pickup Appointment
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon" style="background-color: #F5F3FF; color: #7C3AED;">
+                        <i class="fas fa-file-alt text-xl"></i>
+                    </div>
+                    <h3 class="text-sm font-medium text-gray-900 mb-1">No permits for pickup</h3>
+                    <p class="text-sm text-gray-500">You don't have any permits ready for release.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Past Appointments -->
+    <div class="section-card">
+        <div class="card-header" style="background-color: #4B5563;">
+            <h2>Past Appointments</h2>
+        </div>
+        
+        {% if past_appointments %}
+            <div>
+                {% for appointment in past_appointments %}
+                    <div class="appointment-item">
+                        <div class="flex-between">
+                            <div class="flex-center">
+                                <span class="status-badge 
+                                {% if appointment.status == 'completed' %}
+                                    style="background-color: #D1FAE5; color: #065F46;"
+                                {% elif appointment.status == 'cancelled' %}
+                                    style="background-color: #FEE2E2; color: #B91C1C;"
+                                {% elif appointment.status == 'no_show' %}
+                                    style="background-color: #FEF3C7; color: #92400E;"
+                                {% else %}
+                                    style="background-color: #F3F4F6; color: #374151;"
+                                {% endif %}">
+                                    {{ appointment.get_status_display }}
+                                </span>
+                                <span class="ml-2 text-sm font-medium text-gray-900">{{ appointment.application.business_name }}</span>
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                {{ appointment.slot_date|date:"F j, Y" }} at {{ appointment.slot_time|time:"g:i A" }}
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <span class="text-sm font-medium text-gray-500">{{ appointment.get_appointment_type_display }}</span>
+                            {% if appointment.completion_time %}
+                                <span class="ml-2 text-xs text-gray-500">Completed at {{ appointment.completion_time|time:"g:i A" }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon" style="background-color: #F3F4F6; color: #4B5563;">
+                    <i class="fas fa-history text-xl"></i>
+                </div>
+                <h3 class="text-sm font-medium text-gray-900 mb-1">No past appointments</h3>
+                <p class="text-sm text-gray-500">Your appointment history will be displayed here.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

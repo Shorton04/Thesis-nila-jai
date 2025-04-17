@@ -1,0 +1,285 @@
+{# templates/reviewer/qr_scanner.html #}
+{% extends 'reviewer/base.html' %}
+
+{% block title %}QR Scanner{% endblock %}
+
+{% block content %}
+<div class="container mx-auto py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Queue Check-in Scanner</h1>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- QR Scanner Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Scan QR Code</h2>
+                <button class="btn btn-sm btn-primary" id="startScanButton">
+                    <i class="fas fa-camera"></i> Start Scanner
+                </button>
+            </div>
+            
+            <div class="p-4">
+                <p class="text-gray-700 mb-4">Point the camera at the appointment QR code to check in the visitor.</p>
+                
+                <div id="cameraContainer" class="relative w-full max-w-md mx-auto bg-black rounded-lg overflow-hidden" style="display: none;">
+                    <video id="qrScanner" class="w-full"></video>
+                    <div class="absolute inset-0 border-2 border-white border-opacity-50 rounded pointer-events-none"></div>
+                </div>
+                
+                <div id="startScanMessage" class="text-center py-8 text-gray-500">
+                    <i class="fas fa-camera text-4xl mb-2"></i>
+                    <p>Click "Start Scanner" to begin scanning</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scan Results Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Check-in Results</h2>
+                <span class="text-sm text-gray-500" id="resultTimestamp"></span>
+            </div>
+            
+            <div id="scanResults" class="p-4">
+                <div id="waitingForScan" class="text-center py-8 text-gray-500">
+                    <i class="fas fa-spinner fa-pulse text-4xl mb-2"></i>
+                    <p>Waiting for QR code scan...</p>
+                </div>
+                
+                <div id="successResult" style="display: none;">
+                    <div class="bg-green-50 rounded-lg p-4 border border-green-200 mb-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-lg font-medium text-green-800" id="checkInStatus">Check-in Successful</h3>
+                                <p class="text-sm text-green-700 mt-2" id="checkInMessage">
+                                    The visitor has been checked in successfully.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <div class="px-4 py-5 sm:p-6">
+                            <h3 class="text-lg font-medium text-gray-900">Appointment Details</h3>
+                            
+                            <dl class="mt-4 grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Queue Number</dt>
+                                    <dd class="mt-1 text-lg font-semibold text-gray-900" id="queueNumber"></dd>
+                                </div>
+                                
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Appointment Type</dt>
+                                    <dd class="mt-1 text-sm text-gray-900" id="appointmentType"></dd>
+                                </div>
+                                
+                                <div class="sm:col-span-2">
+                                    <dt class="text-sm font-medium text-gray-500">Visitor Name</dt>
+                                    <dd class="mt-1 text-sm text-gray-900" id="visitorName"></dd>
+                                </div>
+                                
+                                <div class="sm:col-span-2">
+                                    <dt class="text-sm font-medium text-gray-500">Business Name</dt>
+                                    <dd class="mt-1 text-sm text-gray-900" id="businessName"></dd>
+                                </div>
+                                
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Scheduled Time</dt>
+                                    <dd class="mt-1 text-sm text-gray-900" id="slotTime"></dd>
+                                </div>
+                                
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Check-in Time</dt>
+                                    <dd class="mt-1 text-sm text-gray-900" id="checkInTime"></dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="errorResult" style="display: none;">
+                    <div class="bg-red-50 rounded-lg p-4 border border-red-200">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-circle text-red-500 text-xl"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-lg font-medium text-red-800">Check-in Failed</h3>
+                                <p class="text-sm text-red-700 mt-2" id="errorMessage"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const startScanButton = document.getElementById('startScanButton');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const startScanMessage = document.getElementById('startScanMessage');
+        const waitingForScan = document.getElementById('waitingForScan');
+        const successResult = document.getElementById('successResult');
+        const errorResult = document.getElementById('errorResult');
+        const resultTimestamp = document.getElementById('resultTimestamp');
+        
+        // Result fields
+        const queueNumber = document.getElementById('queueNumber');
+        const appointmentType = document.getElementById('appointmentType');
+        const visitorName = document.getElementById('visitorName');
+        const businessName = document.getElementById('businessName');
+        const slotTime = document.getElementById('slotTime');
+        const checkInTime = document.getElementById('checkInTime');
+        const checkInStatus = document.getElementById('checkInStatus');
+        const checkInMessage = document.getElementById('checkInMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        let qrScanner = null;
+        
+        // Initialize QR scanner
+        function initScanner() {
+            const qrScannerElement = document.getElementById('qrScanner');
+            
+            qrScanner = new Html5Qrcode("qrScanner");
+            
+            const config = {
+                fps: 10,
+                qrbox: 250,
+                aspectRatio: 1.0,
+                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+            };
+            
+            qrScanner.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                onScanFailure
+            );
+            
+            cameraContainer.style.display = 'block';
+            startScanMessage.style.display = 'none';
+            startScanButton.innerHTML = '<i class="fas fa-stop"></i> Stop Scanner';
+            
+            // Update scan waiting message
+            waitingForScan.style.display = 'block';
+            successResult.style.display = 'none';
+            errorResult.style.display = 'none';
+            
+            // Show timestamp
+            updateTimestamp();
+        }
+        
+        // Stop QR scanner
+        function stopScanner() {
+            if (qrScanner) {
+                qrScanner.stop().then(() => {
+                    console.log('QR scanner stopped');
+                    startScanButton.innerHTML = '<i class="fas fa-camera"></i> Start Scanner';
+                    cameraContainer.style.display = 'none';
+                    startScanMessage.style.display = 'block';
+                }).catch(error => {
+                    console.error('Error stopping QR scanner:', error);
+                });
+            }
+        }
+        
+        // Handle successful scan
+        function onScanSuccess(qrData) {
+            // Stop scanning to prevent multiple scans
+            stopScanner();
+            
+            // Process the QR code data
+            processQrCode(qrData);
+        }
+        
+        // Handle scan failure
+        function onScanFailure(error) {
+            // Just log to console, don't show to user
+            console.error('QR scan error:', error);
+        }
+        
+        // Process QR code data by sending to server
+        function processQrCode(qrData) {
+            fetch('{% url "reviewer:process_qr_code" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `qr_data=${encodeURIComponent(qrData)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateTimestamp();
+                waitingForScan.style.display = 'none';
+                
+                if (data.success) {
+                    // Show success result
+                    successResult.style.display = 'block';
+                    errorResult.style.display = 'none';
+                    
+                    // Check if already checked in
+                    if (data.already_checked_in) {
+                        checkInStatus.textContent = 'Already Checked In';
+                        checkInMessage.textContent = 'This visitor was already checked in earlier.';
+                    } else {
+                        checkInStatus.textContent = 'Check-in Successful';
+                        checkInMessage.textContent = 'The visitor has been checked in successfully.';
+                    }
+                    
+                    // Update appointment details
+                    queueNumber.textContent = data.appointment.queue_number;
+                    appointmentType.textContent = data.appointment.appointment_type;
+                    visitorName.textContent = data.appointment.applicant_name;
+                    businessName.textContent = data.appointment.business_name;
+                    slotTime.textContent = data.appointment.slot_time;
+                    checkInTime.textContent = getCurrentTime();
+                } else {
+                    // Show error result
+                    errorResult.style.display = 'block';
+                    successResult.style.display = 'none';
+                    errorMessage.textContent = data.error || 'Error processing QR code';
+                }
+            })
+            .catch(error => {
+                console.error('Error processing QR code:', error);
+                updateTimestamp();
+                waitingForScan.style.display = 'none';
+                errorResult.style.display = 'block';
+                successResult.style.display = 'none';
+                errorMessage.textContent = 'Network error processing QR code';
+            });
+        }
+        
+        // Update result timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            resultTimestamp.textContent = `Last updated: ${now.toLocaleTimeString()}`;
+        }
+        
+        // Get current time formatted
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString();
+        }
+        
+        // Toggle scanner on button click
+        startScanButton.addEventListener('click', function() {
+            if (cameraContainer.style.display === 'none') {
+                initScanner();
+            } else {
+                stopScanner();
+            }
+        });
+    });
+</script>
+{% endblock %}

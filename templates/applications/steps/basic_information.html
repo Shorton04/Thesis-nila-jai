@@ -1,0 +1,101 @@
+{# templates/applications/steps/basic_information.html #}
+<div data-step="1">
+    <!-- Payment Mode and Business Type -->
+    <div class="px-4 py-5 sm:p-6">
+        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div class="sm:col-span-3">
+                <label for="{{ form.payment_mode.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Payment Mode
+                </label>
+                <div class="mt-1">
+                    {{ form.payment_mode }}
+                </div>
+                {% if form.payment_mode.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.payment_mode.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-3">
+                <label for="{{ form.business_type.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Business Type
+                </label>
+                <div class="mt-1">
+                    {{ form.business_type }}
+                </div>
+                {% if form.business_type.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.business_type.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Business Name and Trade Name -->
+    <div class="px-4 py-5 sm:p-6">
+        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div class="sm:col-span-6">
+                <label for="{{ form.business_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Business Name
+                </label>
+                <div class="mt-1">
+                    {{ form.business_name }}
+                </div>
+                {% if form.business_name.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.business_name.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-6">
+                <label for="{{ form.trade_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Trade Name/Franchise
+                </label>
+                <div class="mt-1">
+                    {{ form.trade_name }}
+                </div>
+                {% if form.trade_name.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.trade_name.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Details -->
+    <div class="px-4 py-5 sm:p-6">
+        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div class="sm:col-span-3">
+                <label for="{{ form.registration_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    DTI/SEC/CDA Registration Number
+                </label>
+                <div class="mt-1">
+                    {{ form.registration_number }}
+                </div>
+                {% if form.registration_number.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.registration_number.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="sm:col-span-3">
+                <label for="{{ form.registration_date.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Registration Date
+                </label>
+                <div class="mt-1">
+                    {{ form.registration_date }}
+                </div>
+                {% if form.registration_date.errors %}
+                <p class="mt-2 text-sm text-red-600">
+                    {{ form.registration_date.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

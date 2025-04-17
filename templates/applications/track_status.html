@@ -1,0 +1,744 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Track Application Status - Business Permit System{% endblock %}
+
+{% block content %}
+<style>
+    /* Track Status styles */
+    .track-status-wrapper {
+        background-color: #f7fafc;
+        padding: 1.5rem 0;
+        min-height: calc(100vh - 200px);
+    }
+    
+    .status-card {
+        background-color: #fff;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .status-card:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    .status-header {
+        background: linear-gradient(to right, #4338ca, #6366f1);
+        color: white;
+        padding: 1rem;
+    }
+    
+    .search-form {
+        background-color: #fff;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #4338ca;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    
+    .input-icon-wrapper {
+        position: relative;
+    }
+    
+    .input-icon-wrapper .form-input {
+        padding-left: 2.5rem;
+    }
+    
+    .form-icon {
+        position: absolute;
+        top: 50%;
+        left: 0.75rem;
+        transform: translateY(-50%);
+        color: #9ca3af;
+    }
+    
+    .search-btn {
+        background-color: #4338ca;
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .search-btn:hover {
+        background-color: #3730a3;
+    }
+    
+    /* Timeline styles */
+    .timeline {
+        position: relative;
+        margin: 2rem 0;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 1.25rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: #e5e7eb;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 3rem;
+        padding-bottom: 1.5rem;
+    }
+    
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        left: 0;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+    }
+    
+    .timeline-marker.completed {
+        background-color: #10b981;
+        color: white;
+    }
+    
+    .timeline-marker.current {
+        background-color: #3b82f6;
+        color: white;
+    }
+    
+    .timeline-marker.pending {
+        background-color: #f59e0b;
+        color: white;
+    }
+    
+    .timeline-marker.rejected {
+        background-color: #ef4444;
+        color: white;
+    }
+    
+    .timeline-marker.future {
+        background-color: #e5e7eb;
+        color: #9ca3af;
+    }
+    
+    .timeline-content {
+        background-color: #fff;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .timeline-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+    }
+    
+    .timeline-date {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .status-badge.approved {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+    
+    .status-badge.rejected {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .status-badge.pending {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    /* Progress bar */
+    .progress-container {
+        background-color: #e5e7eb;
+        border-radius: 9999px;
+        height: 0.5rem;
+        overflow: hidden;
+        margin: 1.5rem 0;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        border-radius: 9999px;
+        transition: width 0.5s ease;
+    }
+    
+    .progress-bar.pending {
+        background-color: #f59e0b;
+    }
+    
+    .progress-bar.approved {
+        background-color: #10b981;
+    }
+    
+    .progress-bar.rejected {
+        background-color: #ef4444;
+    }
+    
+    .progress-text {
+        text-align: center;
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+    
+    .requirements-list {
+        margin-top: 1.5rem;
+    }
+    
+    .requirement-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .requirement-item:last-child {
+        border-bottom: none;
+    }
+    
+    .requirement-status {
+        flex-shrink: 0;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 0.75rem;
+    }
+    
+    .requirement-status.completed {
+        background-color: #10b981;
+        color: white;
+    }
+    
+    .requirement-status.pending {
+        background-color: #f59e0b;
+        color: white;
+    }
+    
+    .requirement-status.rejected {
+        background-color: #ef4444;
+        color: white;
+    }
+    
+    .requirement-name {
+        flex-grow: 1;
+        font-size: 0.875rem;
+    }
+    
+    .requirement-name.verified {
+        color: #10b981;
+    }
+    
+    .requirement-name.rejected {
+        color: #ef4444;
+    }
+    
+    .application-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .summary-item {
+        background-color: #f9fafb;
+        border-radius: 0.375rem;
+        padding: 0.75rem;
+    }
+    
+    .summary-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+    }
+    
+    .summary-value {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #1f2937;
+    }
+    
+    .no-apps-found {
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .no-apps-icon {
+        font-size: 3rem;
+        color: #9ca3af;
+        margin-bottom: 1rem;
+    }
+    
+    @media (min-width: 768px) {
+        .timeline::before {
+            left: 50%;
+            margin-left: -1px;
+        }
+        
+        .timeline-item {
+            padding-left: 0;
+            padding-right: 0;
+            margin-bottom: 2rem;
+        }
+        
+        .timeline-item:nth-child(odd) {
+            padding-right: calc(50% + 1.5rem);
+        }
+        
+        .timeline-item:nth-child(even) {
+            padding-left: calc(50% + 1.5rem);
+        }
+        
+        .timeline-marker {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    }
+</style>
+
+<div class="track-status-wrapper">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Track Your Application</h1>
+            <p class="text-gray-600 mt-2">Monitor the progress of your business permit applications</p>
+        </div>
+        
+        {% if not application and not form_submitted %}
+        <!-- Search Form -->
+        <div class="max-w-xl mx-auto search-form">
+            <form method="get" action="{% url 'applications:track_status' %}">
+                <div class="mb-4">
+                    <label for="application_id" class="block text-sm font-medium text-gray-700 mb-1">Application ID</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-search form-icon"></i>
+                        <input 
+                            type="text" 
+                            name="application_id" 
+                            id="application_id" 
+                            placeholder="Enter application ID..." 
+                            class="form-input"
+                            value="{{ request.GET.application_id|default:'' }}"
+                            required
+                        >
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-envelope form-icon"></i>
+                        <input 
+                            type="email" 
+                            name="email" 
+                            id="email" 
+                            placeholder="Enter the email associated with application..." 
+                            class="form-input"
+                            value="{{ request.GET.email|default:'' }}"
+                            required
+                        >
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" class="search-btn">
+                        <i class="fas fa-search mr-2"></i> Track Application
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        {% elif form_submitted and not application %}
+        <!-- No Results Found -->
+        <div class="max-w-2xl mx-auto status-card">
+            <div class="status-header">
+                <h2 class="text-lg font-semibold">Application Not Found</h2>
+            </div>
+            <div class="p-6">
+                <div class="no-apps-found">
+                    <div class="no-apps-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">No application found</h3>
+                    <p class="text-gray-600 mb-4">We couldn't find an application with the provided details.</p>
+                    <p class="text-gray-600 mb-6">Please check the application ID and email address and try again.</p>
+                    <a href="{% url 'applications:track_status' %}" class="search-btn inline-block">
+                        <i class="fas fa-arrow-left mr-2"></i> Back to Search
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if application %}
+        <!-- Application Status Details -->
+        <div class="max-w-4xl mx-auto status-card">
+            <div class="status-header">
+                <h2 class="text-lg font-semibold">Application Status</h2>
+            </div>
+            <div class="p-6">
+                <!-- Application Summary -->
+                <div class="application-summary">
+                    <div class="summary-item">
+                        <div class="summary-label">Application ID</div>
+                        <div class="summary-value">{{ application.id }}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Business Name</div>
+                        <div class="summary-value">{{ application.business_name }}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Application Type</div>
+                        <div class="summary-value">{{ application.get_application_type_display }}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Date Submitted</div>
+                        <div class="summary-value">
+                            {% if application.submission_date %}
+                                {{ application.submission_date|date:"M d, Y" }}
+                            {% else %}
+                                Not submitted yet
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Current Status</div>
+                        <div class="summary-value">
+                            <span class="status-badge 
+                                {% if application.status == 'approved' %}approved
+                                {% elif application.status == 'rejected' %}rejected
+                                {% else %}pending{% endif %}">
+                                {{ application.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-medium text-gray-800 mb-2">Application Progress</h3>
+                    <div class="progress-container">
+                        <div class="progress-bar 
+                            {% if application.status == 'approved' %}approved
+                            {% elif application.status == 'rejected' %}rejected
+                            {% else %}pending{% endif %}" 
+                            style="width: {{ completion_percentage }}%">
+                        </div>
+                    </div>
+                    <div class="progress-text">{{ completion_percentage|floatformat:0 }}% Complete</div>
+                </div>
+                
+                <!-- Requirements Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-medium text-gray-800 mb-2">Document Requirements</h3>
+                    <div class="requirements-list">
+                        {% for requirement in requirements %}
+                        <div class="requirement-item">
+                            <div class="requirement-status 
+                                {% if requirement.is_verified %}completed
+                                {% elif requirement.is_submitted %}pending
+                                {% else %}pending{% endif %}">
+                                {% if requirement.is_verified %}
+                                    <i class="fas fa-check text-xs"></i>
+                                {% elif requirement.is_submitted %}
+                                    <i class="fas fa-clock text-xs"></i>
+                                {% else %}
+                                    <i class="fas fa-times text-xs"></i>
+                                {% endif %}
+                            </div>
+                            <div class="requirement-name 
+                                {% if requirement.is_verified %}verified
+                                {% elif requirement.is_submitted %}pending
+                                {% endif %}">
+                                {{ requirement.requirement_name }}
+                                
+                                {% if requirement.is_submitted and not requirement.is_verified %}
+                                    <span class="text-xs text-yellow-600 ml-2">(Under Review)</span>
+                                {% elif requirement.is_verified %}
+                                    <span class="text-xs text-green-600 ml-2">(Verified)</span>
+                                {% else %}
+                                    <span class="text-xs text-gray-500 ml-2">(Not Submitted)</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-gray-500 text-center p-4">No requirements found for this application.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Timeline Section -->
+                <h3 class="text-lg font-medium text-gray-800 mb-2">Application Timeline</h3>
+                <div class="timeline">
+                    {% for activity in activities %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker 
+                            {% if activity.activity_type == 'create' or activity.activity_type == 'submit' %}completed
+                            {% elif activity.activity_type == 'update' %}current
+                            {% elif activity.activity_type == 'reject' %}rejected
+                            {% elif activity.activity_type == 'approve' %}completed
+                            {% else %}pending{% endif %}">
+                            {% if activity.activity_type == 'create' %}
+                                <i class="fas fa-plus"></i>
+                            {% elif activity.activity_type == 'submit' %}
+                                <i class="fas fa-paper-plane"></i>
+                            {% elif activity.activity_type == 'update' %}
+                                <i class="fas fa-pen"></i>
+                            {% elif activity.activity_type == 'reject' %}
+                                <i class="fas fa-times"></i>
+                            {% elif activity.activity_type == 'approve' %}
+                                <i class="fas fa-check"></i>
+                            {% elif activity.activity_type == 'revise' %}
+                                <i class="fas fa-redo"></i>
+                            {% elif activity.activity_type == 'cancel' %}
+                                <i class="fas fa-ban"></i>
+                            {% else %}
+                                <i class="fas fa-circle"></i>
+                            {% endif %}
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <h4 class="font-medium text-gray-900">
+                                    {% if activity.activity_type == 'create' %}
+                                        Application Created
+                                    {% elif activity.activity_type == 'submit' %}
+                                        Application Submitted
+                                    {% elif activity.activity_type == 'update' %}
+                                        Application Updated
+                                    {% elif activity.activity_type == 'reject' %}
+                                        Application Rejected
+                                    {% elif activity.activity_type == 'approve' %}
+                                        Application Approved
+                                    {% elif activity.activity_type == 'revise' %}
+                                        Revision Requested
+                                    {% elif activity.activity_type == 'cancel' %}
+                                        Application Cancelled
+                                    {% else %}
+                                        {{ activity.activity_type|title }}
+                                    {% endif %}
+                                </h4>
+                                <span class="timeline-date">{{ activity.performed_at|date:"M d, Y h:i A" }}</span>
+                            </div>
+                            <p class="text-sm text-gray-600">{{ activity.description }}</p>
+                            {% if activity.performed_by %}
+                            <div class="text-xs text-gray-500 mt-2">
+                                By: {% if activity.performed_by.get_full_name %}{{ activity.performed_by.get_full_name }}{% else %}{{ activity.performed_by.username }}{% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-gray-500 py-4">No activities recorded yet.</div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="mt-8 flex justify-between">
+                    <a href="{% url 'applications:track_status' %}" class="search-btn bg-gray-500 hover:bg-gray-600">
+                        <i class="fas fa-arrow-left mr-2"></i> Back to Search
+                    </a>
+                    
+                    {% if application.status == 'approved' %}
+                    <a href="{% url 'applications:application_detail' application.id %}" class="search-btn">
+                        <i class="fas fa-print mr-2"></i> View Details
+                    </a>
+                    {% elif application.status == 'draft' or application.status == 'requires_revision' %}
+                    <a href="{% url 'applications:application_detail' application.id %}" class="search-btn">
+                        <i class="fas fa-edit mr-2"></i> Edit Application
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Realtime Updates Script -->
+                <div id="lastUpdate" class="text-xs text-gray-500 text-right mt-4">
+                    Last checked: {{ current_datetime|date:"M d, Y h:i:s A" }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Help Section -->
+        <div class="max-w-4xl mx-auto mt-8">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Need Help?</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="status-card p-4">
+                    <div class="flex items-start">
+                        <div class="mr-4 text-indigo-600">
+                            <i class="fas fa-question-circle fa-2x"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-900 mb-1">Can't find your application?</h4>
+                            <p class="text-sm text-gray-600">Make sure you're using the correct application ID and email address that was used during application submission.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="status-card p-4">
+                    <div class="flex items-start">
+                        <div class="mr-4 text-indigo-600">
+                            <i class="fas fa-phone-alt fa-2x"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-900 mb-1">Contact Support</h4>
+                            <p class="text-sm text-gray-600">If you need assistance with your application, please contact our support team at <a href="mailto:support@businesspermit.gov" class="text-indigo-600">support@businesspermit.gov</a> or call (123) 456-7890.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const applicationId = "{{ application.id|default:'' }}";
+        
+        // Only run periodic updates if we have an application ID
+        if (applicationId) {
+            // Function to check for updates
+            const checkForUpdates = () => {
+                fetch(`/applications/${applicationId}/status-update/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Update the last updated timestamp
+                        const now = new Date();
+                        document.getElementById('lastUpdate').textContent = 
+                            `Last checked: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+                            
+                        // If status has changed, reload the page
+                        const currentStatus = "{{ application.status }}";
+                        if (data.status && data.status !== currentStatus) {
+                            location.reload();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking for updates:', error);
+                    });
+            };
+            
+            // Check for updates every 30 seconds
+            setInterval(checkForUpdates, 30000);
+        }
+        
+        // Form validation
+        const trackForm = document.querySelector('form[action*="track_status"]');
+        if (trackForm) {
+            trackForm.addEventListener('submit', function(e) {
+                const applicationIdInput = document.getElementById('application_id');
+                const emailInput = document.getElementById('email');
+                
+                let isValid = true;
+                
+                // Validate Application ID
+                if (!applicationIdInput.value.trim()) {
+                    isValid = false;
+                    applicationIdInput.classList.add('border-red-500');
+                    
+                    // Add error message if it doesn't exist
+                    if (!applicationIdInput.nextElementSibling || 
+                        !applicationIdInput.nextElementSibling.classList.contains('text-red-500')) {
+                        const errorMsg = document.createElement('div');
+                        errorMsg.className = 'text-red-500 text-xs mt-1';
+                        errorMsg.textContent = 'Please enter an application ID';
+                        applicationIdInput.parentNode.appendChild(errorMsg);
+                    }
+                }
+                
+                // Validate Email
+                if (!emailInput.value.trim()) {
+                    isValid = false;
+                    emailInput.classList.add('border-red-500');
+                    
+                    // Add error message if it doesn't exist
+                    if (!emailInput.nextElementSibling || 
+                        !emailInput.nextElementSibling.classList.contains('text-red-500')) {
+                        const errorMsg = document.createElement('div');
+                        errorMsg.className = 'text-red-500 text-xs mt-1';
+                        errorMsg.textContent = 'Please enter an email address';
+                        emailInput.parentNode.appendChild(errorMsg);
+                    }
+                } else if (!/\S+@\S+\.\S+/.test(emailInput.value.trim())) {
+                    isValid = false;
+                    emailInput.classList.add('border-red-500');
+                    
+                    // Add error message if it doesn't exist
+                    if (!emailInput.nextElementSibling || 
+                        !emailInput.nextElementSibling.classList.contains('text-red-500')) {
+                        const errorMsg = document.createElement('div');
+                        errorMsg.className = 'text-red-500 text-xs mt-1';
+                        errorMsg.textContent = 'Please enter a valid email address';
+                        emailInput.parentNode.appendChild(errorMsg);
+                    }
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+            
+            // Clear error on input
+            const inputs = trackForm.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    this.classList.remove('border-red-500');
+                    
+                    // Remove error message if it exists
+                    if (this.nextElementSibling && 
+                        this.nextElementSibling.classList.contains('text-red-500')) {
+                        this.nextElementSibling.remove();
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

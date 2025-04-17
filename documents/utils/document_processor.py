@@ -1,4 +1,5 @@
 # documents/utils/document_processor.py
+'''
 from .ocr import OCRProcessor
 from .fraud_detection import FraudDetector
 from .nlp_validation import NLPValidator
@@ -283,3 +284,4 @@ class DocumentProcessor:
         except Exception as e:
             logger.error(f"Document quality analysis error: {str(e)}")
             return None
+'''

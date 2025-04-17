@@ -1,0 +1,443 @@
+// Add this to templates/applications/includes/handlers.html
+
+<script>
+// Document Upload Handler
+function handleDocumentUpload(fileInput, requirementId, applicationId) {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    // Validate file size and type
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+
+    if (file.size > maxSize) {
+        alert('File size must not exceed 10MB');
+        return;
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+        alert('Only PDF, JPG, and PNG files are allowed');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('document', file);
+    formData.append('requirement_id', requirementId);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+    // Show upload progress
+    const progressBar = document.getElementById(`progress-${requirementId}`);
+    progressBar.style.display = 'block';
+
+    fetch(`/applications/${applicationId}/requirement/${requirementId}/upload/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Upload failed');
+            progressBar.style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Upload failed. Please try again.');
+        progressBar.style.display = 'none';
+    });
+}
+
+// Draft Save Handler
+function saveDraft(formId, applicationId) {
+    const form = document.getElementById(formId);
+    const formData = new FormData(form);
+    formData.append('is_draft', 'true');
+
+    fetch(`/applications/${applicationId}/save-draft/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('Draft saved successfully', 'success');
+        } else {
+            showMessage(data.error || 'Failed to save draft', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Failed to save draft', 'error');
+    });
+}
+
+// Form Validation
+function validateForm(formId) {
+    const form = document.getElementById(formId);
+    let isValid = true;
+
+    // Clear previous errors
+    form.querySelectorAll('.error-message').forEach(el => el.remove());
+    form.querySelectorAll('.border-red-500').forEach(el => {
+        el.classList.remove('border-red-500');
+    });
+
+    // Validate required fields
+    form.querySelectorAll('[required]').forEach(field => {
+        if (!field.value.trim()) {
+            isValid = false;
+            field.classList.add('border-red-500');
+            
+            errorDiv.className = 'error-message text-sm text-red-600';
+            errorDiv.textContent = 'Please enter a valid phone number';
+            field.parentNode.appendChild(errorDiv);
+        }
+    });
+
+    return isValid;
+}
+
+// Email validation
+function isValidEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+// Phone number validation
+function isValidPhone(phone) {
+    const re = /^[\d\s\-()+]{7,}$/;
+    return re.test(phone);
+}
+
+// Show message helper
+function showMessage(message, type = 'success') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+    }`;
+    alertDiv.textContent = message;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => alertDiv.remove(), 3000);
+}
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!validateForm(this.id)) {
+                e.preventDefault();
+            }
+        });
+    });
+
+    // File inputs
+    document.querySelectorAll('input[type="file"]').forEach(input => {
+        input.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const maxSize = 10 * 1024 * 1024; // 10MB
+                const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+
+                if (file.size > maxSize) {
+                    showMessage('File size must not exceed 10MB', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                if (!allowedTypes.includes(file.type)) {
+                    showMessage('Only PDF, JPG and PNG files are allowed', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                // Show preview if available
+                const previewId = `preview-${this.id}`;
+                const preview = document.getElementById(previewId);
+                if (preview) {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            preview.src = e.target.result;
+                            preview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        preview.src = '/static/images/document-icon.png';
+                        preview.style.display = 'block';
+                    }
+                }
+            }
+        });
+    });
+
+    // Draft autosave
+    let autosaveTimeout;
+    document.querySelectorAll('form[data-autosave="true"]').forEach(form => {
+        form.addEventListener('input', function() {
+            clearTimeout(autosaveTimeout);
+            autosaveTimeout = setTimeout(() => {
+                const formData = new FormData(this);
+                formData.append('is_draft', 'true');
+
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage('Draft saved automatically', 'success');
+                    }
+                })
+                .catch(error => console.error('Autosave error:', error));
+            }, 5000); // Autosave after 5 seconds of inactivity
+        });
+    });
+
+    // Business type dependent fields
+    const businessTypeSelect = document.getElementById('id_business_type');
+    if (businessTypeSelect) {
+        const toggleDependentFields = () => {
+            const selectedType = businessTypeSelect.value;
+            const corporateFields = document.getElementById('corporate_fields');
+            if (corporateFields) {
+                corporateFields.style.display = 
+                    ['corporation', 'partnership'].includes(selectedType) ? 'block' : 'none';
+                
+                corporateFields.querySelectorAll('input, select').forEach(field => {
+                    field.required = ['corporation', 'partnership'].includes(selectedType);
+                });
+            }
+        };
+
+        businessTypeSelect.addEventListener('change', toggleDependentFields);
+        toggleDependentFields(); // Initial state
+    }
+
+    // Amendment type fields
+    const amendmentTypeRadios = document.querySelectorAll('input[name="amendment_type"]');
+    if (amendmentTypeRadios.length) {
+        const toggleAmendmentFields = () => {
+            const selected = document.querySelector('input[name="amendment_type"]:checked');
+            if (selected) {
+                document.querySelectorAll('[id$="Change"]').forEach(section => {
+                    section.style.display = 'none';
+                    section.querySelectorAll('input, select').forEach(field => {
+                        field.required = false;
+                    });
+                });
+
+                const targetSection = document.getElementById(`${selected.value}Change`);
+                if (targetSection) {
+                    targetSection.style.display = 'block';
+                    targetSection.querySelectorAll('input, select').forEach(field => {
+                        field.required = true;
+                    });
+                }
+            }
+        };
+
+        amendmentTypeRadios.forEach(radio => {
+            radio.addEventListener('change', toggleAmendmentFields);
+        });
+        toggleAmendmentFields(); // Initial state
+    }
+});
+</script>
+            errorDiv.className = 'error-message text-red-500 text-sm mt-1';
+            errorDiv.textContent = 'Please enter a valid phone number';
+            field.parentNode.appendChild(errorDiv);
+        }
+    });
+
+    return isValid;
+}
+
+// Helper Functions
+function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function isValidPhone(phone) {
+    return /^[\d\s\-()+]{7,}$/.test(phone);
+}
+
+function showMessage(message, type = 'success') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+    }`;
+    alertDiv.textContent = message;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+
+// Application Status Updates
+function updateApplicationStatus(applicationId) {
+    fetch(`/applications/${applicationId}/status/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update progress bar
+                const progressBar = document.querySelector('.progress-bar');
+                if (progressBar) {
+                    progressBar.style.width = `${data.completion_percentage}%`;
+                    progressBar.setAttribute('aria-valuenow', data.completion_percentage);
+                }
+
+                // Update status badges
+                const statusBadge = document.querySelector('.status-badge');
+                if (statusBadge) {
+                    statusBadge.textContent = data.status;
+                    statusBadge.className = `status-badge status-${data.status.toLowerCase()}`;
+                }
+
+                // Update requirements status
+                data.requirements.forEach(req => {
+                    const reqElement = document.getElementById(`requirement-${req.id}`);
+                    if (reqElement) {
+                        updateRequirementStatus(reqElement, req);
+                    }
+                });
+            }
+        })
+        .catch(error => console.error('Error updating status:', error));
+}
+
+function updateRequirementStatus(element, requirement) {
+    const statusBadge = element.querySelector('.requirement-status');
+    if (statusBadge) {
+        statusBadge.className = `requirement-status ${
+            requirement.verified ? 'status-verified' :
+            requirement.submitted ? 'status-submitted' : ''
+        }`;
+        statusBadge.textContent = requirement.verified ? 'Verified' :
+            requirement.submitted ? 'Submitted' : 'Pending';
+    }
+}
+
+// Form Field Dynamic Updates
+function updateFormFields() {
+    const businessType = document.getElementById('id_business_type');
+    const additionalFields = document.getElementById('additional_fields');
+    
+    if (businessType && additionalFields) {
+        businessType.addEventListener('change', function() {
+            const selectedType = this.value;
+            additionalFields.style.display = 
+                ['corporation', 'partnership'].includes(selectedType) ? 'block' : 'none';
+            
+            // Update required attributes
+            additionalFields.querySelectorAll('input, select').forEach(field => {
+                field.required = ['corporation', 'partnership'].includes(selectedType);
+            });
+        });
+    }
+}
+
+// Document Preview
+function previewDocument(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const preview = document.getElementById(`preview-${input.id}`);
+        const previewArea = document.getElementById(`preview-area-${input.id}`);
+        
+        if (preview && previewArea) {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewArea.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type === 'application/pdf') {
+                preview.src = '/static/images/pdf-icon.png';
+                previewArea.classList.remove('hidden');
+            }
+        }
+    }
+}
+
+// Amendment Type Handling
+function handleAmendmentType() {
+    const amendmentType = document.getElementsByName('amendment_type');
+    const sections = {
+        business_name: document.getElementById('businessNameChange'),
+        address: document.getElementById('addressChange'),
+        ownership: document.getElementById('ownershipChange')
+    };
+    
+    amendmentType.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Hide all sections
+            Object.values(sections).forEach(section => {
+                if (section) section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            const selectedSection = sections[this.value];
+            if (selectedSection) {
+                selectedSection.classList.remove('hidden');
+                // Make fields required
+                selectedSection.querySelectorAll('input, select').forEach(field => {
+                    field.required = true;
+                });
+            }
+        });
+    });
+}
+
+// Initialize all handlers
+document.addEventListener('DOMContentLoaded', function() {
+    updateFormFields();
+    handleAmendmentType();
+    
+    // Set up periodic status updates for active applications
+    const applicationId = document.getElementById('application-id')?.value;
+    if (applicationId) {
+        updateApplicationStatus(applicationId);
+        setInterval(() => updateApplicationStatus(applicationId), 30000); // Update every 30 seconds
+    }
+});
+            errorDiv.className = 'error-message text-red-500 text-sm mt-1';
+            errorDiv.textContent = 'This field is required';
+            field.parentNode.appendChild(errorDiv);
+        }
+    });
+
+    // Validate email fields
+    form.querySelectorAll('input[type="email"]').forEach(field => {
+        if (field.value && !isValidEmail(field.value)) {
+            isValid = false;
+            field.classList.add('border-red-500');
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message text-red-500 text-sm mt-1';
+            errorDiv.textContent = 'Please enter a valid email address';
+            field.parentNode.appendChild(errorDiv);
+        }
+    });
+
+    // Validate phone numbers
+    form.querySelectorAll('input[type="tel"]').forEach(field => {
+        if (field.value && !isValidPhone(field.value)) {
+            isValid = false;
+            field.classList.add('border-red-500');
+            
+            const errorDiv = document.createElement('div');

@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+  <!-- Defs for filters, gradients and patterns -->
+  <defs>
+    <!-- Modern green gradient -->
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9CA3AF">
+        <animate attributeName="stop-color" values="#9CA3AF;#6B7280;#9CA3AF" dur="15s" repeatCount="indefinite" />
+      </stop>
+      <stop offset="100%" stop-color="#D1D5DB">
+        <animate attributeName="stop-color" values="#D1D5DB;#9CA3AF;#D1D5DB" dur="15s" repeatCount="indefinite" />
+      </stop>
+    </linearGradient>
+    
+    <!-- Subtle glow filter -->
+    <filter id="subtleGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    
+    <!-- Paper texture pattern -->
+    <pattern id="paperPattern" patternUnits="userSpaceOnUse" width="100" height="100" patternTransform="scale(0.5)">
+      <rect width="100" height="100" fill="white" opacity="0.03"/>
+      <rect width="100" height="1" fill="#9CA3AF" opacity="0.03"/>
+      <rect width="1" height="100" fill="#9CA3AF" opacity="0.03"/>
+    </pattern>
+    
+    <!-- Noise texture -->
+    <filter id="paperNoise" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" result="noise"/>
+      <feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.03 0" in="noise" result="coloredNoise"/>
+      <feComposite operator="in" in="coloredNoise" in2="SourceGraphic" result="noisyImage"/>
+    </filter>
+  </defs>
+  
+  <!-- Main document container -->
+  <g transform="translate(150, 200)" filter="url(#subtleGlow)">
+    <!-- Shadow effect beneath document (very subtle) -->
+    <rect x="-75" y="-100" width="150" height="200" rx="12" fill="#6B7280" opacity="0.07" transform="translate(6, 6)"/>
+    
+    <!-- Main document with slight floating animation -->
+    <g>
+      <animateTransform attributeName="transform" type="translate" values="0,0;0,-5;0,0" dur="6s" repeatCount="indefinite"/>
+      
+      <!-- Base document -->
+      <rect x="-75" y="-100" width="150" height="200" rx="12" fill="white" stroke="url(#accentGradient)" stroke-width="2" filter="url(#paperNoise)"/>
+      <rect x="-75" y="-100" width="150" height="200" rx="12" fill="url(#paperPattern)"/>
+      
+      <!-- Fold corner animation -->
+      <g>
+        <path d="M75,-100 L75,-70 L45,-100 Z" fill="#f9fafb" stroke="url(#accentGradient)" stroke-width="2">
+          <animate attributeName="d" values="M75,-100 L75,-70 L45,-100 Z;M75,-100 L75,-65 L40,-100 Z;M75,-100 L75,-70 L45,-100 Z" dur="10s" repeatCount="indefinite"/>
+        </path>
+      </g>
+      
+      <!-- Content lines that slide in -->
+      <g>
+        <!-- Header/Title Line -->
+        <rect x="-55" y="-80" width="90" height="8" rx="4" fill="#e5e7eb">
+          <animate attributeName="width" values="0;90;90" dur="2s" begin="0.5s" fill="freeze"/>
+        </rect>
+        
+        <!-- Content lines -->
+        <rect x="-55" y="-60" width="110" height="5" rx="2.5" fill="#e5e7eb">
+          <animate attributeName="width" values="0;110;110" dur="2s" begin="0.7s" fill="freeze"/>
+        </rect>
+        
+        <rect x="-55" y="-45" width="110" height="5" rx="2.5" fill="#e5e7eb">
+          <animate attributeName="width" values="0;110;110" dur="2s" begin="0.9s" fill="freeze"/>
+        </rect>
+        
+        <rect x="-55" y="-30" width="110" height="5" rx="2.5" fill="#e5e7eb">
+          <animate attributeName="width" values="0;110;110" dur="2s" begin="1.1s" fill="freeze"/>
+        </rect>
+        
+        <rect x="-55" y="-15" width="110" height="5" rx="2.5" fill="#e5e7eb">
+          <animate attributeName="width" values="0;110;110" dur="2s" begin="1.3s" fill="freeze"/>
+        </rect>
+        
+        <rect x="-55" y="0" width="110" height="5" rx="2.5" fill="#e5e7eb">
+          <animate attributeName="width" values="0;110;110" dur="2s" begin="1.5s" fill="freeze"/>
+        </rect>
+        
+        <rect x="-55" y="15" width="110" height="5" rx="2.5" fill="#e5e7eb">
+          <animate attributeName="width" values="0;110;110" dur="2s" begin="1.7s" fill="freeze"/>
+        </rect>
+        
+        <rect x="-55" y="30" width="80" height="5" rx="2.5" fill="#e5e7eb">
+          <animate attributeName="width" values="0;80;80" dur="2s" begin="1.9s" fill="freeze"/>
+        </rect>
+      </g>
+      
+      <!-- Signature line -->
+      <g transform="translate(0, 60)">
+        <line x1="-40" y1="0" x2="40" y2="0" stroke="#d1d5db" stroke-width="1"/>
+        <rect x="-40" y="10" width="30" height="4" rx="2" fill="#e5e7eb">
+          <animate attributeName="width" values="0;30;30" dur="1s" begin="2.5s" fill="freeze"/>
+        </rect>
+      </g>
+      
+      <!-- Animated checkmark that appears -->
+      <g transform="translate(35, 60)" opacity="0">
+        <circle cx="0" cy="0" r="15" fill="url(#accentGradient)" opacity="0.1"/>
+        <path d="M-8,0 L-3,5 L8,-5" fill="none" stroke="url(#accentGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <animate attributeName="opacity" values="0;0;1" dur="3s" begin="3s" fill="freeze"/>
+        <animateTransform attributeName="transform" type="scale" values="0;1.2;1" dur="0.5s" begin="3s" fill="freeze" additive="sum"/>
+      </g>
+    </g>
+  </g>
+  
+  <!-- Decorative elements -->
+  <g>
+    <!-- Floating rings -->
+    <circle cx="150" cy="200" r="110" fill="none" stroke="url(#accentGradient)" stroke-width="1" stroke-dasharray="4 4" opacity="0.5">
+      <animate attributeName="r" values="110;120;110" dur="20s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-dashoffset" from="0" to="24" dur="80s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;0.3;0.5" dur="10s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="150" cy="200" r="130" fill="none" stroke="url(#accentGradient)" stroke-width="0.5" stroke-dasharray="4 6" opacity="0.3">
+      <animate attributeName="r" values="130;140;130" dur="25s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="100s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.3;0.15;0.3" dur="15s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Small floating particles -->
+  <g>
+    <circle cx="100" cy="120" r="2" fill="url(#accentGradient)" opacity="0.4">
+      <animate attributeName="cy" values="120;110;120;130;120" dur="15s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="100;110;100;90;100" dur="15s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0.2;0.4" dur="15s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="200" cy="120" r="2" fill="url(#accentGradient)" opacity="0.4">
+      <animate attributeName="cy" values="120;130;120;110;120" dur="18s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="200;190;200;210;200" dur="18s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0.2;0.4" dur="18s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="90" cy="280" r="2" fill="url(#accentGradient)" opacity="0.4">
+      <animate attributeName="cy" values="280;270;280;290;280" dur="12s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="90;100;90;80;90" dur="12s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0.2;0.4" dur="12s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="210" cy="280" r="2" fill="url(#accentGradient)" opacity="0.4">
+      <animate attributeName="cy" values="280;290;280;270;280" dur="20s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="210;200;210;220;210" dur="20s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0.2;0.4" dur="20s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

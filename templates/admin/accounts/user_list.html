@@ -1,0 +1,61 @@
+{# templates/admin/accounts/user_list.html #}
+{% extends 'admin/base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Users</h2>
+        <div class="flex gap-4">
+            <form method="get" class="flex gap-2">
+                <input type="text" name="search" value="{{ search }}" 
+                       placeholder="Search users..." class="form-control">
+                <select name="status" class="form-control">
+                    <option value="">All Users</option>
+                    <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    <option value="locked" {% if status == 'locked' %}selected{% endif %}>Locked</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </form>
+            <a href="{% url 'accounts:admin_user_create' %}" class="btn btn-success">Add User</a>
+        </div>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Company</th>
+                <th>Status</th>
+                <th>Joined</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.email }}</td>
+                <td>{{ user.get_full_name }}</td>
+                <td>{{ user.company_name }}</td>
+                <td>
+                    {% if user.is_account_locked %}
+                        <span class="badge badge-danger">Locked</span>
+                    {% elif user.is_active %}
+                        <span class="badge badge-success">Active</span>
+                    {% else %}
+                        <span class="badge badge-warning">Inactive</span>
+                    {% endif %}
+                </td>
+                <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                <td>
+                    <a href="{% url 'accounts:admin_user_detail' user.id %}" class="btn btn-primary btn-sm">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% include "admin/accounts/components/pagination.html" with page_obj=users %}
+</div>
+{% endblock %}

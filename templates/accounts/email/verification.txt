@@ -1,0 +1,13 @@
+Verify Your Email Address
+
+Hello {{ user.username }},
+
+Thank you for registering with our Business Permit System. To complete your registration, please verify your email address by clicking the link below:
+
+{{ verification_url }}
+
+This verification link will expire in 24 hours.
+
+If you did not create an account, you can safely ignore this email.
+
+This is an automated message, please do not reply.

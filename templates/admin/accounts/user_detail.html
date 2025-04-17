@@ -1,0 +1,145 @@
+{# templates/admin/accounts/user_detail.html #}
+{% extends 'admin/base.html' %}
+
+{% block content %}
+<div class="grid grid-cols-3 gap-6">
+    <div class="col-span-2">
+        <div class="card mb-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="text-2xl font-bold">{{ user_obj.get_full_name }}</h2>
+                    <p class="text-gray-600">{{ user_obj.email }}</p>
+                </div>
+                <div class="flex gap-2">
+                    {% if user_obj.is_active %}
+                        <form method="post" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="deactivate">
+                            <button type="submit" class="btn btn-danger">Deactivate</button>
+                        </form>
+                    {% else %}
+                        <form method="post" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="activate">
+                            <button type="submit" class="btn btn-success">Activate</button>
+                        </form>
+                    {% endif %}
+                    
+                    {% if user_obj.is_account_locked %}
+                        <form method="post" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="unlock">
+                            <button type="submit" class="btn btn-warning">Unlock Account</button>
+                        </form>
+                    {% endif %}
+                    
+                    <a href="{% url 'accounts:admin_user_edit' user_obj.id %}" class="btn btn-primary">Edit User</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-6">
+            <h3 class="text-xl font-semibold mb-4">User Information</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="font-medium">Company</label>
+                    <p>{{ user_obj.company_name|default:"-" }}</p>
+                </div>
+                <div>
+                    <label class="font-medium">Position</label>
+                    <p>{{ user_obj.position|default:"-" }}</p>
+                </div>
+                <div>
+                    <label class="font-medium">Phone</label>
+                    <p>{{ user_obj.phone_number|default:"-" }}</p>
+                </div>
+                <div>
+                    <label class="font-medium">Business Type</label>
+                    <p>{{ user_obj.business_type|default:"-" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="text-xl font-semibold mb-4">Recent Login History</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date/Time</th>
+                        <th>IP Address</th>
+                        <th>Status</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in login_history %}
+                    <tr>
+                        <td>{{ log.login_datetime|date:"M d, Y H:i" }}</td>
+                        <td>{{ log.ip_address }}</td>
+                        <td>
+                            {% if log.is_successful %}
+                                <span class="text-success">Success</span>
+                            {% else %}
+                                <span class="text-danger">Failed</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.failure_reason|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="col-span-1">
+        <div class="card mb-6">
+            <h3 class="text-xl font-semibold mb-4">Account Status</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="font-medium">Status</label>
+                    <p>
+                        {% if user_obj.is_active %}
+                            <span class="text-success">Active</span>
+                        {% else %}
+                            <span class="text-danger">Inactive</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <label class="font-medium">Email Verified</label>
+                    <p>
+                        {% if user_obj.is_email_verified %}
+                            <span class="text-success">Yes</span>
+                        {% else %}
+                            <span class="text-warning">No</span>
+                            <form method="post" class="inline ml-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="verify_email">
+                                <button type="submit" class="btn btn-sm btn-warning">
+                                    Verify Now
+                                </button>
+                            </form>
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <label class="font-medium">Account Lock Status</label>
+                    <p>
+                        {% if user_obj.is_account_locked %}
+                            <span class="text-danger">
+                                Locked until {{ user_obj.account_locked_until|date:"M d, Y H:i" }}
+                            </span>
+                        {% else %}
+                            <span class="text-success">Not locked</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <label class="font-medium">Login Attempts</label>
+                    <p>{{ user_obj.login_attempts }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

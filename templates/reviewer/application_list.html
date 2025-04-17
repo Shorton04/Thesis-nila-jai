@@ -1,0 +1,228 @@
+{% extends 'reviewer/base.html' %}
+
+{% block title %}Applications{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-file-alt mr-2"></i>
+            Applications
+        </h3>
+    </div>
+    
+    <!-- Search and Filter Form -->
+    <div style="margin-bottom: 1.5rem;">
+        <form method="get" id="search-form">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                <div style="position: relative;">
+                    <input type="text" 
+                           name="search" 
+                           id="search-input"
+                           value="{{ search|default:'' }}" 
+                           placeholder="Search by business name or application #" 
+                           class="form-control"
+                           style="padding-left: 2.5rem;">
+                    <i class="fas fa-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--secondary);"></i>
+                </div>
+                
+                <select name="status" class="form-control">
+                    <option value="">All Status</option>
+                    <option value="submitted" {% if current_status == 'submitted' %}selected{% endif %}>Submitted</option>
+                    <option value="under_review" {% if current_status == 'under_review' %}selected{% endif %}>Under Review</option>
+                    <option value="requires_revision" {% if current_status == 'requires_revision' %}selected{% endif %}>Requires Revision</option>
+                    <option value="approved" {% if current_status == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="rejected" {% if current_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+                
+                <select name="type" class="form-control">
+                    <option value="">All Types</option>
+                    <option value="new" {% if current_type == 'new' %}selected{% endif %}>New Permit</option>
+                    <option value="renewal" {% if current_type == 'renewal' %}selected{% endif %}>Renewal</option>
+                    <option value="amendment" {% if current_type == 'amendment' %}selected{% endif %}>Amendment</option>
+                    <option value="closure" {% if current_type == 'closure' %}selected{% endif %}>Closure</option>
+                </select>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter mr-2"></i>
+                    Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>
+                        <div style="display: flex; align-items: center;">
+                            <span>Application #</span>
+                            <div class="sort-links ml-2">
+                                <a href="?order_by=application_number{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == 'application_number' %}active{% endif %}">↑</a>
+                                <a href="?order_by=-application_number{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == '-application_number' %}active{% endif %}">↓</a>
+                            </div>
+                        </div>
+                    </th>
+                    <th>
+                        <div style="display: flex; align-items: center;">
+                            <span>Business Name</span>
+                            <div class="sort-links ml-2">
+                                <a href="?order_by=business_name{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == 'business_name' %}active{% endif %}">↑</a>
+                                <a href="?order_by=-business_name{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == '-business_name' %}active{% endif %}">↓</a>
+                            </div>
+                        </div>
+                    </th>
+                    <th>Type</th>
+                    <th>
+                        <div style="display: flex; align-items: center;">
+                            <span>Status</span>
+                            <div class="sort-links ml-2">
+                                <a href="?order_by=status{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == 'status' %}active{% endif %}">↑</a>
+                                <a href="?order_by=-status{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == '-status' %}active{% endif %}">↓</a>
+                            </div>
+                        </div>
+                    </th>
+                    <th>
+                        <div style="display: flex; align-items: center;">
+                            <span>Submitted</span>
+                            <div class="sort-links ml-2">
+                                <a href="?order_by=submission_date{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == 'submission_date' %}active{% endif %}">↑</a>
+                                <a href="?order_by=-submission_date{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}" 
+                                   class="sort-link {% if order_by == '-submission_date' %}active{% endif %}">↓</a>
+                            </div>
+                        </div>
+                    </th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <td style="font-weight: 500;">{{ app.application_number }}</td>
+                    <td>{{ app.business_name }}</td>
+                    <td>
+                        <span class="status-badge" style="background-color: {% if app.application_type == 'new' %}var(--primary); color: white;
+                              {% elif app.application_type == 'renewal' %}var(--success); color: white;
+                              {% elif app.application_type == 'amendment' %}var(--info); color: white;
+                              {% else %}var(--secondary); color: white;{% endif %}">
+                            {{ app.get_application_type_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ app.status }}">
+                            {{ app.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <div>
+                            <div>{{ app.submission_date|date:"M d, Y" }}</div>
+                            <div style="font-size: 0.75rem; color: var(--secondary);">{{ app.submission_date|time:"H:i" }}</div>
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="{% url 'reviewer:application_detail' app.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye mr-1"></i>
+                            Review
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 2rem;">
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-folder-open" style="font-size: 2rem; color: var(--gray-300);"></i>
+                            <p style="color: var(--gray-700);">No applications found</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if applications.has_other_pages %}
+    <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem;">
+        {% if applications.has_previous %}
+        <a href="?page={{ applications.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}" 
+           class="btn btn-primary btn-sm">
+            <i class="fas fa-chevron-left mr-1"></i>
+            Previous
+        </a>
+        {% endif %}
+        
+        <span style="display: inline-flex; align-items: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; background: white; border: 1px solid var(--gray-200); border-radius: 0.25rem;">
+            Page {{ applications.number }} of {{ applications.paginator.num_pages }}
+        </span>
+        
+        {% if applications.has_next %}
+        <a href="?page={{ applications.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}" 
+           class="btn btn-primary btn-sm">
+            Next
+            <i class="fas fa-chevron-right ml-1"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.sort-links {
+    display: flex;
+    flex-direction: column;
+    line-height: 0.7;
+}
+
+.sort-link {
+    color: var(--gray-300);
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.sort-link.active {
+    color: var(--primary);
+    font-weight: bold;
+}
+
+.sort-link:hover {
+    color: var(--primary);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search-input');
+        const searchForm = document.getElementById('search-form');
+        let searchTimeout;
+        
+        // Debounce search to prevent too many requests
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                // Only submit if there are 3 or more characters or the field is empty
+                if (searchInput.value.length >= 3 || searchInput.value.length === 0) {
+                    searchForm.submit();
+                }
+            }, 500); // 500ms delay
+        });
+        
+        // Auto-submit on status or type change
+        document.querySelector('select[name="status"]').addEventListener('change', function() {
+            searchForm.submit();
+        });
+        
+        document.querySelector('select[name="type"]').addEventListener('change', function() {
+            searchForm.submit();
+        });
+    });
+</script>
+{% endblock %}
